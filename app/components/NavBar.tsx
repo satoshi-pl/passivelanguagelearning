@@ -65,21 +65,28 @@ export async function NavBar() {
                 </LogoHomeLink>
               </div>
 
-              <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
-                <DictionaryHeaderSearch langs={langs} />
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:gap-3">
+                <div className="shrink-0">
+                  <DictionaryHeaderSearch langs={langs} />
+                </div>
 
-                <span className="hidden text-sm text-neutral-600 lg:inline">
+                <span
+                  className="hidden min-w-0 flex-1 truncate text-right text-sm text-neutral-600 md:block"
+                  title={email}
+                >
                   {email}
                 </span>
 
-                <ThemeToggle />
+                <div className="flex shrink-0 items-center gap-2 lg:gap-3">
+                  <ThemeToggle />
 
-                <a
-                  href="/api/logout"
-                  className="rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
-                >
-                  Logout
-                </a>
+                  <a
+                    href="/api/logout"
+                    className="rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                  >
+                    Logout
+                  </a>
+                </div>
               </div>
             </div>
           </>

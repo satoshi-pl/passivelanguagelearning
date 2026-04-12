@@ -56,7 +56,9 @@ export default function MobileAccountMenu({ email }: Props) {
           <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
             Signed in as
           </div>
-          <div className="mt-1 truncate text-sm text-neutral-900">{email}</div>
+          <div className="mt-1 break-all text-sm text-neutral-900" title={email}>
+            {email}
+          </div>
 
           <a
             href="/api/logout"

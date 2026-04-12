@@ -89,6 +89,12 @@ function parseLevelSearchParam(raw: string): string {
   return raw.trim().toUpperCase();
 }
 
+/** TEMP: server logs for lazy deck provisioning (remove when stable). */
+function decksProvisionLog(payload: Record<string, unknown>) {
+  if (process.env.NODE_ENV !== "development" && process.env.VERCEL_ENV !== "preview") return;
+  console.log("[decks/provision]", JSON.stringify(payload));
+}
+
 function levelUrlSortKey(urlVal: string): number {
   if (urlVal === LEVEL_URL_OTHER) return 999;
   return levelRank(urlVal);
@@ -273,15 +279,51 @@ export default async function DecksPage({
 
   let allDecks = (decks as DeckRow[]) ?? [];
 
+  let ranProvisioningRpc = false;
+  let provisionSyncError: {
+    message: string;
+    code?: string;
+    details?: string;
+    hint?: string;
+  } | null = null;
+
   // Provisioning: only pay for sync_default_content when this user has no decks yet.
   if (allDecks.length === 0) {
-    const { error: syncErr } = await supabase.rpc("sync_default_content");
+    ranProvisioningRpc = true;
+    decksProvisionLog({
+      phase: "before_rpc",
+      userId: user.id,
+      deckCount: allDecks.length,
+    });
+
+    const { data: syncRpcData, error: syncErr } = await supabase.rpc("sync_default_content");
+    provisionSyncError = syncErr
+      ? {
+          message: syncErr.message,
+          code: syncErr.code,
+          details: syncErr.details,
+          hint: syncErr.hint,
+        }
+      : null;
+
+    decksProvisionLog({
+      phase: "after_rpc",
+      userId: user.id,
+      syncRpcData,
+      syncError: provisionSyncError,
+    });
+
     if (syncErr) {
-      console.error("sync_default_content error:", syncErr.message);
+      console.error("sync_default_content error:", syncErr.message, syncErr);
     }
 
     const refetch = await loadDecks();
     if (refetch.error) {
+      decksProvisionLog({
+        phase: "refetch_failed",
+        userId: user.id,
+        error: refetch.error,
+      });
       return (
         <div style={{ maxWidth: 920, margin: "40px auto", padding: "0 24px" }}>
           <pre>{JSON.stringify(refetch.error, null, 2)}</pre>
@@ -291,6 +333,12 @@ export default async function DecksPage({
 
     decks = refetch.data;
     allDecks = (decks as DeckRow[]) ?? [];
+
+    decksProvisionLog({
+      phase: "after_refetch",
+      userId: user.id,
+      deckCount: allDecks.length,
+    });
   }
 
   if (allDecks.length === 0) {
@@ -320,9 +368,39 @@ export default async function DecksPage({
           }}
         >
           <b>No decks available yet.</b>
-          <div style={{ color: "var(--foreground-muted)", marginTop: 6 }}>
-            Decks are provided by the creator. Refresh once if you just signed up.
-          </div>
+          {ranProvisioningRpc && provisionSyncError ? (
+            <div style={{ color: "var(--foreground-muted)", marginTop: 10 }}>
+              <div style={{ marginBottom: 8, color: "var(--foreground)" }}>
+                Default decks could not be synced ({provisionSyncError.message}).
+              </div>
+              {(provisionSyncError.code || provisionSyncError.details || provisionSyncError.hint) && (
+                <pre
+                  style={{
+                    margin: 0,
+                    fontSize: 12,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    color: "var(--foreground-muted)",
+                  }}
+                >
+                  {JSON.stringify(
+                    {
+                      code: provisionSyncError.code,
+                      details: provisionSyncError.details,
+                      hint: provisionSyncError.hint,
+                    },
+                    null,
+                    2
+                  )}
+                </pre>
+              )}
+            </div>
+          ) : (
+            <div style={{ color: "var(--foreground-muted)", marginTop: 6 }}>
+              Sync ran successfully but no decks are visible yet. Check that default deck templates exist and that row
+              level security allows you to read your own decks.
+            </div>
+          )}
         </div>
       </div>
     );
