@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
 import {
-  logHardcodedSignupTestResult,
+  logHardcodedSignupTestFullPayload,
   logSignupFormDevDiagnostics,
 } from "@/lib/auth/signupFormDevDiagnostics";
+import {
+  getSupabasePublicEnvDebug,
+  serializeSignUpDataForDebug,
+  serializeUnknownErrorForDebug,
+} from "@/lib/auth/serializeSignUpDebug";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import { Container } from "../components/Container";
@@ -50,21 +55,61 @@ function SignupPageInner() {
 
   const authError = AUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
 
+  const envDbg = SIGNUP_DEBUG_V2 ? getSupabasePublicEnvDebug() : null;
+
+  useEffect(() => {
+    if (!SIGNUP_DEBUG_V2 || process.env.NODE_ENV !== "development") return;
+    console.log("[signup] public env (dev console only)", getSupabasePublicEnvDebug());
+  }, []);
+
   async function runHardcodedSignupTest() {
     setHardcodedTestBusy(true);
     setHardcodedTestResult(null);
-    const { data, error } = await supabase.auth.signUp({
-      email: "plltestsimple@example.com",
-      password: "Testpass123!",
-    });
-    logHardcodedSignupTestResult({ error });
-    if (error) {
-      setHardcodedTestResult(`ERROR: ${error.message}`);
-    } else {
-      setHardcodedTestResult(
-        `OK: signUp returned no error (user/session: ${data.user?.id ?? "none"}). Check Supabase Auth → Users.`
-      );
+
+    const includeStack = process.env.NODE_ENV === "development";
+    const envDebug = getSupabasePublicEnvDebug();
+    if (SIGNUP_DEBUG_V2 && process.env.NODE_ENV === "development") {
+      console.log("[signup][path2] env at click", envDebug);
     }
+
+    type SignUpResult = Awaited<ReturnType<typeof supabase.auth.signUp>>;
+    let data: SignUpResult["data"] | null = null;
+    let error: SignUpResult["error"] | null = null;
+
+    try {
+      const res = await supabase.auth.signUp({
+        email: "plltestsimple@example.com",
+        password: "Testpass123!",
+      });
+      data = res.data;
+      error = res.error;
+    } catch (thrown: unknown) {
+      const payload = {
+        kind: "signUp_threw_before_response" as const,
+        env: envDebug,
+        thrown: serializeUnknownErrorForDebug(thrown, { includeStack }),
+      };
+      logHardcodedSignupTestFullPayload(payload);
+      if (process.env.NODE_ENV === "development") {
+        console.log("[signup][path2 hardcoded] dev console", payload);
+      }
+      setHardcodedTestResult(JSON.stringify(payload, null, 2));
+      setHardcodedTestBusy(false);
+      return;
+    }
+
+    const payload: Record<string, unknown> = {
+      kind: "signUp_resolved",
+      env: envDebug,
+      data: serializeSignUpDataForDebug(data),
+      error: error ? serializeUnknownErrorForDebug(error, { includeStack }) : null,
+    };
+
+    logHardcodedSignupTestFullPayload(payload);
+    if (process.env.NODE_ENV === "development") {
+      console.log("[signup][path2 hardcoded] dev console", payload);
+    }
+    setHardcodedTestResult(JSON.stringify(payload, null, 2));
     setHardcodedTestBusy(false);
   }
 
@@ -187,6 +232,22 @@ function SignupPageInner() {
 
             {SIGNUP_DEBUG_V2 && (
               <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-neutral-900">
+                <div className="mb-2 font-bold text-amber-900">DEV: public env (client)</div>
+                <div className="mb-3 space-y-1 font-mono break-all text-[11px] text-neutral-800">
+                  <div>
+                    <span className="text-amber-800">NEXT_PUBLIC_SUPABASE_URL:</span>{" "}
+                    {envDbg?.NEXT_PUBLIC_SUPABASE_URL || "(empty)"}
+                  </div>
+                  <div>
+                    <span className="text-amber-800">NEXT_PUBLIC_SUPABASE_ANON_KEY present:</span>{" "}
+                    {String(envDbg?.NEXT_PUBLIC_SUPABASE_ANON_KEY_present)}
+                  </div>
+                  <div>
+                    <span className="text-amber-800">NEXT_PUBLIC_SUPABASE_ANON_KEY prefix (12):</span>{" "}
+                    {envDbg?.NEXT_PUBLIC_SUPABASE_ANON_KEY_prefix || "(empty)"}
+                  </div>
+                </div>
+
                 <div className="mb-2 font-bold text-amber-900">DEV: signup debug (last submit)</div>
                 {lastSubmitSnapshot ? (
                   <div className="space-y-1 font-mono break-all">

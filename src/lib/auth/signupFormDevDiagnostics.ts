@@ -45,18 +45,8 @@ export function logSignupFormDevDiagnostics(
   console.log("[signup] password length", passwordLen);
 }
 
-/** Hardcoded ASCII control — console result for path isolation. */
-export function logHardcodedSignupTestResult(result: {
-  error: { message: string; name?: string; status?: number } | null;
-}): void {
+/** Hardcoded signUp — full structured payload (same as on-screen debug). */
+export function logHardcodedSignupTestFullPayload(payload: Record<string, unknown>): void {
   if (!isSignupDebugEnabled()) return;
-  if (result.error) {
-    console.error("[signup][path2 hardcoded] signUp failed", {
-      message: result.error.message,
-      name: result.error.name,
-      status: result.error.status,
-    });
-  } else {
-    console.log("[signup][path2 hardcoded] signUp succeeded (check Supabase Auth → Users)");
-  }
+  console.log("[signup][path2 hardcoded] full signUp debug payload", payload);
 }
