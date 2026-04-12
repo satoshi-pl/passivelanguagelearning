@@ -25,10 +25,16 @@ export async function GET(request: NextRequest) {
   const origin = getPublicOrigin(request);
   const code = requestUrl.searchParams.get("code");
   const next = requestUrl.searchParams.get("next") || "/decks";
+  /** OAuth 2.0 error from the provider (e.g. access_denied) when there is no `code`. */
+  const oauthError = requestUrl.searchParams.get("error");
 
   if (!code) {
     const loginUrl = new URL("/login", origin);
-    loginUrl.searchParams.set("error", "missing_auth_code");
+    // Benign: opened /auth/callback without starting OAuth, prefetch, or cancelled consent
+    // (access_denied) — do not show a misleading "code was missing" error on /login.
+    if (oauthError && oauthError !== "access_denied") {
+      loginUrl.searchParams.set("error", "google_callback_failed");
+    }
     return NextResponse.redirect(loginUrl);
   }
 

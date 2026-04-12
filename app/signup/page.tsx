@@ -18,7 +18,6 @@ import { Button } from "../components/ui/Button";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   google_start_failed: "Could not start Google sign-in.",
-  missing_auth_code: "Google sign-in code was missing.",
   google_callback_failed: "Google sign-in failed. Please try again.",
 };
 
