@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import { Container } from "../components/Container";
@@ -34,7 +35,7 @@ function LoginPageInner() {
 
   const authError = AUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     // Mobile password managers can autofill and auto-submit.
     // Allow login only after an explicit user action (click/Enter).
@@ -44,9 +45,26 @@ function LoginPageInner() {
     setMsg(null);
     setLoading(true);
 
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const emailRaw = String(fd.get("email") ?? "");
+    const passwordRaw = String(fd.get("password") ?? "");
+    const loginEmail = normalizeEmailForAuth(emailRaw);
+
+    setEmail(loginEmail);
+    setPassword(passwordRaw);
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("[login] submit (FormData)", {
+        emailLen: emailRaw.length,
+        passwordLen: passwordRaw.length,
+        cleanedEmailLen: loginEmail.length,
+      });
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: loginEmail,
+      password: passwordRaw,
     });
 
     setLoading(false);
@@ -78,8 +96,13 @@ function LoginPageInner() {
 
             <form onSubmit={onSubmit} className="grid gap-3">
               <div className="grid gap-1">
-                <label className="text-sm text-neutral-700">Email</label>
+                <label className="text-sm text-neutral-700" htmlFor="login-email">
+                  Email
+                </label>
                 <Input
+                  id="login-email"
+                  name="email"
+                  type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -87,12 +110,20 @@ function LoginPageInner() {
                     if (e.key === "Enter") submitIntentRef.current = true;
                   }}
                   autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  inputMode="email"
                 />
               </div>
 
               <div className="grid gap-1">
-                <label className="text-sm text-neutral-700">Password</label>
+                <label className="text-sm text-neutral-700" htmlFor="login-password">
+                  Password
+                </label>
                 <Input
+                  id="login-password"
+                  name="password"
                   placeholder="••••••••"
                   type="password"
                   value={password}

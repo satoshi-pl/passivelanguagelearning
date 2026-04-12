@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseOAuthCallbackClient } from "@/lib/supabase/server";
 
 function getPublicOrigin(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = getPublicOrigin(request);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") || "/decks";
+  const nextRaw = requestUrl.searchParams.get("next") || "/decks";
   /** OAuth 2.0 error from the provider (e.g. access_denied) when there is no `code`. */
   const oauthError = requestUrl.searchParams.get("error");
 
@@ -38,14 +38,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const nextPath =
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/decks";
+  const redirectTarget = new URL(nextPath, origin);
+
+  const response = NextResponse.redirect(redirectTarget);
+  const supabase = createSupabaseOAuthCallbackClient(request, response);
+
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
+    console.error("[auth/callback] exchangeCodeForSession failed", {
+      message: error.message,
+      name: error.name,
+      status: (error as { status?: number }).status,
+    });
     const loginUrl = new URL("/login", origin);
     loginUrl.searchParams.set("error", "google_callback_failed");
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.redirect(new URL(next, origin));
+  if (process.env.NODE_ENV === "development") {
+    console.log("[auth/callback] session established", { userId: data.user?.id ?? null });
+  }
+
+  return response;
 }
