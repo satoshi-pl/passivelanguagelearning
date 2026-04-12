@@ -29,7 +29,7 @@ export async function middlewareSupabase(req: NextRequest) {
   if (code && url.pathname !== "/auth/callback") {
     const callbackUrl = new URL("/auth/callback", getPublicOrigin(req));
     callbackUrl.searchParams.set("code", code);
-    callbackUrl.searchParams.set("next", "/decks");
+    callbackUrl.searchParams.set("next", "/setup");
     return NextResponse.redirect(callbackUrl);
   }
 

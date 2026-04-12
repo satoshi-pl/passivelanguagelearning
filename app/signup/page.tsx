@@ -67,9 +67,8 @@ function SignupPageInner() {
       return setMsg(m);
     }
 
-    // Hard navigation so the next document request includes auth cookies set by signUp.
-    // Client router.push can load /decks before cookies are visible to the server render.
-    window.location.assign("/decks");
+    // Full navigation: session cookies apply, then /setup runs provisioning with clear UX.
+    window.location.assign("/setup");
   }
 
   return (

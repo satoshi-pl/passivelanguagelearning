@@ -71,7 +71,7 @@ export async function NavBar() {
                 </div>
 
                 <span
-                  className="hidden min-w-0 flex-1 truncate text-right text-sm text-neutral-600 md:block"
+                  className="hidden min-h-10 min-w-[14rem] max-w-lg flex-1 truncate rounded-lg bg-neutral-100 px-2.5 text-right text-sm font-semibold leading-10 text-neutral-950 md:block"
                   title={email}
                 >
                   {email}

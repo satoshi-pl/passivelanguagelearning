@@ -1,6 +1,6 @@
 "use client";
 
-const GOOGLE_SIGN_IN_HREF = "/auth/sign-in/google?next=/decks";
+const GOOGLE_SIGN_IN_HREF = "/auth/sign-in/google?next=/setup";
 
 function GoogleLogo() {
   return (

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = getPublicOrigin(request);
   const code = requestUrl.searchParams.get("code");
-  const nextRaw = requestUrl.searchParams.get("next") || "/decks";
+  const nextRaw = requestUrl.searchParams.get("next") || "/setup";
   /** OAuth 2.0 error from the provider (e.g. access_denied) when there is no `code`. */
   const oauthError = requestUrl.searchParams.get("error");
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   }
 
   const nextPath =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/decks";
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
   const redirectTarget = new URL(nextPath, origin);
 
   const response = NextResponse.redirect(redirectTarget);
