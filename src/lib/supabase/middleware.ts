@@ -24,6 +24,14 @@ export async function middlewareSupabase(req: NextRequest) {
   const url = req.nextUrl;
   const code = url.searchParams.get("code");
 
+  // Do not refresh the session on the OAuth return hop. `getUser()` can write auth cookies on
+  // the middleware response while the callback route must read the PKCE verifier from the
+  // incoming request and attach the new session to its own redirect — mixing these has been
+  // linked to intermittent first-attempt `exchangeCodeForSession` failures (preview / new users).
+  if (url.pathname === "/auth/callback") {
+    return NextResponse.next();
+  }
+
   // Some OAuth returns can land on the site root with ?code=...
   // Ensure all auth codes are processed by the dedicated callback route.
   if (code && url.pathname !== "/auth/callback") {

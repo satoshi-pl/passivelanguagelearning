@@ -20,6 +20,11 @@ function getPublicOrigin(request: NextRequest) {
   return `${protocol}://${host}`;
 }
 
+function truncateForLog(s: string | null, max = 160) {
+  if (!s) return null;
+  return s.length <= max ? s : `${s.slice(0, max)}…`;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = getPublicOrigin(request);
@@ -27,6 +32,17 @@ export async function GET(request: NextRequest) {
   const nextRaw = requestUrl.searchParams.get("next") || "/setup";
   /** OAuth 2.0 error from the provider (e.g. access_denied) when there is no `code`. */
   const oauthError = requestUrl.searchParams.get("error");
+  const oauthErrorDescription = requestUrl.searchParams.get("error_description");
+
+  console.info("[auth/callback] inbound", {
+    hasCode: Boolean(code),
+    codeLen: code?.length ?? 0,
+    next: nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "(sanitized)",
+    oauthError: oauthError ?? null,
+    oauthErrorDescription: truncateForLog(oauthErrorDescription),
+    secFetchSite: request.headers.get("sec-fetch-site"),
+    purpose: request.headers.get("purpose"),
+  });
 
   if (!code) {
     const loginUrl = new URL("/login", origin);
@@ -34,6 +50,14 @@ export async function GET(request: NextRequest) {
     // (access_denied) — do not show a misleading "code was missing" error on /login.
     if (oauthError && oauthError !== "access_denied") {
       loginUrl.searchParams.set("error", "google_callback_failed");
+      console.warn("[auth/callback] missing code with oauth error → login", {
+        oauthError,
+        oauthErrorDescription: truncateForLog(oauthErrorDescription),
+      });
+    } else {
+      console.warn("[auth/callback] missing code (benign or prefetch)", {
+        oauthError: oauthError ?? null,
+      });
     }
     return NextResponse.redirect(loginUrl);
   }
@@ -52,15 +76,17 @@ export async function GET(request: NextRequest) {
       message: error.message,
       name: error.name,
       status: (error as { status?: number }).status,
+      code: (error as { code?: string }).code ?? null,
     });
     const loginUrl = new URL("/login", origin);
     loginUrl.searchParams.set("error", "google_callback_failed");
     return NextResponse.redirect(loginUrl);
   }
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("[auth/callback] session established", { userId: data.user?.id ?? null });
-  }
+  console.info("[auth/callback] session established", {
+    userId: data.user?.id ?? null,
+    nextPath,
+  });
 
   return response;
 }

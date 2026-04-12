@@ -29,10 +29,23 @@ export default function SetupDecksClient() {
       if (!cancelled) window.location.assign("/decks");
     }
 
+    async function getSessionWithSettle() {
+      const maxAttempts = 10;
+      const delayMs = 120;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session) return session;
+        if (attempt < maxAttempts - 1) {
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+      }
+      return null;
+    }
+
     async function run() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await getSessionWithSettle();
       if (!session) {
         window.location.assign("/login");
         return;
