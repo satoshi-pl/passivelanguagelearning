@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import RememberDecksHref from "./RememberDecksHref";
 import { redirect } from "next/navigation";
@@ -87,12 +88,6 @@ function parseLevelSearchParam(raw: string): string {
   if (!t) return "";
   if (t === LEVEL_URL_OTHER) return LEVEL_URL_OTHER;
   return raw.trim().toUpperCase();
-}
-
-/** TEMP: server logs for lazy deck provisioning (remove when stable). */
-function decksProvisionLog(payload: Record<string, unknown>) {
-  if (process.env.NODE_ENV !== "development" && process.env.VERCEL_ENV !== "preview") return;
-  console.log("[decks/provision]", JSON.stringify(payload));
 }
 
 function levelUrlSortKey(urlVal: string): number {
@@ -290,13 +285,8 @@ export default async function DecksPage({
   // Provisioning: only pay for sync_default_content when this user has no decks yet.
   if (allDecks.length === 0) {
     ranProvisioningRpc = true;
-    decksProvisionLog({
-      phase: "before_rpc",
-      userId: user.id,
-      deckCount: allDecks.length,
-    });
 
-    const { data: syncRpcData, error: syncErr } = await supabase.rpc("sync_default_content");
+    const { error: syncErr } = await supabase.rpc("sync_default_content");
     provisionSyncError = syncErr
       ? {
           message: syncErr.message,
@@ -306,24 +296,12 @@ export default async function DecksPage({
         }
       : null;
 
-    decksProvisionLog({
-      phase: "after_rpc",
-      userId: user.id,
-      syncRpcData,
-      syncError: provisionSyncError,
-    });
-
     if (syncErr) {
-      console.error("sync_default_content error:", syncErr.message, syncErr);
+      console.error("sync_default_content error:", syncErr.message);
     }
 
     const refetch = await loadDecks();
     if (refetch.error) {
-      decksProvisionLog({
-        phase: "refetch_failed",
-        userId: user.id,
-        error: refetch.error,
-      });
       return (
         <div style={{ maxWidth: 920, margin: "40px auto", padding: "0 24px" }}>
           <pre>{JSON.stringify(refetch.error, null, 2)}</pre>
@@ -333,12 +311,6 @@ export default async function DecksPage({
 
     decks = refetch.data;
     allDecks = (decks as DeckRow[]) ?? [];
-
-    decksProvisionLog({
-      phase: "after_refetch",
-      userId: user.id,
-      deckCount: allDecks.length,
-    });
   }
 
   if (allDecks.length === 0) {

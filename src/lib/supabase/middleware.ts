@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { fetchNoStore } from "./fetchNoStore";
 
 function getPublicOrigin(req: NextRequest) {
   const hostHeader = req.headers.get("x-forwarded-host") || req.headers.get("host");
@@ -38,6 +39,7 @@ export async function middlewareSupabase(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: { fetch: fetchNoStore },
       cookies: {
         getAll() {
           return req.cookies.getAll();
