@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
@@ -22,7 +22,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   google_callback_failed: "Google sign-in failed. Please try again.",
 };
 
-export default function LoginPage() {
+function LoginPageInner() {
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -132,5 +132,31 @@ export default function LoginPage() {
         </Card>
       </div>
     </Container>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <Container>
+      <div className="mx-auto mt-10 max-w-md">
+        <Card>
+          <CardHeader>
+            <CardTitle>Login</CardTitle>
+            <CardDescription>Sign in to continue to your decks.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-neutral-500">Loading…</p>
+          </CardContent>
+        </Card>
+      </div>
+    </Container>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
