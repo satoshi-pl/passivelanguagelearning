@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { NavBar } from "./components/NavBar";
 
 export const metadata = {
@@ -40,6 +41,8 @@ export default async function RootLayout({
         <main className="pt-2 pb-8 sm:pt-3 sm:pb-10 md:py-12">
           {children}
         </main>
+
+        <Analytics />
       </body>
     </html>
   );
