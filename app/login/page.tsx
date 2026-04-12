@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
@@ -24,7 +24,6 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 
 function LoginPageInner() {
   const supabase = createSupabaseBrowserClient();
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
@@ -70,8 +69,8 @@ function LoginPageInner() {
     setLoading(false);
     if (error) return setMsg(error.message);
 
-    router.push("/decks");
-    router.refresh();
+    // Hard navigation so /decks sees session cookies (same timing issue as signup).
+    window.location.assign("/decks");
   }
 
   return (
