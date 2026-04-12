@@ -1,0 +1,237 @@
+PLL AUDIO FIX NOTES
+===================
+
+Date
+----
+2026-04-10
+
+What the bug looked like
+------------------------
+It first looked like:
+- email/password users often had audio
+- Google-login users often did not
+- mobile/favorites sometimes had audio, which made the issue confusing
+
+What the real root cause was
+----------------------------
+The issue was NOT mainly Google OAuth, frontend playback, or mobile audio.
+
+The real root cause was database provisioning:
+
+1. New users get default content through:
+   public.sync_default_content()
+   -> public.sync_default_content_for_user(auth.uid())
+
+2. The old version of public.sync_default_content_for_user created rows in public.pairs
+   with:
+   - deck_id
+   - pair_template_id
+   - word_target
+   - word_native
+   - sentence_target
+   - sentence_native
+   - category
+
+3. But it DID NOT populate:
+   - word_target_audio_url
+   - sentence_target_audio_url
+
+4. pair_templates has no audio columns, so new pairs were created without audio.
+
+5. Older users had audio because older rows had already been enriched/backfilled later.
+
+So the bug was:
+NEWLY PROVISIONED USER-OWNED PAIRS WERE CREATED WITHOUT AUDIO.
+
+What we proved
+--------------
+- Same deck_template_id could exist for two different users
+- Same pair_template_id could exist for two different users
+- Older user's copied pairs had audio URLs
+- Newer user's copied pairs had null audio URLs
+- Therefore the issue was in provisioning / post-provision audio population
+
+Permanent fix for future users
+------------------------------
+Updated public.sync_default_content_for_user so that when new pairs are inserted,
+audio URLs are copied from existing public.pairs rows with the same pair_template_id.
+
+FINAL FUNCTION SQL
+------------------
+create or replace function public.sync_default_content_for_user(p_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+begin
+  -- 1) ensure user has all default decks
+  insert into public.decks (
+    user_id,
+    deck_template_id,
+    name,
+    target_lang,
+    native_lang,
+    level
+  )
+  select
+    p_user_id,
+    dt.id,
+    dt.name,
+    dt.target_lang,
+    dt.native_lang,
+    dt.level
+  from public.deck_templates dt
+  left join public.decks d
+    on d.user_id = p_user_id
+   and d.deck_template_id = dt.id
+  where d.id is null;
+
+  -- 2) ensure user has all default pairs for those decks
+  insert into public.pairs (
+    deck_id,
+    pair_template_id,
+    word_target,
+    word_native,
+    sentence_target,
+    sentence_native,
+    word_target_audio_url,
+    sentence_target_audio_url,
+    category
+  )
+  select
+    d.id as deck_id,
+    pt.id as pair_template_id,
+    pt.word_target,
+    pt.word_native,
+    pt.sentence_target,
+    pt.sentence_native,
+    audio_src.word_target_audio_url,
+    audio_src.sentence_target_audio_url,
+    pt.category
+  from public.pair_templates pt
+  join public.decks d
+    on d.user_id = p_user_id
+   and d.deck_template_id = pt.deck_template_id
+  left join public.pairs p
+    on p.deck_id = d.id
+   and p.pair_template_id = pt.id
+  left join (
+    select
+      pair_template_id,
+      max(word_target_audio_url) as word_target_audio_url,
+      max(sentence_target_audio_url) as sentence_target_audio_url
+    from public.pairs
+    where word_target_audio_url is not null
+       or sentence_target_audio_url is not null
+    group by pair_template_id
+  ) audio_src
+    on audio_src.pair_template_id = pt.id
+  where p.id is null;
+end;
+$function$;
+
+Repair SQL for already-created broken rows
+------------------------------------------
+This query fills missing audio in existing public.pairs rows by copying audio from
+another row with the same pair_template_id:
+
+update public.pairs p
+set
+  word_target_audio_url = coalesce(p.word_target_audio_url, audio_src.word_target_audio_url),
+  sentence_target_audio_url = coalesce(p.sentence_target_audio_url, audio_src.sentence_target_audio_url)
+from (
+  select
+    pair_template_id,
+    max(word_target_audio_url) as word_target_audio_url,
+    max(sentence_target_audio_url) as sentence_target_audio_url
+  from public.pairs
+  where word_target_audio_url is not null
+     or sentence_target_audio_url is not null
+  group by pair_template_id
+) audio_src
+where p.pair_template_id = audio_src.pair_template_id
+  and (
+    p.word_target_audio_url is null
+    or p.sentence_target_audio_url is null
+  );
+
+Manual provisioning fix for a user with no decks
+------------------------------------------------
+If a user exists in auth.users but has no default decks/pairs, run:
+
+select public.sync_default_content_for_user('<USER_ID>');
+
+How remaining true audio gaps were fixed
+----------------------------------------
+After the DB-side provisioning fix and the first backfill, there were still true
+dataset gaps where no audio source existed anywhere yet.
+
+We then used the TTS batch script to generate only missing audio on selected decks.
+
+Relevant script
+---------------
+tts_batch_auto_en_es.js
+
+What the script does
+--------------------
+- Supports English and Spanish target decks
+- Generates MP3s with Google Cloud TTS
+- Uploads them to Supabase Storage bucket: tts
+- Writes URLs back into:
+  - pairs.word_target_audio_url
+  - pairs.sentence_target_audio_url
+- By default only generates missing audio
+- Do NOT use --force true unless you intentionally want to overwrite
+
+Command pattern
+---------------
+node tts_batch_auto_en_es.js --deckIds <comma-separated-deck-ids> --pageSize 50 --sleep 700
+
+Important workflow
+------------------
+1. Identify decks with missing audio
+2. Run the TTS script only on the needed deck IDs
+3. Run the backfill SQL again
+4. Re-check coverage
+
+Important note about duplicate user-owned decks
+-----------------------------------------------
+Many missing items were duplicated across multiple user-owned copies of the same content.
+So it was often enough to:
+- run TTS on ONE source deck
+- then run the backfill SQL
+- and let matching pair_template_id rows inherit the audio
+
+What Cursor audit concluded
+---------------------------
+- The missing-audio bug was DB-side, not mainly app-side
+- app/auth/callback/route.ts was not the real cause
+- app/signup/page.tsx was not the real cause
+- Google auth files are safe to leave as-is
+- Optional cleanup later:
+  remove redundant hydrateMissingAudioForPairs logic if desired
+- Keep 0.0.0.0 -> localhost auth redirect normalization for local dev/OAuth hygiene
+
+Final result achieved
+---------------------
+Final check on public.pairs:
+
+- total_pairs: 110649
+- rows_with_both_audio: 110649
+- rows_with_any_missing_audio: 0
+- rows_with_both_missing_audio: 0
+
+Meaning:
+100% audio coverage in public.pairs
+
+Short summary for future reference
+----------------------------------
+If audio ever seems missing again for new users, first check:
+1. public.sync_default_content_for_user
+2. whether new public.pairs rows are being created with audio URLs
+3. whether a backfill is needed
+4. whether newly imported content has no audio source yet
+
+This was NOT mainly a Google auth bug.
+It was a provisioning + data enrichment bug.

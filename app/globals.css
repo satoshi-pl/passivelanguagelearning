@@ -1,26 +1,552 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f5f5f4;
+  --surface: rgba(255, 255, 255, 0.86);
+  --surface-solid: #ffffff;
+  --surface-muted: #f5f5f4;
+  --surface-soft: #fafaf9;
   --foreground: #171717;
+  --foreground-muted: #5f5f5a;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  --shell-halo: radial-gradient(ellipse at top, rgba(0, 0, 0, 0.045), transparent 62%);
+  --toggle-bg: #e7e5e4;
+  --toggle-fg: #111827;
+  --toggle-thumb: #ffffff;
+  --toggle-thumb-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+  --report-soft-bg: #fff1f2;
+  --report-soft-border: #fecdd3;
+  --report-soft-text: #be123c;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html[data-theme="dark"] {
+  --background: #0d1117;
+  --surface: rgba(19, 24, 33, 0.88);
+  --surface-solid: #131821;
+  --surface-muted: #161d27;
+  --surface-soft: #1b2430;
+  --foreground: #edf2f7;
+  --foreground-muted: #9aa4b2;
+  --border: rgba(148, 163, 184, 0.22);
+  --border-strong: rgba(148, 163, 184, 0.32);
+  --shadow: 0 24px 48px rgba(0, 0, 0, 0.34);
+  --shell-halo: radial-gradient(ellipse at top, rgba(96, 165, 250, 0.14), transparent 60%);
+  --toggle-bg: #253041;
+  --toggle-fg: #e5edf8;
+  --toggle-thumb: #f8fafc;
+  --toggle-thumb-shadow: 0 2px 10px rgba(2, 6, 23, 0.55);
+  --report-soft-bg: rgba(190, 24, 93, 0.12);
+  --report-soft-border: rgba(244, 114, 182, 0.3);
+  --report-soft-text: #f9a8d4;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--background);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.app-shell-glow {
+  background: var(--background);
+}
+
+.app-shell-glow__halo {
+  position: absolute;
+  inset: 0;
+  background: var(--shell-halo);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground-muted);
+  border-radius: 999px;
+  padding: 0.35rem 0.45rem 0.35rem 0.7rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--border-strong);
+  color: var(--foreground);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+.theme-toggle__label {
+  font-weight: 600;
+}
+
+.theme-toggle__track {
+  position: relative;
+  width: 2.7rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  background: var(--toggle-bg);
+  transition: background-color 180ms ease;
+}
+
+.theme-toggle__thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.16rem;
+  width: 1.12rem;
+  height: 1.12rem;
+  border-radius: 999px;
+  background: var(--toggle-thumb);
+  box-shadow: var(--toggle-thumb-shadow);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.audio-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--surface-solid);
+  color: var(--foreground);
+  border-radius: 0.9rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.audio-switch:hover {
+  border-color: var(--border-strong);
+}
+
+.audio-switch:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+.audio-switch__track {
+  position: relative;
+  width: 2.4rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  background: var(--toggle-bg);
+  transition: background-color 180ms ease;
+}
+
+.audio-switch__thumb {
+  position: absolute;
+  top: 0.12rem;
+  left: 0.14rem;
+  width: 1.02rem;
+  height: 1.02rem;
+  border-radius: 999px;
+  background: var(--toggle-thumb);
+  box-shadow: var(--toggle-thumb-shadow);
+  transition: transform 180ms ease;
+}
+
+.audio-switch--on .audio-switch__thumb {
+  transform: translateX(1.08rem);
+}
+
+html[data-theme="dark"] .theme-toggle {
+  color: var(--toggle-fg);
+}
+
+html[data-theme="dark"] .theme-toggle__thumb {
+  transform: translateX(1.22rem);
+}
+
+html[data-theme="dark"] ::selection {
+  background: rgba(96, 165, 250, 0.28);
+}
+
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-white\/80 {
+  background-color: var(--surface) !important;
+}
+
+html[data-theme="dark"] .bg-neutral-50 {
+  background-color: var(--surface-muted) !important;
+}
+
+html[data-theme="dark"] .bg-neutral-100 {
+  background-color: var(--surface-soft) !important;
+}
+
+html[data-theme="dark"] .border-neutral-200,
+html[data-theme="dark"] .border-black\/5,
+html[data-theme="dark"] .border-black\/10 {
+  border-color: var(--border) !important;
+}
+
+html[data-theme="dark"] .text-neutral-900,
+html[data-theme="dark"] .text-neutral-800,
+html[data-theme="dark"] .text-black {
+  color: var(--foreground) !important;
+}
+
+html[data-theme="dark"] .text-neutral-700,
+html[data-theme="dark"] .text-neutral-600,
+html[data-theme="dark"] .text-neutral-500,
+html[data-theme="dark"] .text-neutral-400,
+html[data-theme="dark"] .text-black\/40,
+html[data-theme="dark"] .opacity-60,
+html[data-theme="dark"] .opacity-70,
+html[data-theme="dark"] .opacity-75,
+html[data-theme="dark"] .opacity-80 {
+  color: var(--foreground-muted) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] [class*="hover:bg-neutral-50"]:hover,
+html[data-theme="dark"] [class*="hover:bg-neutral-100"]:hover,
+html[data-theme="dark"] [class*="hover:bg-black/5"]:hover,
+html[data-theme="dark"] [class*="hover:bg-black/3"]:hover {
+  background-color: var(--surface-soft) !important;
+}
+
+html[data-theme="dark"] [class*="bg-black/5"] {
+  background-color: rgba(148, 163, 184, 0.1) !important;
+}
+
+html[data-theme="dark"] [class*="bg-black/10"] {
+  background-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+html[data-theme="dark"] [class*="text-white"] {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  color: var(--foreground);
+  caret-color: var(--foreground);
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--foreground-muted);
+}
+
+html[data-theme="dark"] .shadow-sm,
+html[data-theme="dark"] .shadow-lg,
+html[data-theme="dark"] [class*="shadow-[0_1px_0_rgba(0,0,0,0.04)]"] {
+  box-shadow: var(--shadow) !important;
+}
+
+html[data-theme="dark"] .bg-red-500,
+html[data-theme="dark"] .bg-red-600 {
+  background-color: #dc2626 !important;
+}
+
+html[data-theme="dark"] .hover\:bg-red-600:hover,
+html[data-theme="dark"] .hover\:bg-red-700:hover {
+  background-color: #b91c1c !important;
+}
+
+html[data-theme="dark"] .border-rose-200 {
+  border-color: var(--report-soft-border) !important;
+}
+
+html[data-theme="dark"] .bg-rose-50 {
+  background-color: var(--report-soft-bg) !important;
+}
+
+html[data-theme="dark"] .text-rose-700,
+html[data-theme="dark"] .text-rose-400 {
+  color: var(--report-soft-text) !important;
+}
+
+html[data-theme="dark"] .learning-translation {
+  color: #cfd8e6 !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .learning-support-text {
+  color: #b7c2d1 !important;
+  opacity: 1 !important;
+}
+
+/* My decks: progress row — label / % / count separated on small screens */
+.deck-progress-bar {
+  margin-top: 10px;
+  max-width: 560px;
+}
+
+.deck-progress-bar__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--foreground-muted);
+}
+
+.deck-progress-bar__label {
+  color: var(--foreground-muted);
+}
+
+.deck-progress-bar__stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 4px;
+}
+
+.deck-progress-bar__pct {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.deck-progress-bar__sep {
+  color: var(--foreground-muted);
+  opacity: 0.9;
+  user-select: none;
+}
+
+.deck-progress-bar__count {
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .deck-progress-bar__meta {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 0;
+    width: 100%;
+  }
+
+  .deck-progress-bar__stats {
+    flex-shrink: 0;
+    justify-content: flex-end;
+    column-gap: 8px;
+  }
+}
+
+.deck-action-button {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+html[data-theme="dark"] .hero-slogan {
+  background-image: linear-gradient(
+    90deg,
+    #f8fafc 0%,
+    #eef3fb 58%,
+    #8fb4ff 100%
+  ) !important;
+}
+
+/* Passive / active review: Review 5–20 stay one row on desktop; 2×2 grid on small screens */
+.deck-review-size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.deck-review-size-row .deck-review-size-link {
+  display: inline-block;
+  text-align: center;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .deck-review-size-row {
+    flex-wrap: nowrap;
+  }
+
+  .deck-review-size-row .deck-review-size-link {
+    flex: 1 1 0;
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .preview-mobile-card--base {
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .preview-mobile-card--selected {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .preview-mobile-empty--base {
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .deck-mode-row {
+    margin-inline: auto;
+    max-width: 24rem;
+    justify-content: center !important;
+    gap: 0.625rem !important;
+  }
+
+  .deck-mode-button {
+    flex: 1 1 9.75rem;
+    max-width: 11.25rem !important;
+    width: auto !important;
+  }
+
+  .deck-action-row {
+    gap: 0.625rem !important;
+  }
+
+  .deck-action-button {
+    min-height: 46px;
+    border-radius: 14px !important;
+    padding: 11px 14px !important;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  .deck-review-size-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    column-gap: 0.625rem !important;
+    row-gap: 0.625rem !important;
+    max-width: 21rem;
+    margin-inline: auto;
+  }
+
+  .deck-review-size-row .deck-review-size-link {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .deck-learn-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    column-gap: 0.625rem !important;
+    row-gap: 0.625rem !important;
+    max-width: 21rem;
+  }
+
+  .deck-learn-button {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 44px;
+    padding: 9px 10px !important;
+    font-size: 0.88rem;
+  }
+
+  .deck-actions-group {
+    margin-top: 0.2rem;
+  }
+
+  .deck-actions-group .deck-optional-section {
+    margin-top: 0.8rem !important;
+  }
+
+  .deck-action-button--primary {
+    background: color-mix(in srgb, var(--surface-solid) 84%, var(--surface-soft)) !important;
+    border-color: color-mix(in srgb, var(--border) 88%, transparent) !important;
+  }
+
+  .deck-action-button--secondary {
+    background: color-mix(in srgb, var(--surface-muted) 76%, var(--surface-solid)) !important;
+    border-color: color-mix(in srgb, var(--border) 92%, transparent) !important;
+  }
+
+  /* Dark + mobile: deck CTAs (Learn N, Active N, Passive review, etc.) — lift off the card */
+  html[data-theme="dark"] .deck-action-button {
+    border-color: var(--border-strong) !important;
+    color: var(--foreground) !important;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.07);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 2px 12px rgba(0, 0, 0, 0.42) !important;
+  }
+
+  html[data-theme="dark"] .deck-action-button--primary {
+    background: var(--surface-soft) !important;
+    border-color: var(--border-strong) !important;
+    color: var(--foreground) !important;
+  }
+
+  html[data-theme="dark"] .deck-action-button--secondary {
+    background: color-mix(in srgb, var(--surface-soft) 55%, var(--surface-muted) 45%) !important;
+    border-color: var(--border-strong) !important;
+    color: var(--foreground) !important;
+  }
+
+  html[data-theme="dark"] .deck-action-button:focus-visible {
+    outline: 2px solid rgba(96, 165, 250, 0.55);
+    outline-offset: 2px;
+  }
+
+  html[data-theme="dark"] .deck-action-button:active {
+    transform: scale(0.99);
+  }
+
+  html[data-theme="dark"] .preview-shell {
+    background: color-mix(in srgb, var(--surface) 88%, var(--surface-soft)) !important;
+    border-color: color-mix(in srgb, var(--border) 92%, transparent) !important;
+  }
+
+  html[data-theme="dark"] .preview-mobile-list .preview-mobile-card {
+    border-color: color-mix(in srgb, var(--border) 94%, transparent) !important;
+    background: color-mix(in srgb, var(--surface-soft) 90%, var(--surface-solid)) !important;
+  }
+
+  html[data-theme="dark"] .preview-mobile-list .preview-mobile-card--selected {
+    background: color-mix(in srgb, var(--surface-muted) 84%, var(--surface-soft)) !important;
+  }
+
+  html[data-theme="dark"] .preview-mobile-empty {
+    border-color: color-mix(in srgb, var(--border) 94%, transparent) !important;
+    background: color-mix(in srgb, var(--surface-soft) 88%, var(--surface-solid)) !important;
+  }
+}
+
+/*
+ * Mobile practice (< sm): header is not sticky so dictionary + nav scroll away and
+ * the learning card can use the full viewport height. Bottom action bar stays fixed in PracticeScreen.
+ * Desktop: body class is only set on practice routes; these rules are max-width so md+ unchanged.
+ */
+@media (max-width: 639px) {
+  body.pll-mobile-practice > header {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  body.pll-mobile-practice > main {
+    padding-top: 0.375rem;
+  }
 }
