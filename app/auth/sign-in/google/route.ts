@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { fetchNoStore } from "@/lib/supabase/fetchNoStore";
 
 function getPublicOrigin(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -20,28 +21,69 @@ function getPublicOrigin(request: NextRequest) {
   return `${protocol}://${host}`;
 }
 
+type CookieToSet = { name: string; value: string; options?: Parameters<NextResponse["cookies"]["set"]>[2] };
+
+/**
+ * PKCE + OAuth state cookies must be attached to the same {@link NextResponse} that redirects
+ * to Google. Using `cookies()` from `next/headers` here can fail silently (see try/catch in
+ * createSupabaseServerClient), which breaks exchangeCodeForSession intermittently — especially
+ * for new users.
+ */
+function createSupabaseGoogleOAuthStartClient(request: NextRequest, pendingCookies: CookieToSet[]) {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: { fetch: fetchNoStore },
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          for (const { name, value, options } of cookiesToSet) {
+            pendingCookies.push({ name, value, options });
+          }
+        },
+      },
+    }
+  );
+}
+
+function applyPendingCookies(res: NextResponse, pending: CookieToSet[]) {
+  for (const { name, value, options } of pending) {
+    res.cookies.set(name, value, options);
+  }
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = getPublicOrigin(request);
   const next = requestUrl.searchParams.get("next") || "/setup";
 
-  const redirectTo =
-    `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
-  const supabase = await createSupabaseServerClient();
+  const pendingCookies: CookieToSet[] = [];
+  const supabase = createSupabaseGoogleOAuthStartClient(request, pendingCookies);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo,
+      queryParams: {
+        prompt: "select_account",
+      },
     },
   });
 
   if (error || !data.url) {
     const loginUrl = new URL("/login", origin);
     loginUrl.searchParams.set("error", "google_start_failed");
-    return NextResponse.redirect(loginUrl);
+    const res = NextResponse.redirect(loginUrl);
+    applyPendingCookies(res, pendingCookies);
+    return res;
   }
 
-  return NextResponse.redirect(data.url);
+  const res = NextResponse.redirect(data.url);
+  applyPendingCookies(res, pendingCookies);
+  return res;
 }

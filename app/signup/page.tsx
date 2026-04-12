@@ -19,7 +19,8 @@ import { Button } from "../components/ui/Button";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   google_start_failed: "Could not start Google sign-in.",
-  google_callback_failed: "Google sign-in failed. Please try again.",
+  google_callback_failed:
+    "Google could not finish sign-in. Try again, pick a different Google account if needed, or use email.",
 };
 
 function SignupPageInner() {
