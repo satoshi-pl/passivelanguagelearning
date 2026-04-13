@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
 
   const callbackUrl = new URL("/auth/callback", requestUrl.origin);
   callbackUrl.searchParams.set("next", next);
+  callbackUrl.searchParams.set("app_origin", requestUrl.origin);
   if (retry === "1") {
     callbackUrl.searchParams.set("retry", "1");
   }
@@ -66,6 +67,7 @@ export async function GET(request: NextRequest) {
   console.info("[auth/google/start] begin", {
     next,
     retryAttempt: retry ?? "0",
+    appOrigin: requestUrl.origin,
     redirectToHasRetry: callbackUrl.searchParams.get("retry") === "1",
   });
 
@@ -96,6 +98,7 @@ export async function GET(request: NextRequest) {
 
   console.info("[auth/google/start] redirecting_to_provider", {
     retryAttempt: retry ?? "0",
+    appOrigin: requestUrl.origin,
     redirectToHasRetry: callbackUrl.searchParams.get("retry") === "1",
   });
 

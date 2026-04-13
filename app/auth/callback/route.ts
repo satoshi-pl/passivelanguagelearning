@@ -31,8 +31,36 @@ function summarizeOAuthCookies(request: NextRequest) {
   };
 }
 
+function getSafeAppOrigin(appOriginRaw: string | null, fallbackOrigin: string) {
+  if (!appOriginRaw) return fallbackOrigin;
+  try {
+    const appOriginUrl = new URL(appOriginRaw);
+    const fallbackUrl = new URL(fallbackOrigin);
+    const host = appOriginUrl.hostname.toLowerCase();
+    const fallbackHost = fallbackUrl.hostname.toLowerCase();
+    const allowed =
+      host === fallbackHost ||
+      host === "passivelanguagelearning.io" ||
+      host === "www.passivelanguagelearning.io" ||
+      host.endsWith(".vercel.app") ||
+      host === "localhost" ||
+      host === "127.0.0.1";
+    if (!allowed) return fallbackOrigin;
+    return `${appOriginUrl.protocol}//${appOriginUrl.host}`;
+  } catch {
+    return fallbackOrigin;
+  }
+}
+
+function toAppRedirectTarget(path: string, appOrigin: string, requestOrigin: string) {
+  if (appOrigin === requestOrigin) return path;
+  return new URL(path, appOrigin);
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
+  const appOriginRaw = requestUrl.searchParams.get("app_origin");
+  const appOrigin = getSafeAppOrigin(appOriginRaw, requestUrl.origin);
   const code = requestUrl.searchParams.get("code");
   const nextRaw = requestUrl.searchParams.get("next") || "/setup";
   const retryAttempt = requestUrl.searchParams.get("retry");
@@ -43,6 +71,9 @@ export async function GET(request: NextRequest) {
   console.info("[auth/callback] inbound", {
     hasCode: Boolean(code),
     codeLen: code?.length ?? 0,
+    appOriginRaw,
+    appOriginEffective: appOrigin,
+    crossOriginCallback: appOrigin !== requestUrl.origin,
     retryAttempt: retryAttempt ?? "0",
     hasRetry1: retryAttempt === "1",
     next: nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "(sanitized)",
@@ -68,12 +99,12 @@ export async function GET(request: NextRequest) {
         oauthError: oauthError ?? null,
       });
     }
-    return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`);
+    return redirectNoStore(toAppRedirectTarget(`${loginUrl.pathname}${loginUrl.search}`, appOrigin, requestUrl.origin));
   }
 
   const nextPath =
     nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
-  const response = redirectNoStore(nextPath);
+  const response = redirectNoStore(toAppRedirectTarget(nextPath, appOrigin, requestUrl.origin));
   const supabase = createSupabaseOAuthCallbackClient(request, response);
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -93,13 +124,16 @@ export async function GET(request: NextRequest) {
       const restartUrl = new URL("/auth/sign-in/google", requestUrl.origin);
       restartUrl.searchParams.set("next", nextPath);
       restartUrl.searchParams.set("retry", "1");
+      restartUrl.searchParams.set("app_origin", appOrigin);
       console.warn("[auth/callback] exchange failed -> restarting OAuth once", {
         retryAttempt: retryAttempt ?? "0",
         automaticRestartTaken: true,
         failureStage: "before_retry",
         restartUrl: restartUrl.toString(),
       });
-      return redirectNoStore(`${restartUrl.pathname}${restartUrl.search}`);
+      return redirectNoStore(
+        toAppRedirectTarget(`${restartUrl.pathname}${restartUrl.search}`, appOrigin, requestUrl.origin)
+      );
     }
 
     console.error("[auth/callback] exchange failed on retry=1 -> login error", {
@@ -110,7 +144,7 @@ export async function GET(request: NextRequest) {
     const loginUrl = new URL("/login", requestUrl.origin);
     loginUrl.searchParams.set("error", "google_callback_failed");
     loginUrl.searchParams.set("retry", "1");
-    return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`);
+    return redirectNoStore(toAppRedirectTarget(`${loginUrl.pathname}${loginUrl.search}`, appOrigin, requestUrl.origin));
   }
 
   console.info("[auth/callback] session established", {
