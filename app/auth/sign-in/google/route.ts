@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { fetchNoStore } from "@/lib/supabase/fetchNoStore";
 
+export const dynamic = "force-dynamic";
+
+const NO_STORE_REDIRECT_HEADERS = {
+  "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
+function redirectNoStore(url: string | URL) {
+  return NextResponse.redirect(url, {
+    status: 302,
+    headers: NO_STORE_REDIRECT_HEADERS,
+  });
+}
+
 function getPublicOrigin(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const hostHeader = request.headers.get("x-forwarded-host") || request.headers.get("host");
@@ -59,8 +74,20 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = getPublicOrigin(request);
   const next = requestUrl.searchParams.get("next") || "/setup";
+  const retry = requestUrl.searchParams.get("retry");
 
-  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  const callbackUrl = new URL("/auth/callback", origin);
+  callbackUrl.searchParams.set("next", next);
+  if (retry === "1") {
+    callbackUrl.searchParams.set("retry", "1");
+  }
+  const redirectTo = callbackUrl.toString();
+
+  console.info("[auth/google/start] begin", {
+    next,
+    retryAttempt: retry ?? "0",
+    redirectToHasRetry: callbackUrl.searchParams.get("retry") === "1",
+  });
 
   const pendingCookies: CookieToSet[] = [];
   const supabase = createSupabaseGoogleOAuthStartClient(request, pendingCookies);
@@ -76,14 +103,23 @@ export async function GET(request: NextRequest) {
   });
 
   if (error || !data.url) {
+    console.error("[auth/google/start] signInWithOAuth failed", {
+      message: error?.message ?? "missing_data_url",
+      retryAttempt: retry ?? "0",
+    });
     const loginUrl = new URL("/login", origin);
     loginUrl.searchParams.set("error", "google_start_failed");
-    const res = NextResponse.redirect(loginUrl);
+    const res = redirectNoStore(loginUrl);
     applyPendingCookies(res, pendingCookies);
     return res;
   }
 
-  const res = NextResponse.redirect(data.url);
+  console.info("[auth/google/start] redirecting_to_provider", {
+    retryAttempt: retry ?? "0",
+    redirectToHasRetry: callbackUrl.searchParams.get("retry") === "1",
+  });
+
+  const res = redirectNoStore(data.url);
   applyPendingCookies(res, pendingCookies);
   return res;
 }

@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseOAuthCallbackClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
+const NO_STORE_REDIRECT_HEADERS = {
+  "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
+function redirectNoStore(url: string | URL) {
+  return NextResponse.redirect(url, {
+    status: 302,
+    headers: NO_STORE_REDIRECT_HEADERS,
+  });
+}
+
 function getPublicOrigin(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const hostHeader = request.headers.get("x-forwarded-host") || request.headers.get("host");
@@ -25,11 +40,22 @@ function truncateForLog(s: string | null, max = 160) {
   return s.length <= max ? s : `${s.slice(0, max)}…`;
 }
 
+function summarizeOAuthCookies(request: NextRequest) {
+  const names = request.cookies.getAll().map((c) => c.name);
+  return {
+    cookieCount: names.length,
+    hasCodeVerifierCookie: names.some((n) => n.includes("-auth-token-code-verifier")),
+    hasAuthTokenCookie: names.some((n) => n.includes("-auth-token")),
+    hasStateCookie: names.some((n) => n.includes("oauth-state")),
+  };
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const origin = getPublicOrigin(request);
   const code = requestUrl.searchParams.get("code");
   const nextRaw = requestUrl.searchParams.get("next") || "/setup";
+  const retryAttempt = requestUrl.searchParams.get("retry");
   /** OAuth 2.0 error from the provider (e.g. access_denied) when there is no `code`. */
   const oauthError = requestUrl.searchParams.get("error");
   const oauthErrorDescription = requestUrl.searchParams.get("error_description");
@@ -37,11 +63,14 @@ export async function GET(request: NextRequest) {
   console.info("[auth/callback] inbound", {
     hasCode: Boolean(code),
     codeLen: code?.length ?? 0,
+    retryAttempt: retryAttempt ?? "0",
+    hasRetry1: retryAttempt === "1",
     next: nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "(sanitized)",
     oauthError: oauthError ?? null,
     oauthErrorDescription: truncateForLog(oauthErrorDescription),
     secFetchSite: request.headers.get("sec-fetch-site"),
     purpose: request.headers.get("purpose"),
+    ...summarizeOAuthCookies(request),
   });
 
   if (!code) {
@@ -59,14 +88,14 @@ export async function GET(request: NextRequest) {
         oauthError: oauthError ?? null,
       });
     }
-    return NextResponse.redirect(loginUrl);
+    return redirectNoStore(loginUrl);
   }
 
   const nextPath =
     nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
   const redirectTarget = new URL(nextPath, origin);
 
-  const response = NextResponse.redirect(redirectTarget);
+  const response = redirectNoStore(redirectTarget);
   const supabase = createSupabaseOAuthCallbackClient(request, response);
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -77,10 +106,28 @@ export async function GET(request: NextRequest) {
       name: error.name,
       status: (error as { status?: number }).status,
       code: (error as { code?: string }).code ?? null,
+      retryAttempt: retryAttempt ?? "0",
+    });
+
+    // Pattern observed in preview: first callback can fail, but immediately retrying OAuth with
+    // the same account often succeeds. Retry once automatically before showing login error.
+    if (retryAttempt !== "1") {
+      const restartUrl = new URL("/auth/sign-in/google", origin);
+      restartUrl.searchParams.set("next", nextPath);
+      restartUrl.searchParams.set("retry", "1");
+      console.warn("[auth/callback] exchange failed -> restarting OAuth once", {
+        retryAttempt: retryAttempt ?? "0",
+        restartUrl: restartUrl.toString(),
+      });
+      return redirectNoStore(restartUrl);
+    }
+
+    console.error("[auth/callback] exchange failed on retry=1 -> login error", {
+      retryAttempt: retryAttempt ?? "0",
     });
     const loginUrl = new URL("/login", origin);
     loginUrl.searchParams.set("error", "google_callback_failed");
-    return NextResponse.redirect(loginUrl);
+    return redirectNoStore(loginUrl);
   }
 
   console.info("[auth/callback] session established", {
