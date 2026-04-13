@@ -99,7 +99,7 @@ export default function SetupDecksClient() {
     if (rpcErr) {
       setIsSubmittingPairs(false);
       setPhase("error");
-      setDetail(rpcErr.message);
+      setDetail(`Could not provision selected pairs: ${rpcErr.message}`);
       return;
     }
 
@@ -127,7 +127,7 @@ export default function SetupDecksClient() {
       if (cancelledRef.current) return;
       if (qErr) {
         setPhase("error");
-        setDetail(qErr.message);
+        setDetail(`Could not check your existing decks: ${qErr.message}`);
         await new Promise((r) => setTimeout(r, 2500));
         await goDecks();
         return;
@@ -140,11 +140,19 @@ export default function SetupDecksClient() {
 
       const { data: pairRows, error: pairErr } = await supabaseRef.current
         .from("deck_templates")
-        .select("target_lang,native_lang");
+        .select("target_lang,native_lang")
+        .order("target_lang", { ascending: true })
+        .order("native_lang", { ascending: true });
       if (cancelledRef.current) return;
       if (pairErr) {
         setPhase("error");
-        setDetail(pairErr.message);
+        const msg = pairErr.message || "Unknown error while loading language pairs.";
+        const lower = msg.toLowerCase();
+        if (pairErr.code === "42501" || lower.includes("permission denied") || lower.includes("row-level security")) {
+          setDetail("Language pairs could not be loaded due to permissions. Please contact support.");
+        } else {
+          setDetail(`Could not load language pairs: ${msg}`);
+        }
         return;
       }
 
@@ -163,7 +171,9 @@ export default function SetupDecksClient() {
       }
       if (targets.length === 0) {
         setPhase("error");
-        setDetail("No language pairs are available yet.");
+        setDetail(
+          "No language pairs are currently available for onboarding. Please try again shortly or contact support."
+        );
         return;
       }
 
