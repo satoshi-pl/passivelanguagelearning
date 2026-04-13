@@ -16,26 +16,6 @@ function redirectNoStore(url: string | URL) {
   });
 }
 
-function getPublicOrigin(request: NextRequest) {
-  const requestUrl = new URL(request.url);
-  const protoHeader = request.headers.get("x-forwarded-proto");
-
-  // Keep redirects on the same host that received the request (preview stays preview,
-  // production stays production). Do not prioritize x-forwarded-host here.
-  let host = (requestUrl.host || request.headers.get("host") || "").trim();
-  if (!host) host = requestUrl.host;
-
-  const hostLower = host.toLowerCase();
-  if (hostLower.startsWith("0.0.0.0")) {
-    host = host.replace(/^0\.0\.0\.0/i, "localhost");
-  } else if (hostLower === "::1" || hostLower === "[::1]") {
-    host = "localhost";
-  }
-
-  const protocol = (protoHeader || requestUrl.protocol.replace(":", "") || "http").toLowerCase();
-  return `${protocol}://${host}`;
-}
-
 function truncateForLog(s: string | null, max = 160) {
   if (!s) return null;
   return s.length <= max ? s : `${s.slice(0, max)}…`;
@@ -53,7 +33,6 @@ function summarizeOAuthCookies(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const origin = getPublicOrigin(request);
   const code = requestUrl.searchParams.get("code");
   const nextRaw = requestUrl.searchParams.get("next") || "/setup";
   const retryAttempt = requestUrl.searchParams.get("retry");
@@ -75,7 +54,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (!code) {
-    const loginUrl = new URL("/login", origin);
+    const loginUrl = new URL("/login", requestUrl.origin);
     // Benign: opened /auth/callback without starting OAuth, prefetch, or cancelled consent
     // (access_denied) — do not show a misleading "code was missing" error on /login.
     if (oauthError && oauthError !== "access_denied") {
@@ -89,14 +68,12 @@ export async function GET(request: NextRequest) {
         oauthError: oauthError ?? null,
       });
     }
-    return redirectNoStore(loginUrl);
+    return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`);
   }
 
   const nextPath =
     nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
-  const redirectTarget = new URL(nextPath, origin);
-
-  const response = redirectNoStore(redirectTarget);
+  const response = redirectNoStore(nextPath);
   const supabase = createSupabaseOAuthCallbackClient(request, response);
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -113,7 +90,7 @@ export async function GET(request: NextRequest) {
     // Pattern observed in preview: first callback can fail, but immediately retrying OAuth with
     // the same account often succeeds. Retry once automatically before showing login error.
     if (retryAttempt !== "1") {
-      const restartUrl = new URL("/auth/sign-in/google", origin);
+      const restartUrl = new URL("/auth/sign-in/google", requestUrl.origin);
       restartUrl.searchParams.set("next", nextPath);
       restartUrl.searchParams.set("retry", "1");
       console.warn("[auth/callback] exchange failed -> restarting OAuth once", {
@@ -122,7 +99,7 @@ export async function GET(request: NextRequest) {
         failureStage: "before_retry",
         restartUrl: restartUrl.toString(),
       });
-      return redirectNoStore(restartUrl);
+      return redirectNoStore(`${restartUrl.pathname}${restartUrl.search}`);
     }
 
     console.error("[auth/callback] exchange failed on retry=1 -> login error", {
@@ -130,10 +107,10 @@ export async function GET(request: NextRequest) {
       automaticRestartTaken: false,
       failureStage: "retry_1",
     });
-    const loginUrl = new URL("/login", origin);
+    const loginUrl = new URL("/login", requestUrl.origin);
     loginUrl.searchParams.set("error", "google_callback_failed");
     loginUrl.searchParams.set("retry", "1");
-    return redirectNoStore(loginUrl);
+    return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`);
   }
 
   console.info("[auth/callback] session established", {

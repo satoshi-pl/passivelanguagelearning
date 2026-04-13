@@ -17,26 +17,6 @@ function redirectNoStore(url: string | URL) {
   });
 }
 
-function getPublicOrigin(request: NextRequest) {
-  const requestUrl = new URL(request.url);
-  const protoHeader = request.headers.get("x-forwarded-proto");
-
-  // Keep redirects on the same host that received the request (preview stays preview,
-  // production stays production). Do not prioritize x-forwarded-host here.
-  let host = (requestUrl.host || request.headers.get("host") || "").trim();
-  if (!host) host = requestUrl.host;
-
-  const hostLower = host.toLowerCase();
-  if (hostLower.startsWith("0.0.0.0")) {
-    host = host.replace(/^0\.0\.0\.0/i, "localhost");
-  } else if (hostLower === "::1" || hostLower === "[::1]") {
-    host = "localhost";
-  }
-
-  const protocol = (protoHeader || requestUrl.protocol.replace(":", "") || "http").toLowerCase();
-  return `${protocol}://${host}`;
-}
-
 type CookieToSet = { name: string; value: string; options?: Parameters<NextResponse["cookies"]["set"]>[2] };
 
 /**
@@ -73,11 +53,10 @@ function applyPendingCookies(res: NextResponse, pending: CookieToSet[]) {
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const origin = getPublicOrigin(request);
   const next = requestUrl.searchParams.get("next") || "/setup";
   const retry = requestUrl.searchParams.get("retry");
 
-  const callbackUrl = new URL("/auth/callback", origin);
+  const callbackUrl = new URL("/auth/callback", requestUrl.origin);
   callbackUrl.searchParams.set("next", next);
   if (retry === "1") {
     callbackUrl.searchParams.set("retry", "1");
@@ -108,9 +87,9 @@ export async function GET(request: NextRequest) {
       message: error?.message ?? "missing_data_url",
       retryAttempt: retry ?? "0",
     });
-    const loginUrl = new URL("/login", origin);
+    const loginUrl = new URL("/login", requestUrl.origin);
     loginUrl.searchParams.set("error", "google_start_failed");
-    const res = redirectNoStore(loginUrl);
+    const res = redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`);
     applyPendingCookies(res, pendingCookies);
     return res;
   }

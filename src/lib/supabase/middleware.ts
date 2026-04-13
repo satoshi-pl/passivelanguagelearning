@@ -2,25 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { fetchNoStore } from "./fetchNoStore";
 
-function getPublicOrigin(req: NextRequest) {
-  const protoHeader = req.headers.get("x-forwarded-proto");
-
-  // Keep redirects on the same host that received the request (preview stays preview,
-  // production stays production). Do not prioritize x-forwarded-host here.
-  let host = (req.nextUrl.host || req.headers.get("host") || "").trim();
-  if (!host) host = req.nextUrl.host;
-
-  const hostLower = host.toLowerCase();
-  if (hostLower.startsWith("0.0.0.0")) {
-    host = host.replace(/^0\.0\.0\.0/i, "localhost");
-  } else if (hostLower === "::1" || hostLower === "[::1]") {
-    host = "localhost";
-  }
-
-  const protocol = (protoHeader || req.nextUrl.protocol.replace(":", "") || "http").toLowerCase();
-  return `${protocol}://${host}`;
-}
-
 export async function middlewareSupabase(req: NextRequest) {
   const url = req.nextUrl;
   const code = url.searchParams.get("code");
@@ -36,10 +17,8 @@ export async function middlewareSupabase(req: NextRequest) {
   // Some OAuth returns can land on the site root with ?code=...
   // Ensure all auth codes are processed by the dedicated callback route.
   if (code && url.pathname !== "/auth/callback") {
-    const callbackUrl = new URL("/auth/callback", getPublicOrigin(req));
-    callbackUrl.searchParams.set("code", code);
-    callbackUrl.searchParams.set("next", "/setup");
-    return NextResponse.redirect(callbackUrl);
+    const callbackPath = `/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent("/setup")}`;
+    return NextResponse.redirect(callbackPath);
   }
 
   const res = NextResponse.next();
