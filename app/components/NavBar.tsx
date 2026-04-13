@@ -13,6 +13,10 @@ type DeckLangRow = {
   target_lang: string | null;
 };
 
+type ProfileRow = {
+  display_name: string | null;
+};
+
 export async function NavBar() {
   noStore();
 
@@ -22,6 +26,24 @@ export async function NavBar() {
   } = await supabase.auth.getUser();
 
   const email = user?.email ?? null;
+  let accountLabel = email;
+  if (user) {
+    const { error: ensureProfileErr } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id }, { onConflict: "id" });
+    if (ensureProfileErr && process.env.NODE_ENV === "development") {
+      console.warn("[navbar] ensure profile failed", ensureProfileErr.message);
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const displayName = ((profile as ProfileRow | null)?.display_name || "").trim();
+    if (displayName) accountLabel = displayName;
+  }
 
   let langs: string[] = [];
   if (user) {
@@ -51,7 +73,7 @@ export async function NavBar() {
       <Container>
         {email ? (
           <>
-            <MobileNavLoggedIn email={email} langs={langs} />
+            <MobileNavLoggedIn email={email} accountLabel={accountLabel ?? email} langs={langs} />
 
             <div className="hidden min-h-14 items-center justify-between gap-4 py-2 md:flex">
               <div className="min-w-0 shrink-0">
@@ -72,12 +94,18 @@ export async function NavBar() {
 
                 <span
                   className="hidden min-h-10 min-w-[14rem] max-w-lg flex-1 truncate rounded-lg bg-neutral-100 px-2.5 text-right text-sm font-semibold leading-10 text-neutral-950 md:block"
-                  title={email}
+                  title={email ?? accountLabel ?? ""}
                 >
-                  {email}
+                  {accountLabel}
                 </span>
 
                 <div className="flex shrink-0 items-center gap-2 lg:gap-3">
+                  <Link
+                    href="/account"
+                    className="rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                  >
+                    Account
+                  </Link>
                   <ThemeToggle />
 
                   <a

@@ -16,11 +16,12 @@ function isPracticePath(pathname: string | null) {
 }
 
 type Props = {
+  accountLabel: string;
   email: string;
   langs: string[];
 };
 
-export default function MobileNavLoggedIn({ email, langs }: Props) {
+export default function MobileNavLoggedIn({ accountLabel, email, langs }: Props) {
   const pathname = usePathname();
   const practice = isPracticePath(pathname);
   const [dictOpen, setDictOpen] = useState(false);
@@ -52,7 +53,7 @@ export default function MobileNavLoggedIn({ email, langs }: Props) {
               Dictionary
             </button>
             <ThemeToggle />
-            <MobileAccountMenu email={email} />
+            <MobileAccountMenu email={email} accountLabel={accountLabel} />
           </div>
         </div>
 
@@ -88,7 +89,7 @@ export default function MobileNavLoggedIn({ email, langs }: Props) {
 
         <div className="flex items-center gap-2.5">
           <ThemeToggle />
-          <MobileAccountMenu email={email} />
+          <MobileAccountMenu email={email} accountLabel={accountLabel} />
         </div>
       </div>
 

@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
+  accountLabel: string;
   email: string;
 };
 
-export default function MobileAccountMenu({ email }: Props) {
+export default function MobileAccountMenu({ accountLabel, email }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -42,7 +43,7 @@ export default function MobileAccountMenu({ email }: Props) {
         aria-expanded={open}
       >
         <span className="text-sm font-semibold leading-none">
-          {(email?.trim().charAt(0) || "U").toUpperCase()}
+          {(accountLabel?.trim().charAt(0) || email?.trim().charAt(0) || "U").toUpperCase()}
         </span>
       </button>
 
@@ -56,14 +57,29 @@ export default function MobileAccountMenu({ email }: Props) {
           <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
             Signed in as
           </div>
-          <div className="mt-1 break-words text-sm font-semibold text-neutral-950" title={email}>
-            {email}
+          <div className="mt-1 break-words text-sm font-semibold text-neutral-950" title={accountLabel}>
+            {accountLabel}
           </div>
+          {accountLabel !== email ? (
+            <div className="mt-0.5 break-words text-xs text-neutral-500" title={email}>
+              {email}
+            </div>
+          ) : null}
+
+          <a
+            href="/account"
+            onClick={() => setOpen(false)}
+            className="mt-3 block rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+          >
+            Account
+          </a>
 
           <a
             href="/api/logout"
-            onClick={() => setOpen(false)}
-            className="mt-3 block rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+            onClick={() => {
+              setOpen(false);
+            }}
+            className="mt-1 block rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
           >
             Logout
           </a>
