@@ -23,28 +23,51 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     let active = true;
 
+    async function waitForSessionSettle(maxAttempts = 8, delayMs = 150) {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) return data.session;
+        if (attempt < maxAttempts - 1) {
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+      }
+      return null;
+    }
+
     async function initRecoveryState() {
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const searchParams = new URLSearchParams(window.location.search);
       const type = hashParams.get("type");
       const hasAccessToken = Boolean(hashParams.get("access_token"));
       const code = searchParams.get("code");
+      const hasRecoveryError =
+        Boolean(searchParams.get("error")) ||
+        Boolean(searchParams.get("error_code")) ||
+        Boolean(hashParams.get("error")) ||
+        Boolean(hashParams.get("error_code"));
 
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          if (!active) return;
-          setError("This reset link is invalid or expired. Request a new one.");
-          return;
+        if (exchangeError && process.env.NODE_ENV === "development") {
+          console.warn("[reset-password] exchangeCodeForSession failed; waiting for settled session", {
+            message: exchangeError.message,
+          });
         }
       }
 
-      const { data } = await supabase.auth.getSession();
+      const session = await waitForSessionSettle();
       if (!active) return;
 
-      const hasSession = Boolean(data.session);
+      const hasSession = Boolean(session);
       if (hasSession || type === "recovery" || hasAccessToken) {
         setReady(true);
+        return;
+      }
+
+      // Do not fail aggressively on first load if a recovery marker exists; the session may still
+      // settle after redirect/exchange in some browsers/environments.
+      if (hasRecoveryError) {
+        setError("This reset link may have expired. Please try once more, or request a new email.");
         return;
       }
 
