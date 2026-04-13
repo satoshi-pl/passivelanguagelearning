@@ -9,8 +9,12 @@ const NO_STORE_REDIRECT_HEADERS = {
   Expires: "0",
 };
 
-function redirectNoStore(url: string | URL) {
-  return NextResponse.redirect(url, {
+function redirectNoStore(url: string | URL, appOriginForRelative?: string) {
+  const target =
+    typeof url === "string" && appOriginForRelative
+      ? new URL(url, appOriginForRelative)
+      : url;
+  return NextResponse.redirect(target, {
     status: 302,
     headers: NO_STORE_REDIRECT_HEADERS,
   });
@@ -50,11 +54,6 @@ function getSafeAppOrigin(appOriginRaw: string | null, fallbackOrigin: string) {
   } catch {
     return fallbackOrigin;
   }
-}
-
-function toAppRedirectTarget(path: string, appOrigin: string, requestOrigin: string) {
-  if (appOrigin === requestOrigin) return path;
-  return new URL(path, appOrigin);
 }
 
 export async function GET(request: NextRequest) {
@@ -99,12 +98,17 @@ export async function GET(request: NextRequest) {
         oauthError: oauthError ?? null,
       });
     }
-    return redirectNoStore(toAppRedirectTarget(`${loginUrl.pathname}${loginUrl.search}`, appOrigin, requestUrl.origin));
+    return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`, appOrigin);
   }
 
   const nextPath =
     nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
-  const response = redirectNoStore(toAppRedirectTarget(nextPath, appOrigin, requestUrl.origin));
+  const successRedirectTarget = new URL(nextPath, appOrigin);
+  console.info("[auth/callback] preparing success redirect response", {
+    nextPath,
+    successRedirectTarget: successRedirectTarget.toString(),
+  });
+  const response = redirectNoStore(successRedirectTarget);
   const supabase = createSupabaseOAuthCallbackClient(request, response);
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -131,9 +135,7 @@ export async function GET(request: NextRequest) {
         failureStage: "before_retry",
         restartUrl: restartUrl.toString(),
       });
-      return redirectNoStore(
-        toAppRedirectTarget(`${restartUrl.pathname}${restartUrl.search}`, appOrigin, requestUrl.origin)
-      );
+      return redirectNoStore(`${restartUrl.pathname}${restartUrl.search}`, appOrigin);
     }
 
     console.error("[auth/callback] exchange failed on retry=1 -> login error", {
@@ -144,7 +146,7 @@ export async function GET(request: NextRequest) {
     const loginUrl = new URL("/login", requestUrl.origin);
     loginUrl.searchParams.set("error", "google_callback_failed");
     loginUrl.searchParams.set("retry", "1");
-    return redirectNoStore(toAppRedirectTarget(`${loginUrl.pathname}${loginUrl.search}`, appOrigin, requestUrl.origin));
+    return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`, appOrigin);
   }
 
   console.info("[auth/callback] session established", {

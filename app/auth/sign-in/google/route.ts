@@ -17,6 +17,10 @@ function redirectNoStore(url: string | URL) {
   });
 }
 
+function toAbsoluteUrl(path: string, origin: string) {
+  return new URL(path, origin);
+}
+
 type CookieToSet = { name: string; value: string; options?: Parameters<NextResponse["cookies"]["set"]>[2] };
 
 /**
@@ -91,7 +95,7 @@ export async function GET(request: NextRequest) {
     });
     const loginUrl = new URL("/login", requestUrl.origin);
     loginUrl.searchParams.set("error", "google_start_failed");
-    const res = redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`);
+    const res = redirectNoStore(toAbsoluteUrl(`${loginUrl.pathname}${loginUrl.search}`, requestUrl.origin));
     applyPendingCookies(res, pendingCookies);
     return res;
   }
