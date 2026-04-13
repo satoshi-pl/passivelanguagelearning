@@ -34,6 +34,7 @@ function LoginPageInner() {
   const submitIntentRef = useRef(false);
 
   const authError = AUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
+  const resetStatus = searchParams.get("reset");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -84,6 +85,12 @@ function LoginPageInner() {
           </CardHeader>
 
           <CardContent>
+            {resetStatus === "success" && (
+              <div className="mb-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                Password updated. You can now log in with your new password.
+              </div>
+            )}
+
             {!msg && authError && (
               <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {authError}
@@ -118,9 +125,14 @@ function LoginPageInner() {
               </div>
 
               <div className="grid gap-1">
-                <label className="text-sm text-neutral-700" htmlFor="login-password">
-                  Password
-                </label>
+                <div className="flex items-center justify-between gap-4">
+                  <label className="text-sm text-neutral-700" htmlFor="login-password">
+                    Password
+                  </label>
+                  <Link href="/forgot-password" className="text-xs font-medium text-black underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="login-password"
                   name="password"
