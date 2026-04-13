@@ -15,8 +15,9 @@ export async function middlewareSupabase(req: NextRequest) {
   }
 
   // Some OAuth returns can land on the site root with ?code=...
-  // Ensure all auth codes are processed by the dedicated callback route.
-  if (code && url.pathname !== "/auth/callback") {
+  // Ensure auth provider codes are processed by the dedicated callback route.
+  // Important: Supabase password-recovery links also use `?code=` on /reset-password.
+  if (code && url.pathname !== "/auth/callback" && url.pathname !== "/reset-password") {
     const callbackPath = `/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent("/setup")}`;
     return NextResponse.redirect(callbackPath);
   }
