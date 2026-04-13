@@ -1,4 +1,6 @@
 -- Provision only user-selected language pairs during onboarding.
+-- If pairs are inserted with null audio URLs, run sql/backfill_pair_audio_urls_from_storage.sql
+-- (or TTS scripts) so rows have URLs; then the audio_src aggregate below can propagate by pair_template_id.
 -- p_pairs format:
 -- [
 --   { "target_lang": "es", "native_lang": "en" },

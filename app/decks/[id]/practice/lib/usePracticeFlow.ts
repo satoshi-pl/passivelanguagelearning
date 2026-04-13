@@ -412,6 +412,7 @@ export function usePracticeFlow({
   // stable play that does NOT depend on `audio` identity
   const playCurrent = useCallback(() => {
     if (!currentPair || !currentStage) return;
+    audioRef.current.enable();
     const raw =
       currentStage === "word"
         ? currentPair.word_target_audio_url ?? currentPair.sentence_target_audio_url

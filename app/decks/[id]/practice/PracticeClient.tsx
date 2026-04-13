@@ -16,17 +16,12 @@ import { useSessionBuilder } from "./lib/useSessionBuilder";
 
 import type { PairRow, ProgressMap, LearnMode } from "./lib/types";
 import { normalizeMode } from "./lib/learning";
+import { resolvePracticeAudioUrl } from "./lib/resolvePracticeAudioUrl";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
 function resolveAudioUrl(raw?: string | null) {
-  const v = (raw ?? "").trim();
-  if (!v) return "";
-  if (v.startsWith("http://") || v.startsWith("https://")) return v;
-
-  const cleanPath = v.replace(/^tts\//, "");
-  if (!SUPABASE_URL) return "";
-  return `${SUPABASE_URL}/storage/v1/object/public/tts/${cleanPath}`;
+  return resolvePracticeAudioUrl(raw, SUPABASE_PUBLIC_URL);
 }
 
 function langName(codeOrName: string) {
@@ -558,7 +553,7 @@ export default function PracticeClient({
     ],
   });
 
-  const audioEl = <audio ref={flow.audio.audioRef} preload="auto" />;
+  const audioEl = <audio ref={flow.audio.audioRef} preload="auto" playsInline />;
 
   const emptyState = getPracticeEmptyState({
     hasSessionPairs: flow.sessionPairs.length > 0,

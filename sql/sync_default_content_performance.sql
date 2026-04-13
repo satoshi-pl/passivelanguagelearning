@@ -14,6 +14,9 @@
 --
 -- Apply in Supabase SQL Editor as a privileged role (postgres / dashboard).
 -- After deploy: REFRESH MATERIALIZED VIEW when bulk audio backfills change sources.
+--
+-- If public.pairs audio URL columns are globally null but Storage still has MP3s,
+-- run sql/backfill_pair_audio_urls_from_storage.sql (see sql/AUDIO_BACKFILL_RUNBOOK.md).
 -- =============================================================================
 
 -- 1) Lookup: one row per pair_template_id with best-known audio URLs
