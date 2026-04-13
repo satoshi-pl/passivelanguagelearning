@@ -18,10 +18,11 @@ function redirectNoStore(url: string | URL) {
 
 function getPublicOrigin(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const hostHeader = request.headers.get("x-forwarded-host") || request.headers.get("host");
   const protoHeader = request.headers.get("x-forwarded-proto");
 
-  let host = (hostHeader || requestUrl.host || "").trim();
+  // Keep redirects on the same host that received the request (preview stays preview,
+  // production stays production). Do not prioritize x-forwarded-host here.
+  let host = (requestUrl.host || request.headers.get("host") || "").trim();
   if (!host) host = requestUrl.host;
 
   const hostLower = host.toLowerCase();
@@ -117,6 +118,8 @@ export async function GET(request: NextRequest) {
       restartUrl.searchParams.set("retry", "1");
       console.warn("[auth/callback] exchange failed -> restarting OAuth once", {
         retryAttempt: retryAttempt ?? "0",
+        automaticRestartTaken: true,
+        failureStage: "before_retry",
         restartUrl: restartUrl.toString(),
       });
       return redirectNoStore(restartUrl);
@@ -124,9 +127,12 @@ export async function GET(request: NextRequest) {
 
     console.error("[auth/callback] exchange failed on retry=1 -> login error", {
       retryAttempt: retryAttempt ?? "0",
+      automaticRestartTaken: false,
+      failureStage: "retry_1",
     });
     const loginUrl = new URL("/login", origin);
     loginUrl.searchParams.set("error", "google_callback_failed");
+    loginUrl.searchParams.set("retry", "1");
     return redirectNoStore(loginUrl);
   }
 

@@ -19,10 +19,11 @@ function redirectNoStore(url: string | URL) {
 
 function getPublicOrigin(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const hostHeader = request.headers.get("x-forwarded-host") || request.headers.get("host");
   const protoHeader = request.headers.get("x-forwarded-proto");
 
-  let host = (hostHeader || requestUrl.host || "").trim();
+  // Keep redirects on the same host that received the request (preview stays preview,
+  // production stays production). Do not prioritize x-forwarded-host here.
+  let host = (requestUrl.host || request.headers.get("host") || "").trim();
   if (!host) host = requestUrl.host;
 
   const hostLower = host.toLowerCase();

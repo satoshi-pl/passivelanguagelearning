@@ -3,10 +3,11 @@ import { createServerClient } from "@supabase/ssr";
 import { fetchNoStore } from "./fetchNoStore";
 
 function getPublicOrigin(req: NextRequest) {
-  const hostHeader = req.headers.get("x-forwarded-host") || req.headers.get("host");
   const protoHeader = req.headers.get("x-forwarded-proto");
 
-  let host = (hostHeader || req.nextUrl.host || "").trim();
+  // Keep redirects on the same host that received the request (preview stays preview,
+  // production stays production). Do not prioritize x-forwarded-host here.
+  let host = (req.nextUrl.host || req.headers.get("host") || "").trim();
   if (!host) host = req.nextUrl.host;
 
   const hostLower = host.toLowerCase();
