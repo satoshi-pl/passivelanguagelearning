@@ -1,0 +1,14 @@
+-- Optional: null out pair audio URLs before canonical regeneration.
+-- Paste ONE of the following into SQL Editor after tightening WHERE.
+-- See sql/AUDIO_REGENERATION_RUNBOOK.md.
+--
+-- Full table (destructive — use only when you intend a full re-run):
+-- update public.pairs
+-- set word_target_audio_url = null,
+--     sentence_target_audio_url = null;
+--
+-- Scoped to one deck:
+-- update public.pairs
+-- set word_target_audio_url = null,
+--     sentence_target_audio_url = null
+-- where deck_id = '<deck-uuid>'::uuid;

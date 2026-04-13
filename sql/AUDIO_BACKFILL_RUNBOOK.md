@@ -1,5 +1,7 @@
 # PLL audio restore — storage backfill runbook
 
+If Storage object keys **do not** match the current live `pairs.id` / dataset (common after re-seed or env mismatch), backfill from guessed paths will not restore playback. Use **`sql/AUDIO_REGENERATION_RUNBOOK.md`** and `tts_regenerate_canonical.js` instead.
+
 ## Root cause
 
 - Playback reads `public.pairs.word_target_audio_url` and `public.pairs.sentence_target_audio_url`.

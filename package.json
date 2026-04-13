@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "tts:regenerate-canonical": "node tts_regenerate_canonical.js"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",
