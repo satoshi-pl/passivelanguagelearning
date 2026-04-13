@@ -90,7 +90,11 @@ export async function GET(request: NextRequest) {
     // Benign: opened /auth/callback without starting OAuth, prefetch, or cancelled consent
     // (access_denied) — do not show a misleading "code was missing" error on /login.
     if (oauthError && oauthError !== "access_denied") {
-      loginUrl.searchParams.set("error", "google_callback_failed");
+      if (flow === "email_verify") {
+        loginUrl.searchParams.set("verified", "error");
+      } else {
+        loginUrl.searchParams.set("error", "google_callback_failed");
+      }
       console.warn("[auth/callback] missing code with oauth error → login", {
         oauthError,
         oauthErrorDescription: truncateForLog(oauthErrorDescription),
@@ -139,10 +143,23 @@ export async function GET(request: NextRequest) {
       return redirectNoStore(`${restartUrl.pathname}${restartUrl.search}`, appOrigin);
     }
 
+    // Email verification can occasionally fail on first callback hit due to transient exchange timing.
+    // Retry the exact callback once before surfacing "invalid or expired" to the user.
+    if (flow === "email_verify" && retryAttempt !== "1") {
+      const retryUrl = new URL(requestUrl.toString());
+      retryUrl.searchParams.set("retry", "1");
+      console.warn("[auth/callback] exchange failed -> retrying email verification callback once", {
+        retryAttempt: retryAttempt ?? "0",
+        retryUrl: retryUrl.toString(),
+      });
+      return redirectNoStore(`${retryUrl.pathname}${retryUrl.search}`, appOrigin);
+    }
+
     console.error("[auth/callback] exchange failed -> login error", {
       retryAttempt: retryAttempt ?? "0",
       automaticRestartTaken: flow === "google" ? false : null,
-      failureStage: flow === "google" ? "retry_1" : "non_google",
+      failureStage:
+        flow === "google" ? "retry_1" : flow === "email_verify" ? "email_verify_retry_1" : "non_google",
       flow,
     });
     const loginUrl = new URL("/login", requestUrl.origin);
