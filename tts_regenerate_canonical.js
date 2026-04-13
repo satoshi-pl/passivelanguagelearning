@@ -18,6 +18,7 @@
  *   node tts_regenerate_canonical.js --max 20          # smoke test first 20 templates
  *   node tts_regenerate_canonical.js --offset 0 --limit 500
  *   node tts_regenerate_canonical.js --force true      # re-upload + overwrite DB URLs
+ *   node tts_regenerate_canonical.js --pageSize 1000   # Supabase fetch page (default 1000)
  */
 
 require("dotenv").config({ path: ".env.local" });
@@ -204,6 +205,41 @@ async function generateAndUpload({
   throw new Error("TTS failed after repeated quota retries.");
 }
 
+/** Load all deck_templates rows (paginated; PostgREST caps each response). */
+async function fetchAllDeckTemplates(supabase, pageSize) {
+  const map = new Map();
+  let from = 0;
+
+  for (;;) {
+    const to = from + pageSize - 1;
+    const { data, error } = await supabase
+      .from("deck_templates")
+      .select("id, target_lang")
+      .order("id", { ascending: true })
+      .range(from, to);
+
+    if (error) throw error;
+    const batch = data || [];
+    for (const row of batch) {
+      map.set(String(row.id), String(row.target_lang || ""));
+    }
+    console.log(`deck_templates page range ${from}-${to}: fetched ${batch.length} (map size ${map.size})`);
+    if (batch.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return map;
+}
+
+/** Fetch one page of pair_templates ordered by id. */
+async function fetchPairTemplatesPage(supabase, from, to) {
+  return supabase
+    .from("pair_templates")
+    .select("id, word_target, sentence_target, deck_template_id")
+    .order("id", { ascending: true })
+    .range(from, to);
+}
+
 async function main() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -230,6 +266,7 @@ async function main() {
     return Number.isFinite(n) ? n : null;
   })();
   const FORCE = getArgBool("force", false);
+  const PAGE_SIZE = Math.max(1, Math.min(1000, getArgNumber("pageSize", 1000)));
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
@@ -237,40 +274,19 @@ async function main() {
 
   const ttsClient = new textToSpeech.TextToSpeechClient();
 
-  const { data: templates, error: ptErr } = await supabase
+  const { count: pairTemplatesTableCount, error: cntErr } = await supabase
     .from("pair_templates")
-    .select("id, word_target, sentence_target, deck_template_id")
-    .order("id", { ascending: true });
+    .select("id", { count: "exact", head: true });
 
-  if (ptErr) throw ptErr;
+  if (cntErr) throw cntErr;
 
-  const { data: deckTemplates, error: dtErr } = await supabase.from("deck_templates").select("id, target_lang");
-
-  if (dtErr) throw dtErr;
-
-  const targetLangByDeckTemplateId = new Map();
-  for (const row of deckTemplates || []) {
-    targetLangByDeckTemplateId.set(String(row.id), String(row.target_lang || ""));
-  }
-
-  const rows = (templates || [])
-    .map((pt) => ({
-      id: String(pt.id),
-      word_target: pt.word_target,
-      sentence_target: pt.sentence_target,
-      deck_template_id: String(pt.deck_template_id),
-      target_lang: targetLangByDeckTemplateId.get(String(pt.deck_template_id)) || "",
-    }))
-    .filter((r) => r.target_lang);
-
-  let sliced = rows.slice(OFFSET);
-  if (LIMIT != null) sliced = sliced.slice(0, LIMIT);
-  else if (MAX_TEMPLATES != null) sliced = sliced.slice(0, MAX_TEMPLATES);
+  const targetLangByDeckTemplateId = await fetchAllDeckTemplates(supabase, PAGE_SIZE);
 
   console.log("Canonical TTS regeneration");
   console.log("Bucket:", BUCKET);
-  console.log("Templates total:", rows.length);
-  console.log("Processing slice:", { offset: OFFSET, count: sliced.length, max: MAX_TEMPLATES, limit: LIMIT });
+  console.log("pair_templates rows (table count):", pairTemplatesTableCount ?? "unknown");
+  console.log("Fetch pageSize:", PAGE_SIZE);
+  console.log("Slice:", { offset: OFFSET, limit: LIMIT, max: MAX_TEMPLATES });
   console.log("sleep ms:", SLEEP_MS, "force:", FORCE);
 
   let okWord = 0;
@@ -280,101 +296,174 @@ async function main() {
   let failWord = 0;
   let failSentence = 0;
   let skipUnsupportedLang = 0;
+  let failTemplate = 0;
+  /**
+   * Count of pair_template rows with non-empty target_lang fully handled so far
+   * (skipped for --offset or processed). Matches legacy: filter then slice(OFFSET).slice(limit).
+   */
+  let nFilteredSeen = 0;
+  let pageIdx = 0;
 
-  for (const pt of sliced) {
-    const voice = voiceForTargetLang(pt.target_lang);
-    if (!voice) {
-      console.warn(`⚠️ Unsupported target_lang for template ${pt.id}: "${pt.target_lang}" — skip`);
-      skipUnsupportedLang += 1;
-      continue;
-    }
+  for (let rangeFrom = 0; ; pageIdx++) {
+    const rangeTo = rangeFrom + PAGE_SIZE - 1;
+    const { data: batch, error: ptErr } = await fetchPairTemplatesPage(supabase, rangeFrom, rangeTo);
+    if (ptErr) throw ptErr;
+    const rows = batch || [];
 
-    const { count: rowsForTemplate, error: rcErr } = await supabase
-      .from("pairs")
-      .select("id", { count: "exact", head: true })
-      .eq("pair_template_id", pt.id);
-    if (rcErr) throw rcErr;
-    if ((rowsForTemplate ?? 0) === 0) {
-      console.log(`— skip template ${pt.id}: no pairs rows reference it`);
-      continue;
-    }
+    const processedApprox = Math.max(0, nFilteredSeen - OFFSET);
 
-    const wordPath = buildStoragePath(voice.languageCode, "word", pt.id);
-    const sentencePath = buildStoragePath(voice.languageCode, "sentence", pt.id);
+    console.log(
+      `\n--- pair_templates page ${pageIdx} DB range [${rangeFrom}, ${rangeTo}] — fetched ${rows.length} row(s) | nFilteredSeen=${nFilteredSeen} processedInSlice≈${processedApprox} | totals okW=${okWord} okS=${okSentence} skipW=${skipWord} skipS=${skipSentence} failW=${failWord} failS=${failSentence} skipLang=${skipUnsupportedLang} failTpl=${failTemplate} ---`
+    );
 
-    // ----- WORD -----
-    const hasWord = !!(pt.word_target && String(pt.word_target).trim());
-    if (hasWord) {
-      const shouldGenWord = FORCE || (await anyPairMissingWordAudio(supabase, pt.id));
-      if (shouldGenWord) {
-        try {
-          const ssml = buildSsml(pt.word_target, LEADING_BREAK_MS);
-          const publicUrl = await generateAndUpload({
-            ttsClient,
-            supabase,
-            ssml,
-            path: wordPath,
-            voice,
-            speakingRate: SPEAKING_RATE,
-            pitch: PITCH,
-          });
+    if (rows.length === 0) break;
 
-          const { error: upErr } = await supabase
+    let stopAll = false;
+
+    for (const raw of rows) {
+      const pt = {
+        id: String(raw.id),
+        word_target: raw.word_target,
+        sentence_target: raw.sentence_target,
+        deck_template_id: String(raw.deck_template_id),
+        target_lang: targetLangByDeckTemplateId.get(String(raw.deck_template_id)) || "",
+      };
+
+      if (!pt.target_lang) continue;
+
+      if (nFilteredSeen < OFFSET) {
+        nFilteredSeen += 1;
+        continue;
+      }
+
+      if (LIMIT != null && nFilteredSeen - OFFSET >= LIMIT) {
+        stopAll = true;
+        break;
+      }
+      if (MAX_TEMPLATES != null && nFilteredSeen - OFFSET >= MAX_TEMPLATES) {
+        stopAll = true;
+        break;
+      }
+
+      try {
+        const voice = voiceForTargetLang(pt.target_lang);
+        if (!voice) {
+          console.warn(`⚠️ Unsupported target_lang for template ${pt.id}: "${pt.target_lang}" — skip`);
+          skipUnsupportedLang += 1;
+        } else {
+          const { count: rowsForTemplate, error: rcErr } = await supabase
             .from("pairs")
-            .update({ word_target_audio_url: publicUrl })
+            .select("id", { count: "exact", head: true })
             .eq("pair_template_id", pt.id);
+          if (rcErr) throw rcErr;
+          if ((rowsForTemplate ?? 0) === 0) {
+            console.log(`— skip template ${pt.id}: no pairs rows reference it`);
+          } else {
+            const wordPath = buildStoragePath(voice.languageCode, "word", pt.id);
+            const sentencePath = buildStoragePath(voice.languageCode, "sentence", pt.id);
 
-          if (upErr) throw upErr;
-          console.log(`✅ word template ${pt.id} -> ${wordPath}`);
-          okWord += 1;
-        } catch (e) {
-          console.error(`❌ word template ${pt.id}:`, String(e?.message || e));
-          failWord += 1;
+            // ----- WORD -----
+            const hasWord = !!(pt.word_target && String(pt.word_target).trim());
+            if (hasWord) {
+              const shouldGenWord = FORCE || (await anyPairMissingWordAudio(supabase, pt.id));
+              if (shouldGenWord) {
+                try {
+                  const ssml = buildSsml(pt.word_target, LEADING_BREAK_MS);
+                  const publicUrl = await generateAndUpload({
+                    ttsClient,
+                    supabase,
+                    ssml,
+                    path: wordPath,
+                    voice,
+                    speakingRate: SPEAKING_RATE,
+                    pitch: PITCH,
+                  });
+
+                  const { error: upErr } = await supabase
+                    .from("pairs")
+                    .update({ word_target_audio_url: publicUrl })
+                    .eq("pair_template_id", pt.id);
+
+                  if (upErr) throw upErr;
+                  console.log(`✅ word template ${pt.id} -> ${wordPath}`);
+                  okWord += 1;
+                } catch (e) {
+                  console.error(`❌ word template ${pt.id}:`, String(e?.message || e));
+                  failWord += 1;
+                }
+                await sleep(SLEEP_MS);
+              } else {
+                skipWord += 1;
+              }
+            }
+
+            // ----- SENTENCE -----
+            const hasSentence = !!(pt.sentence_target && String(pt.sentence_target).trim());
+            if (hasSentence) {
+              const shouldGenSentence = FORCE || (await anyPairMissingSentenceAudio(supabase, pt.id));
+              if (shouldGenSentence) {
+                try {
+                  const ssml = buildSsml(pt.sentence_target, LEADING_BREAK_MS);
+                  const publicUrl = await generateAndUpload({
+                    ttsClient,
+                    supabase,
+                    ssml,
+                    path: sentencePath,
+                    voice,
+                    speakingRate: SPEAKING_RATE,
+                    pitch: PITCH,
+                  });
+
+                  const { error: upErr } = await supabase
+                    .from("pairs")
+                    .update({ sentence_target_audio_url: publicUrl })
+                    .eq("pair_template_id", pt.id);
+
+                  if (upErr) throw upErr;
+                  console.log(`✅ sentence template ${pt.id} -> ${sentencePath}`);
+                  okSentence += 1;
+                } catch (e) {
+                  console.error(`❌ sentence template ${pt.id}:`, String(e?.message || e));
+                  failSentence += 1;
+                }
+                await sleep(SLEEP_MS);
+              } else {
+                skipSentence += 1;
+              }
+            }
+          }
         }
-        await sleep(SLEEP_MS);
-      } else {
-        skipWord += 1;
+      } catch (e) {
+        console.error(`❌ template ${pt.id} (non-TTS):`, String(e?.message || e));
+        failTemplate += 1;
+      } finally {
+        nFilteredSeen += 1;
       }
     }
 
-    // ----- SENTENCE -----
-    const hasSentence = !!(pt.sentence_target && String(pt.sentence_target).trim());
-    if (hasSentence) {
-      const shouldGenSentence = FORCE || (await anyPairMissingSentenceAudio(supabase, pt.id));
-      if (shouldGenSentence) {
-        try {
-          const ssml = buildSsml(pt.sentence_target, LEADING_BREAK_MS);
-          const publicUrl = await generateAndUpload({
-            ttsClient,
-            supabase,
-            ssml,
-            path: sentencePath,
-            voice,
-            speakingRate: SPEAKING_RATE,
-            pitch: PITCH,
-          });
-
-          const { error: upErr } = await supabase
-            .from("pairs")
-            .update({ sentence_target_audio_url: publicUrl })
-            .eq("pair_template_id", pt.id);
-
-          if (upErr) throw upErr;
-          console.log(`✅ sentence template ${pt.id} -> ${sentencePath}`);
-          okSentence += 1;
-        } catch (e) {
-          console.error(`❌ sentence template ${pt.id}:`, String(e?.message || e));
-          failSentence += 1;
-        }
-        await sleep(SLEEP_MS);
-      } else {
-        skipSentence += 1;
-      }
-    }
+    if (stopAll) break;
+    if (rows.length < PAGE_SIZE) break;
+    rangeFrom += PAGE_SIZE;
   }
 
+  const cap = LIMIT ?? MAX_TEMPLATES;
+  const processedInSlice =
+    cap != null ? Math.min(Math.max(0, nFilteredSeen - OFFSET), cap) : Math.max(0, nFilteredSeen - OFFSET);
+
   console.log("\n=== Summary ===");
-  console.log({ okWord, okSentence, skipWord, skipSentence, failWord, failSentence, skipUnsupportedLang });
+  console.log({
+    pairTemplatesTableCount,
+    nFilteredSeen,
+    processedInSlice,
+    okWord,
+    okSentence,
+    skipWord,
+    skipSentence,
+    failWord,
+    failSentence,
+    skipUnsupportedLang,
+    failTemplate,
+  });
 }
 
 async function anyPairMissingWordAudio(supabase, pairTemplateId) {

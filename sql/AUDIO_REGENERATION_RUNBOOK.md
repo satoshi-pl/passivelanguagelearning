@@ -39,12 +39,15 @@ From the repo root:
 npm run tts:regenerate-canonical -- --sleep 600
 ```
 
+The script **fetches `pair_templates` in DB pages** (`.range`, default 1000 rows per request) until a page returns fewer rows than the page size, so a single command walks the **full** table (tens of thousands of rows). You do not need to manually chain offsets against Supabase.
+
 Useful flags (see header in `tts_regenerate_canonical.js`):
 
 | Flag | Meaning |
 |------|--------|
-| `--max 20` | Process only the first 20 templates after `--offset` (smoke test). |
-| `--offset 0 --limit 500` | Paginate through templates. |
+| `--max 20` | Process only the first 20 templates in the **filtered** stream (after `--offset`). |
+| `--offset 0 --limit 500` | Skip the first `--offset` filtered templates; then process at most `--limit` templates (`--limit` wins over `--max` if both are set). |
+| `--pageSize 1000` | Rows per Supabase fetch (capped at 1000). |
 | `--sleep 600` | Ms between TTS calls (rate limiting / quota). |
 | `--force true` | Re-upload and overwrite DB URLs even when no nulls remain. |
 
