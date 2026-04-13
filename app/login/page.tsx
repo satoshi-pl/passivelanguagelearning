@@ -31,7 +31,7 @@ function LoginPageInner() {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const submitIntentRef = useRef(false);
+  const submitInFlightRef = useRef(false);
 
   const authError = AUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
   const resetStatus = searchParams.get("reset");
@@ -39,52 +39,60 @@ function LoginPageInner() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Mobile password managers can autofill and auto-submit.
-    // Allow login only after an explicit user action (click/Enter).
-    if (!submitIntentRef.current) return;
-    submitIntentRef.current = false;
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
 
     setMsg(null);
     setLoading(true);
 
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    const emailRaw = String(fd.get("email") ?? "");
-    const passwordRaw = String(fd.get("password") ?? "");
-    const loginEmail = normalizeEmailForAuth(emailRaw);
+    try {
+      const form = e.currentTarget;
+      const fd = new FormData(form);
+      const emailRaw = String(fd.get("email") ?? "");
+      const passwordRaw = String(fd.get("password") ?? "");
+      const loginEmail = normalizeEmailForAuth(emailRaw);
 
-    setEmail(loginEmail);
-    setPassword(passwordRaw);
+      setEmail(loginEmail);
+      setPassword(passwordRaw);
 
-    if (process.env.NODE_ENV === "development") {
-      console.log("[login] submit (FormData)", {
-        emailLen: emailRaw.length,
-        passwordLen: passwordRaw.length,
-        cleanedEmailLen: loginEmail.length,
-      });
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password: passwordRaw,
-    });
-
-    setLoading(false);
-    if (error) {
-      if (/confirm|verified/i.test(error.message)) {
-        return setMsg("Please verify your email before logging in. Check your inbox.");
+      if (process.env.NODE_ENV === "development") {
+        console.log("[login] submit (FormData)", {
+          emailLen: emailRaw.length,
+          passwordLen: passwordRaw.length,
+          cleanedEmailLen: loginEmail.length,
+        });
       }
-      return setMsg(error.message);
-    }
 
-    const provider = (data.user?.app_metadata?.provider as string | undefined) ?? null;
-    if (provider === "email" && !data.user?.email_confirmed_at) {
-      await supabase.auth.signOut();
-      return setMsg("Please verify your email before logging in. Check your inbox.");
-    }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: passwordRaw,
+      });
 
-    // Hard navigation so /decks sees session cookies (same timing issue as signup).
-    window.location.assign("/decks");
+      if (error) {
+        if (/confirm|verified/i.test(error.message)) {
+          setMsg("Please verify your email before logging in. Check your inbox.");
+          return;
+        }
+        setMsg(error.message || "Could not log in. Please try again.");
+        return;
+      }
+
+      const provider = (data.user?.app_metadata?.provider as string | undefined) ?? null;
+      if (provider === "email" && !data.user?.email_confirmed_at) {
+        await supabase.auth.signOut();
+        setMsg("Please verify your email before logging in. Check your inbox.");
+        return;
+      }
+
+      // Route through setup so first-time users wait for provisioning visibility settle.
+      // Returning users with existing decks are redirected quickly to /decks by /setup page.
+      window.location.assign("/setup");
+    } catch (err) {
+      setMsg(err instanceof Error && err.message ? err.message : "Could not log in. Please try again.");
+    } finally {
+      submitInFlightRef.current = false;
+      setLoading(false);
+    }
   }
 
   return (
@@ -135,9 +143,6 @@ function LoginPageInner() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") submitIntentRef.current = true;
-                  }}
                   autoComplete="email"
                   autoCapitalize="none"
                   autoCorrect="off"
@@ -162,20 +167,11 @@ function LoginPageInner() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") submitIntentRef.current = true;
-                  }}
                   autoComplete="current-password"
                 />
               </div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                onClick={() => {
-                  submitIntentRef.current = true;
-                }}
-              >
+              <Button type="submit" disabled={loading}>
                 {loading ? "Logging in..." : "Login"}
               </Button>
             </form>

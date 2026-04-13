@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -32,66 +32,74 @@ function SignupPageInner() {
   const [msg, setMsg] = useState<string | null>(null);
   const [msgTone, setMsgTone] = useState<"error" | "success">("error");
   const [loading, setLoading] = useState(false);
+  const submitInFlightRef = useRef(false);
 
   const authError = AUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
     setMsg(null);
     setMsgTone("error");
     setLoading(true);
 
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    const emailRaw = String(fd.get("email") ?? "");
-    const passwordRaw = String(fd.get("password") ?? "");
-    const signupEmail = normalizeEmailForAuth(emailRaw);
+    try {
+      const form = e.currentTarget;
+      const fd = new FormData(form);
+      const emailRaw = String(fd.get("email") ?? "");
+      const passwordRaw = String(fd.get("password") ?? "");
+      const signupEmail = normalizeEmailForAuth(emailRaw);
 
-    setEmail(signupEmail);
-    setPassword(passwordRaw);
+      setEmail(signupEmail);
+      setPassword(passwordRaw);
 
-    if (!signupEmail || !signupEmail.includes("@")) {
-      setLoading(false);
-      setMsgTone("error");
-      setMsg("Please enter a valid email address.");
-      return;
-    }
-
-    const callbackUrl = new URL("/auth/callback", window.location.origin);
-    callbackUrl.searchParams.set("next", "/login?verified=1");
-    callbackUrl.searchParams.set("app_origin", window.location.origin);
-    callbackUrl.searchParams.set("flow", "email_verify");
-
-    const { data, error } = await supabase.auth.signUp({
-      email: signupEmail,
-      password: passwordRaw,
-      options: {
-        emailRedirectTo: callbackUrl.toString(),
-      },
-    });
-
-    setLoading(false);
-    if (error) {
-      const m = error.message || "";
-      if (/invalid format|validate email address/i.test(m)) {
+      if (!signupEmail || !signupEmail.includes("@")) {
         setMsgTone("error");
-        setMsg(
-          "That email could not be accepted. Remove any spaces or odd characters at the start or end, then try again."
-        );
+        setMsg("Please enter a valid email address.");
         return;
       }
-      setMsgTone("error");
-      return setMsg(m);
-    }
 
-    // Require verified email before allowing account login/session use.
-    if (data.session) {
-      await supabase.auth.signOut();
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      callbackUrl.searchParams.set("next", "/login?verified=1");
+      callbackUrl.searchParams.set("app_origin", window.location.origin);
+      callbackUrl.searchParams.set("flow", "email_verify");
+
+      const { data, error } = await supabase.auth.signUp({
+        email: signupEmail,
+        password: passwordRaw,
+        options: {
+          emailRedirectTo: callbackUrl.toString(),
+        },
+      });
+
+      if (error) {
+        const m = (error.message || "").trim();
+        if (/invalid format|validate email address/i.test(m)) {
+          setMsgTone("error");
+          setMsg(
+            "That email could not be accepted. Remove any spaces or odd characters at the start or end, then try again."
+          );
+          return;
+        }
+        setMsgTone("error");
+        setMsg(m || "Could not create your account. Please try again.");
+        return;
+      }
+
+      // Require verified email before allowing account login/session use.
+      if (data.session) {
+        await supabase.auth.signOut();
+      }
+      setMsgTone("success");
+      setMsg("Check your email to verify your account, then come back and log in.");
+    } catch (err) {
+      setMsgTone("error");
+      setMsg(err instanceof Error && err.message ? err.message : "Could not create your account. Please try again.");
+    } finally {
+      submitInFlightRef.current = false;
+      setLoading(false);
     }
-    setMsgTone("success");
-    setMsg(
-      "Check your email to verify your account, then come back and log in."
-    );
   }
 
   return (
