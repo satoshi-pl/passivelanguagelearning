@@ -5,6 +5,7 @@ import { Container } from "./Container";
 import DictionaryHeaderSearch from "./DictionaryHeaderSearch";
 import LogoHomeLink from "./LogoHomeLink";
 import MobileNavLoggedIn from "./MobileNavLoggedIn";
+import MobileAccountMenu from "./MobileAccountMenu";
 import ThemeToggle from "./ThemeToggle";
 
 export const dynamic = "force-dynamic";
@@ -92,28 +93,9 @@ export async function NavBar() {
                   <DictionaryHeaderSearch langs={langs} />
                 </div>
 
-                <span
-                  className="hidden min-h-10 min-w-[14rem] max-w-lg flex-1 truncate rounded-lg bg-neutral-100 px-2.5 text-right text-sm font-semibold leading-10 text-neutral-950 md:block"
-                  title={email ?? accountLabel ?? ""}
-                >
-                  {accountLabel}
-                </span>
-
                 <div className="flex shrink-0 items-center gap-2 lg:gap-3">
-                  <Link
-                    href="/account"
-                    className="rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
-                  >
-                    Account
-                  </Link>
                   <ThemeToggle />
-
-                  <a
-                    href="/api/logout"
-                    className="rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
-                  >
-                    Logout
-                  </a>
+                  <MobileAccountMenu email={email} accountLabel={accountLabel ?? email} />
                 </div>
               </div>
             </div>
