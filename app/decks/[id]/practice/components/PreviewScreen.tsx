@@ -243,7 +243,7 @@ export default function PreviewScreen(props: Props) {
             </div>
           )}
 
-          <div className="mt-4 text-xs opacity-60">
+          <div className="mt-4 hidden text-xs opacity-60 md:block">
             Tip: Enter starts • A plays all audio • H hides translation • S shows translation • R reports an issue
           </div>
         </div>
