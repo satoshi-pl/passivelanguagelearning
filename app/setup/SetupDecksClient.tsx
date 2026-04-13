@@ -228,7 +228,8 @@ export default function SetupDecksClient() {
             </div>
             <CardTitle className="text-xl">Setting up your decks</CardTitle>
             <CardDescription>
-              Start with one or more language pairs now. You can add more pairs later.
+              Start with one or more language pairs now.{" "}
+              <span className="font-semibold text-neutral-900">You can add more pairs later.</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 text-center">

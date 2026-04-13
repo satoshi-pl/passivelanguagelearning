@@ -361,7 +361,16 @@ export default async function DecksPage({
     <div style={{ maxWidth: 920, margin: "40px auto", padding: "0 24px" }}>
       <RememberDecksHref href={currentDecksHref} />
 
-      <div style={{ marginBottom: 16 }}>
+      <div
+        style={{
+          marginBottom: 16,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
         <h1
           style={{
             margin: 0,
@@ -374,6 +383,27 @@ export default async function DecksPage({
         >
           My decks
         </h1>
+
+        <Link
+          href="/decks/add-pair"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "10px 14px",
+            borderRadius: 999,
+            border: "1px solid var(--border)",
+            background: "var(--surface-solid)",
+            color: "var(--foreground)",
+            textDecoration: "none",
+            fontWeight: 800,
+            fontSize: 14,
+            whiteSpace: "nowrap",
+            boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
+          }}
+        >
+          Add language pair
+        </Link>
       </div>
 
       <div
