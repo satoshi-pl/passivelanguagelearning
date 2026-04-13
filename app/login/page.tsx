@@ -35,6 +35,7 @@ function LoginPageInner() {
 
   const authError = AUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
   const resetStatus = searchParams.get("reset");
+  const verifiedStatus = searchParams.get("verified");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,13 +64,24 @@ function LoginPageInner() {
       });
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: passwordRaw,
     });
 
     setLoading(false);
-    if (error) return setMsg(error.message);
+    if (error) {
+      if (/confirm|verified/i.test(error.message)) {
+        return setMsg("Please verify your email before logging in. Check your inbox.");
+      }
+      return setMsg(error.message);
+    }
+
+    const provider = (data.user?.app_metadata?.provider as string | undefined) ?? null;
+    if (provider === "email" && !data.user?.email_confirmed_at) {
+      await supabase.auth.signOut();
+      return setMsg("Please verify your email before logging in. Check your inbox.");
+    }
 
     // Hard navigation so /decks sees session cookies (same timing issue as signup).
     window.location.assign("/decks");
@@ -88,6 +100,16 @@ function LoginPageInner() {
             {resetStatus === "success" && (
               <div className="mb-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
                 Password updated. You can now log in with your new password.
+              </div>
+            )}
+            {verifiedStatus === "1" && (
+              <div className="mb-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                Email verified. You can now log in.
+              </div>
+            )}
+            {verifiedStatus === "error" && (
+              <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                Email verification link was invalid or expired. Request a new sign-up email.
               </div>
             )}
 

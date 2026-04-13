@@ -30,6 +30,7 @@ function SignupPageInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [msgTone, setMsgTone] = useState<"error" | "success">("error");
   const [loading, setLoading] = useState(false);
 
   const authError = AUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
@@ -37,6 +38,7 @@ function SignupPageInner() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMsg(null);
+    setMsgTone("error");
     setLoading(true);
 
     const form = e.currentTarget;
@@ -50,26 +52,46 @@ function SignupPageInner() {
 
     if (!signupEmail || !signupEmail.includes("@")) {
       setLoading(false);
+      setMsgTone("error");
       setMsg("Please enter a valid email address.");
       return;
     }
 
-    const { error } = await supabase.auth.signUp({ email: signupEmail, password: passwordRaw });
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    callbackUrl.searchParams.set("next", "/login?verified=1");
+    callbackUrl.searchParams.set("app_origin", window.location.origin);
+    callbackUrl.searchParams.set("flow", "email_verify");
+
+    const { data, error } = await supabase.auth.signUp({
+      email: signupEmail,
+      password: passwordRaw,
+      options: {
+        emailRedirectTo: callbackUrl.toString(),
+      },
+    });
 
     setLoading(false);
     if (error) {
       const m = error.message || "";
       if (/invalid format|validate email address/i.test(m)) {
+        setMsgTone("error");
         setMsg(
           "That email could not be accepted. Remove any spaces or odd characters at the start or end, then try again."
         );
         return;
       }
+      setMsgTone("error");
       return setMsg(m);
     }
 
-    // Full navigation: session cookies apply, then /setup runs provisioning with clear UX.
-    window.location.assign("/setup");
+    // Require verified email before allowing account login/session use.
+    if (data.session) {
+      await supabase.auth.signOut();
+    }
+    setMsgTone("success");
+    setMsg(
+      "Check your email to verify your account, then come back and log in."
+    );
   }
 
   return (
@@ -135,7 +157,13 @@ function SignupPageInner() {
             </form>
 
             {msg && (
-              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              <div
+                className={`mt-3 rounded-xl border p-3 text-sm ${
+                  msgTone === "success"
+                    ? "border-green-200 bg-green-50 text-green-700"
+                    : "border-red-200 bg-red-50 text-red-700"
+                }`}
+              >
                 {msg}
               </div>
             )}

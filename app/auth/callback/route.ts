@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
   const nextRaw = requestUrl.searchParams.get("next") || "/setup";
   const retryAttempt = requestUrl.searchParams.get("retry");
+  const flow = requestUrl.searchParams.get("flow") ?? "unknown";
   /** OAuth 2.0 error from the provider (e.g. access_denied) when there is no `code`. */
   const oauthError = requestUrl.searchParams.get("error");
   const oauthErrorDescription = requestUrl.searchParams.get("error_description");
@@ -75,6 +76,7 @@ export async function GET(request: NextRequest) {
     crossOriginCallback: appOrigin !== requestUrl.origin,
     retryAttempt: retryAttempt ?? "0",
     hasRetry1: retryAttempt === "1",
+    flow,
     next: nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "(sanitized)",
     oauthError: oauthError ?? null,
     oauthErrorDescription: truncateForLog(oauthErrorDescription),
@@ -122,9 +124,8 @@ export async function GET(request: NextRequest) {
       retryAttempt: retryAttempt ?? "0",
     });
 
-    // Pattern observed in preview: first callback can fail, but immediately retrying OAuth with
-    // the same account often succeeds. Retry once automatically before showing login error.
-    if (retryAttempt !== "1") {
+    // Google-only retry: email verification and other callback flows should not bounce into Google.
+    if (flow === "google" && retryAttempt !== "1") {
       const restartUrl = new URL("/auth/sign-in/google", requestUrl.origin);
       restartUrl.searchParams.set("next", nextPath);
       restartUrl.searchParams.set("retry", "1");
@@ -138,14 +139,19 @@ export async function GET(request: NextRequest) {
       return redirectNoStore(`${restartUrl.pathname}${restartUrl.search}`, appOrigin);
     }
 
-    console.error("[auth/callback] exchange failed on retry=1 -> login error", {
+    console.error("[auth/callback] exchange failed -> login error", {
       retryAttempt: retryAttempt ?? "0",
-      automaticRestartTaken: false,
-      failureStage: "retry_1",
+      automaticRestartTaken: flow === "google" ? false : null,
+      failureStage: flow === "google" ? "retry_1" : "non_google",
+      flow,
     });
     const loginUrl = new URL("/login", requestUrl.origin);
-    loginUrl.searchParams.set("error", "google_callback_failed");
-    loginUrl.searchParams.set("retry", "1");
+    if (flow === "email_verify") {
+      loginUrl.searchParams.set("verified", "error");
+    } else {
+      loginUrl.searchParams.set("error", "google_callback_failed");
+      loginUrl.searchParams.set("retry", "1");
+    }
     return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`, appOrigin);
   }
 

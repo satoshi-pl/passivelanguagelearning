@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
   const callbackUrl = new URL("/auth/callback", requestUrl.origin);
   callbackUrl.searchParams.set("next", next);
   callbackUrl.searchParams.set("app_origin", requestUrl.origin);
+  callbackUrl.searchParams.set("flow", "google");
   if (retry === "1") {
     callbackUrl.searchParams.set("retry", "1");
   }
