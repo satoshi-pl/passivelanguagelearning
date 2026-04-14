@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 type ResolveAudioUrl = (raw?: string | null) => string;
-const PLAYBACK_RATES: number[] = [0.8, 0.9, 1];
+const PLAYBACK_RATES: number[] = [1, 0.9, 0.8];
 
 type PlayAllOptions<T> = {
   getRaw: (row: T) => string | null | undefined;
