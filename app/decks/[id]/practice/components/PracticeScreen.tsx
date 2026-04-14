@@ -638,11 +638,11 @@ export default function PracticeScreen(props: Props) {
             )
           ) : !revealed ? (
             <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-              Press <b>S</b> to reveal the translation.
+              Press <b>0</b> to reveal the translation. Press <b>S</b> to change speed.
             </div>
           ) : (
             <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-              Press <b>S</b> for still learning. Press <b>D</b> for mastered.
+              Press <b>0</b> for still learning. Press <b>D</b> for mastered. Press <b>S</b> to change speed.
             </div>
           )}
 
@@ -669,7 +669,7 @@ export default function PracticeScreen(props: Props) {
               ) : (
                 <>
                   <div>
-                    <b>S</b> — {revealed ? "Still learning" : "Reveal translation"}
+                    <b>S</b> — Change speed
                   </div>
                   <div>
                     <b>D</b> — Mastered

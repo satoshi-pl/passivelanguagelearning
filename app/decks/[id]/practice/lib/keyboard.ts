@@ -42,6 +42,7 @@ type KeyboardArgs = {
   onPlayCurrent(): void;
 
   onToggleMute(): void;
+  onTogglePlaybackRate(): void;
 };
 
 export function createKeyHandler(args: KeyboardArgs) {
@@ -94,6 +95,13 @@ export function createKeyHandler(args: KeyboardArgs) {
       return;
     }
 
+    // S = playback speed cycle
+    if (k === "s") {
+      e.preventDefault();
+      args.onTogglePlaybackRate();
+      return;
+    }
+
     // ===== REVIEW MODE =====
     if (args.isReview && args.viewMode === "practice") {
       if (is0) {
@@ -123,7 +131,7 @@ export function createKeyHandler(args: KeyboardArgs) {
         args.onHideTranslations();
         return;
       }
-      if (k === "s") {
+      if (k === "t") {
         e.preventDefault();
         args.onShowTranslations();
         return;
@@ -137,14 +145,6 @@ export function createKeyHandler(args: KeyboardArgs) {
       e.preventDefault();
       if (!args.revealed) args.onReveal();
       else args.onDefer();
-      return;
-    }
-
-    // s = reveal / next
-    if (k === "s") {
-      e.preventDefault();
-      if (!args.revealed) args.onReveal();
-      else args.onNext();
       return;
     }
 

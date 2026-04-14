@@ -43,6 +43,7 @@ type Args = {
 
   onPlayCurrent(): void;
   onToggleMute(): void;
+  onTogglePlaybackRate(): void;
 
   deps: any[];
 };
@@ -76,6 +77,7 @@ export function usePracticeKeyboard(args: Args) {
 
     onPlayCurrent,
     onToggleMute,
+    onTogglePlaybackRate,
 
     deps,
   } = args;
@@ -112,6 +114,7 @@ export function usePracticeKeyboard(args: Args) {
 
       onPlayCurrent,
       onToggleMute,
+      onTogglePlaybackRate,
     });
 
     window.addEventListener("keydown", onKey);

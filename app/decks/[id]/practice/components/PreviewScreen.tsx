@@ -252,7 +252,7 @@ export default function PreviewScreen(props: Props) {
           )}
 
           <div className="mt-4 hidden text-xs opacity-60 md:block">
-            Tip: Enter starts • A plays all audio • H hides translation • S shows translation • R reports an issue
+            Tip: Enter starts • A plays all audio • H hides translation • T shows translation • S changes speed • R reports an issue
           </div>
         </div>
       </div>

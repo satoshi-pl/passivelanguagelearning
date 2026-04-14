@@ -534,6 +534,7 @@ export default function PracticeClient({
       flow.audio.toggleMute();
       flow.audio.stop();
     },
+    onTogglePlaybackRate: () => flow.audio.togglePlaybackRate(),
 
     deps: [
       flow.busy,
