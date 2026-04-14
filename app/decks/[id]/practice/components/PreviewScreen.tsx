@@ -315,15 +315,11 @@ function WordsPreviewTable({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide opacity-55">{leftHeader}</div>
-                  <div className="mt-1 break-words text-base font-semibold">{leftValue || "—"}</div>
+                  <div className="break-words text-base font-semibold">{leftValue || "—"}</div>
 
                   {showTranslations ? (
                     <>
-                      <div className="mt-3 text-[11px] font-semibold uppercase tracking-wide opacity-55">
-                        {rightHeader}
-                      </div>
-                      <div className="learning-translation mt-1 break-words text-sm opacity-80">{rightValue || "—"}</div>
+                      <div className="learning-translation mt-3 break-words text-sm opacity-80">{rightValue || "—"}</div>
                     </>
                   ) : null}
                 </div>
