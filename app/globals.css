@@ -359,6 +359,16 @@ html[data-theme="dark"] .learning-support-text {
     transform 180ms ease;
 }
 
+.deck-action-button--secondary:hover {
+  background: color-mix(in srgb, var(--surface-solid) 82%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--border-strong) 88%, transparent);
+}
+
+.deck-action-button--secondary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foreground) 24%, transparent);
+  outline-offset: 2px;
+}
+
 html[data-theme="dark"] .hero-slogan {
   background-image: linear-gradient(
     90deg,

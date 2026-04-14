@@ -219,14 +219,15 @@ export default function PassiveDeckControls({
     display: "inline-block",
     padding: "12px 16px",
     borderRadius: 12,
-    border: "1px solid var(--border)",
-    background: "var(--surface-muted)",
+    border: "1px solid var(--border-strong)",
+    background: "var(--surface-solid)",
     textDecoration: "none",
     color: "var(--foreground)",
     fontWeight: 700,
     width: "100%",
     maxWidth: 220,
     textAlign: "center",
+    boxShadow: "0 1px 0 rgba(0,0,0,0.03)",
   } as const;
 
   const learnButtonStyle = {
