@@ -219,6 +219,7 @@ export function usePracticeFlow({
   const wsPreviewCount = useMemo(() => {
     if (mode !== "ws" || isReview) return 0;
     if (wsEffectiveMode === "sentences") return 0; // skip preview entirely
+    if (chosenN <= 0) return Math.min(5, wsRemaining.words);
     return Math.min(chosenN, wsRemaining.words);
   }, [mode, isReview, wsEffectiveMode, chosenN, wsRemaining.words]);
 

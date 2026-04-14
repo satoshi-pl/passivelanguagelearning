@@ -119,9 +119,10 @@ export default function PracticeClient({
 
   const finishHref = decodedBack || defaultFinishHref;
 
-  const sizes = [5, 10, 15, 20];
+  const sizes = [0, 5, 10, 15];
   const requestedN = Number(sp.get("n") ?? "10");
   const chosenN = sizes.includes(requestedN) ? requestedN : 10;
+  const isNoLimitMode = chosenN === 0;
 
   const requestedO = Number(sp.get("o") ?? "0");
   const offset = Number.isFinite(requestedO) && requestedO >= 0 ? requestedO : 0;
@@ -168,7 +169,8 @@ export default function PracticeClient({
     safePairs,
   });
 
-  const previewRows = mode === "ws" ? flow.wsPreviewPairs : session.previewWords;
+  const rawPreviewRows = mode === "ws" ? flow.wsPreviewPairs : session.previewWords;
+  const previewRows = isNoLimitMode ? rawPreviewRows.slice(0, 5) : rawPreviewRows;
 
   const derived = usePracticeDerived({
     mode,
@@ -590,6 +592,7 @@ export default function PracticeClient({
           nativeLang={nativeLang}
           sessionPairs={flow.sessionPairs}
           previewWords={previewRows}
+          noLimitPreviewHint={isNoLimitMode}
           showTranslations={flow.showTranslations}
           setShowTranslations={flow.setShowTranslations}
           selectedPreviewId={flow.selectedPreviewId}

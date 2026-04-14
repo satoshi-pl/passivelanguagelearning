@@ -91,7 +91,12 @@ export default function ActiveDeckControls({
   const currentCategoryOptions = useMemo(() => categoryOptionsByMode[mode] ?? [], [categoryOptionsByMode, mode]);
   const currentModePending = pendingTotalsByMode[mode] ?? 0;
 
-  const sizes = [5, 10, 15, 20];
+  const sessionSizes = [
+    { value: 5, label: "Active 5" },
+    { value: 10, label: "Active 10" },
+    { value: 15, label: "Active 15" },
+    { value: 0, label: "No limit" },
+  ];
 
   const buildActivePageHref = useCallback((nextMode: Mode, nextCategory: string | null) => {
     const qs = new URLSearchParams();
@@ -320,14 +325,14 @@ export default function ActiveDeckControls({
             className="deck-action-row deck-learn-row"
             style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}
           >
-            {sizes.map((n) => (
+            {sessionSizes.map((size) => (
               <Link
-                key={n}
-                href={buildPracticeHref(n)}
+                key={size.label}
+                href={buildPracticeHref(size.value)}
                 style={learnButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >
-                Active {n}
+                {size.label}
               </Link>
             ))}
           </div>

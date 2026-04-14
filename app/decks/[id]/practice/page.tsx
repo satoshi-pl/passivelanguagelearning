@@ -188,9 +188,10 @@ export default async function DeckPracticePage({
   const shouldUseActiveCategoryRpc =
     !!selectedCategory && source === "learn" && dir === "active";
 
-  const sizes = [5, 10, 15, 20];
+  const sizes = [0, 5, 10, 15];
   const requestedN = Number(sp.n ?? "10");
   const chosenN = sizes.includes(requestedN) ? requestedN : 10;
+  const rpcN = chosenN === 0 ? 100000 : chosenN;
 
   const requestedO = Number(sp.o ?? "0");
   const offset = Number.isFinite(requestedO) && requestedO >= 0 ? requestedO : 0;
@@ -265,7 +266,7 @@ export default async function DeckPracticePage({
           p_target_lang: targetLang,
           p_native_lang: supportLang,
           p_mode: mode,
-          p_n: chosenN,
+          p_n: rpcN,
           p_offset: offset,
         })
       : shouldUsePassiveReviewCategoryRpc
@@ -273,7 +274,7 @@ export default async function DeckPracticePage({
           p_user_id: user.id,
           p_deck_id: deckId,
           p_mode: mode,
-          p_n: chosenN,
+          p_n: rpcN,
           p_offset: offset,
           p_category: selectedCategory,
         })
@@ -282,7 +283,7 @@ export default async function DeckPracticePage({
           p_user_id: user.id,
           p_deck_id: deckId,
           p_mode: mode,
-          p_n: chosenN,
+          p_n: rpcN,
           p_offset: offset,
           p_category: selectedCategory,
         })
@@ -291,7 +292,7 @@ export default async function DeckPracticePage({
           p_user_id: user.id,
           p_deck_id: deckId,
           p_mode: mode,
-          p_n: chosenN,
+          p_n: rpcN,
           p_offset: offset,
           p_category: selectedCategory,
         })
@@ -300,7 +301,7 @@ export default async function DeckPracticePage({
           p_user_id: user.id,
           p_deck_id: deckId,
           p_mode: mode,
-          p_n: chosenN,
+          p_n: rpcN,
           p_offset: offset,
           p_category: selectedCategory,
         })
@@ -308,7 +309,7 @@ export default async function DeckPracticePage({
           p_user_id: user.id,
           p_deck_id: deckId,
           p_mode: mode,
-          p_n: chosenN,
+          p_n: rpcN,
           p_offset: offset,
           p_dir: dir,
           p_source: source,
@@ -396,19 +397,21 @@ export default async function DeckPracticePage({
       ? `← Back to ${backLabel}`
       : `← Back to ${deck.name} ${suffixDashboard(backLabel)}`;
 
+  const sessionSizeLabel = chosenN === 0 ? "No limit" : `${chosenN} cards`;
+
   const mobileMetaLine =
     source === "favorites"
-      ? ["Favourites", modeShortLabel(mode), `${chosenN} cards`].join(" · ")
+      ? ["Favourites", modeShortLabel(mode), sessionSizeLabel].join(" · ")
       : source === "review"
         ? [
             dir === "active" ? "Active review" : "Passive review",
             modeShortLabel(mode),
-            `${chosenN} cards`,
+            sessionSizeLabel,
           ].join(" · ")
         : [
             dir === "active" ? "Active" : "Passive",
             modeShortLabel(mode),
-            `${chosenN} cards`,
+            sessionSizeLabel,
             ...(selectedCategory ? [selectedCategory] : []),
           ].join(" · ");
 

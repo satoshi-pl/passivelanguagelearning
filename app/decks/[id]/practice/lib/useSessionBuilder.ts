@@ -35,6 +35,7 @@ type Args = {
 
 export function buildSessionPairs(args: Omit<Args, "sessionPairs">) {
   const { safePairs, progress, mode, isReview, chosenN, offset } = args;
+  const takeN = chosenN <= 0 ? Number.MAX_SAFE_INTEGER : chosenN;
 
   // ============================
   // ✅ REVIEW MODE (DON'T TOUCH)
@@ -47,7 +48,7 @@ export function buildSessionPairs(args: Omit<Args, "sessionPairs">) {
 
     const shuffled = shuffle(eligible);
     const start = Math.min(offset, shuffled.length);
-    return shuffled.slice(start, start + chosenN);
+    return shuffled.slice(start, start + takeN);
   }
 
   // ============================
@@ -72,7 +73,7 @@ export function buildSessionPairs(args: Omit<Args, "sessionPairs">) {
     const eligible = [...sentenceMasteredFirst, ...rest];
 
     const start = Math.min(offset, eligible.length);
-    return eligible.slice(start, start + chosenN);
+    return eligible.slice(start, start + takeN);
   }
 
   // SENTENCES learn:
@@ -89,7 +90,7 @@ export function buildSessionPairs(args: Omit<Args, "sessionPairs">) {
     const eligible = [...wordMasteredFirst, ...rest];
 
     const start = Math.min(offset, eligible.length);
-    return eligible.slice(start, start + chosenN);
+    return eligible.slice(start, start + takeN);
   }
 
   // ✅ ws learn: prioritize FULL pending pairs first (word + sentence pending),
@@ -98,7 +99,7 @@ export function buildSessionPairs(args: Omit<Args, "sessionPairs">) {
     all: safePairs,
     prMap: progress,
     offset,
-    chosenN,
+    chosenN: takeN,
   });
 }
 

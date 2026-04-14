@@ -93,7 +93,12 @@ export default function PassiveDeckControls({
         ? "Learn sentences only."
         : "Learn words first, then sentences.";
 
-  const sizes = [5, 10, 15, 20];
+  const sessionSizes = [
+    { value: 5, label: "Learn 5" },
+    { value: 10, label: "Learn 10" },
+    { value: 15, label: "Learn 15" },
+    { value: 0, label: "No limit" },
+  ];
 
   const buildDeckPageHref = useCallback((nextMode: Mode, nextCategory: string | null) => {
     const qs = new URLSearchParams();
@@ -300,14 +305,14 @@ export default function PassiveDeckControls({
 
       <div className="deck-actions-group">
         <div className="deck-action-row deck-learn-row" style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {sizes.map((n) => (
+          {sessionSizes.map((size) => (
             <Link
-              key={n}
-              href={buildPracticeHref(n)}
+              key={size.label}
+              href={buildPracticeHref(size.value)}
               style={learnButtonStyle}
               className="deck-action-button deck-action-button--primary deck-learn-button"
             >
-              Learn {n}
+              {size.label}
             </Link>
           ))}
         </div>

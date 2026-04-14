@@ -31,6 +31,7 @@ type Props = {
 
   playAllBusy: boolean;
   sessionPlanLabel: string;
+  noLimitPreviewHint?: boolean;
 
   resolveAudioUrl: (raw?: string | null) => string;
 
@@ -129,6 +130,7 @@ export default function PreviewScreen(props: Props) {
     playingPreviewId,
     playAllBusy,
     sessionPlanLabel,
+    noLimitPreviewHint = false,
     resolveAudioUrl,
     playbackRate,
     onTogglePlaybackRate,
@@ -176,7 +178,12 @@ export default function PreviewScreen(props: Props) {
       <div className="mx-auto max-w-5xl px-4 pt-1 pb-4 sm:px-6 sm:pt-4 sm:pb-6 md:py-6">
         <div className="preview-shell rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="text-sm opacity-70">{plannedCountLabel}</div>
+            <div>
+              <div className="text-sm opacity-70">{plannedCountLabel}</div>
+              {noLimitPreviewHint ? (
+                <div className="mt-1 text-xs opacity-60">Preview: first 5 items</div>
+              ) : null}
+            </div>
 
             <div className="flex flex-wrap items-stretch gap-2 lg:justify-end">
               {showWordsTable && (
