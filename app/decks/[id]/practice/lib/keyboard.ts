@@ -95,8 +95,8 @@ export function createKeyHandler(args: KeyboardArgs) {
       return;
     }
 
-    // S = playback speed cycle
-    if (k === "s") {
+    // V = playback speed cycle
+    if (k === "v") {
       e.preventDefault();
       args.onTogglePlaybackRate();
       return;
@@ -131,7 +131,7 @@ export function createKeyHandler(args: KeyboardArgs) {
         args.onHideTranslations();
         return;
       }
-      if (k === "t") {
+      if (k === "s") {
         e.preventDefault();
         args.onShowTranslations();
         return;
@@ -145,6 +145,14 @@ export function createKeyHandler(args: KeyboardArgs) {
       e.preventDefault();
       if (!args.revealed) args.onReveal();
       else args.onDefer();
+      return;
+    }
+
+    // s = reveal / next
+    if (k === "s") {
+      e.preventDefault();
+      if (!args.revealed) args.onReveal();
+      else args.onNext();
       return;
     }
 

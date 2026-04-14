@@ -202,7 +202,10 @@ export default function PreviewScreen(props: Props) {
                     className="min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
                     title="Toggle audio speed"
                   >
-                    {playbackRateLabel}
+                    <span className="md:hidden">{playbackRateLabel}</span>
+                    <span className="hidden md:inline">
+                      {playbackRateLabel} • V
+                    </span>
                   </button>
 
                   <button
@@ -252,7 +255,7 @@ export default function PreviewScreen(props: Props) {
           )}
 
           <div className="mt-4 hidden text-xs opacity-60 md:block">
-            Tip: Enter starts • A plays all audio • H hides translation • T shows translation • S changes speed • R reports an issue
+            Tip: Enter starts • A plays all audio • H hides translation • S shows translation • V changes speed • R reports an issue
           </div>
         </div>
       </div>

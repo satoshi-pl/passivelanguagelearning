@@ -417,7 +417,7 @@ export default function PracticeScreen(props: Props) {
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs hover:bg-neutral-50"
             title="Toggle audio speed"
           >
-            {playbackRateLabel}
+            {playbackRateLabel} <span className="text-neutral-400">• V</span>
           </button>
 
           <button
@@ -638,11 +638,11 @@ export default function PracticeScreen(props: Props) {
             )
           ) : !revealed ? (
             <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-              Press <b>0</b> to reveal the translation. Press <b>S</b> to change speed.
+              Press <b>S</b> (or <b>0</b>) to reveal the translation. Press <b>V</b> to change speed.
             </div>
           ) : (
             <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-              Press <b>0</b> for still learning. Press <b>D</b> for mastered. Press <b>S</b> to change speed.
+              Press <b>S</b> (or <b>0</b>) for still learning. Press <b>D</b> (or <b>1</b>) for mastered. Press <b>V</b> to change speed.
             </div>
           )}
 
@@ -669,7 +669,7 @@ export default function PracticeScreen(props: Props) {
               ) : (
                 <>
                   <div>
-                    <b>S</b> — Change speed
+                    <b>S</b> — {revealed ? "Still learning" : "Reveal translation"}
                   </div>
                   <div>
                     <b>D</b> — Mastered
@@ -679,6 +679,9 @@ export default function PracticeScreen(props: Props) {
                   </div>
                   <div>
                     <b>1</b> — Mastered
+                  </div>
+                  <div>
+                    <b>V</b> — Change speed
                   </div>
                 </>
               )}
