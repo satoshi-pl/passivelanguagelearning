@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Container } from "../../components/Container";
@@ -49,6 +50,7 @@ function normalizeLevel(level: string | null | undefined) {
 }
 
 export default function AddLanguagePairClient() {
+  const router = useRouter();
   const [loadingPairs, setLoadingPairs] = useState(true);
   const [loadErrorMsg, setLoadErrorMsg] = useState<string | null>(null);
   const [submitErrorMsg, setSubmitErrorMsg] = useState<string | null>(null);
@@ -267,6 +269,7 @@ export default function AddLanguagePairClient() {
     setConfirmRemovePair(null);
     setIsRemoving(false);
     setSuccessMsg(`${langName(targetLang)} from ${langName(nativeLang)} was removed.`);
+    router.refresh();
   }
 
   const hasAvailablePairs = availableTargets.length > 0;
