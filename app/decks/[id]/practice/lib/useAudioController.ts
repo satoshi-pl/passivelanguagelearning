@@ -4,6 +4,27 @@ import { useEffect, useRef, useState } from "react";
 
 type ResolveAudioUrl = (raw?: string | null) => string;
 const PLAYBACK_RATES: number[] = [1, 0.9, 0.8];
+const PLAYBACK_RATE_STORAGE_KEY = "pll.audio.playbackRate";
+
+function normalizePlaybackRate(next: number) {
+  if (!Number.isFinite(next)) return 1;
+  let closest = PLAYBACK_RATES[0];
+  for (const candidate of PLAYBACK_RATES) {
+    if (Math.abs(candidate - next) < Math.abs(closest - next)) closest = candidate;
+  }
+  return closest;
+}
+
+function loadPlaybackRatePreference() {
+  if (typeof window === "undefined") return 1;
+  try {
+    const raw = window.localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY);
+    if (!raw) return 1;
+    return normalizePlaybackRate(Number(raw));
+  } catch {
+    return 1;
+  }
+}
 
 type PlayAllOptions<T> = {
   getRaw: (row: T) => string | null | undefined;
@@ -20,10 +41,10 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
   };
   const [enabled, setEnabled] = useState(true);
   const [muted, setMutedState] = useState(false);
-  const [playbackRate, setPlaybackRateState] = useState(1);
+  const [playbackRate, setPlaybackRateState] = useState(loadPlaybackRatePreference);
   const enabledRef = useRef(true);
   const mutedRef = useRef(false);
-  const playbackRateRef = useRef(1);
+  const playbackRateRef = useRef(playbackRate);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -44,6 +65,11 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
 
   useEffect(() => {
     playbackRateRef.current = playbackRate;
+    try {
+      window.localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, String(playbackRate));
+    } catch {
+      // ignore storage write failures
+    }
     const el = audioRef.current;
     if (!el) return;
     el.defaultPlaybackRate = playbackRate;
@@ -72,14 +98,6 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
   };
 
   const toggleMute = () => setMuted(!mutedRef.current);
-  const normalizePlaybackRate = (next: number) => {
-    if (!Number.isFinite(next)) return 1;
-    let closest: number = PLAYBACK_RATES[0];
-    for (const candidate of PLAYBACK_RATES) {
-      if (Math.abs(candidate - next) < Math.abs(closest - next)) closest = candidate;
-    }
-    return closest;
-  };
   const setPlaybackRate = (next: number) => {
     const safe = normalizePlaybackRate(next);
     playbackRateRef.current = safe;
