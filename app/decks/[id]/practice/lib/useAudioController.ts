@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 type ResolveAudioUrl = (raw?: string | null) => string;
+const PLAYBACK_RATES: number[] = [0.8, 0.9, 1];
 
 type PlayAllOptions<T> = {
   getRaw: (row: T) => string | null | undefined;
@@ -71,8 +72,16 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
   };
 
   const toggleMute = () => setMuted(!mutedRef.current);
+  const normalizePlaybackRate = (next: number) => {
+    if (!Number.isFinite(next)) return 1;
+    let closest: number = PLAYBACK_RATES[0];
+    for (const candidate of PLAYBACK_RATES) {
+      if (Math.abs(candidate - next) < Math.abs(closest - next)) closest = candidate;
+    }
+    return closest;
+  };
   const setPlaybackRate = (next: number) => {
-    const safe = next === 0.75 ? 0.75 : 1;
+    const safe = normalizePlaybackRate(next);
     playbackRateRef.current = safe;
     setPlaybackRateState(safe);
 
@@ -81,7 +90,10 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
   };
 
   const togglePlaybackRate = () => {
-    setPlaybackRate(playbackRateRef.current === 0.75 ? 1 : 0.75);
+    const current = normalizePlaybackRate(playbackRateRef.current);
+    const idx = PLAYBACK_RATES.indexOf(current);
+    const next = PLAYBACK_RATES[(idx + 1) % PLAYBACK_RATES.length];
+    setPlaybackRate(next);
   };
 
   const stop = () => {

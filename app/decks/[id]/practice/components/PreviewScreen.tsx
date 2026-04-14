@@ -169,6 +169,7 @@ export default function PreviewScreen(props: Props) {
 
     return sessionPlanLabel || "";
   }, [mode, previewWords?.length, sessionPlanLabel]);
+  const playbackRateLabel = `${playbackRate.toFixed(1)}x`;
 
   return (
     <>
@@ -194,7 +195,7 @@ export default function PreviewScreen(props: Props) {
                     className="min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
                     title="Toggle audio speed"
                   >
-                    {playbackRate === 0.75 ? "0.75x" : "1x"}
+                    {playbackRateLabel}
                   </button>
 
                   <button

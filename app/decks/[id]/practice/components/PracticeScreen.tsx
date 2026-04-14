@@ -112,6 +112,7 @@ export default function PracticeScreen(props: Props) {
   const [favFlash, setFavFlash] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
   const helpWrapRef = useRef<HTMLDivElement | null>(null);
+  const playbackRateLabel = `${playbackRate.toFixed(1)}x`;
 
   useEffect(() => {
     if (!favFlash) return;
@@ -279,9 +280,9 @@ export default function PracticeScreen(props: Props) {
             onClick={onTogglePlaybackRate}
             className="inline-flex h-10 min-w-[2.75rem] shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-solid)] px-1.5 text-xs font-semibold tabular-nums text-[var(--foreground)] shadow-sm hover:bg-[var(--surface-muted)] active:scale-[0.98]"
             title="Toggle audio speed"
-            aria-label={`Audio speed ${playbackRate === 0.75 ? "0.75" : "1"} times`}
+            aria-label={`Audio speed ${playbackRate.toFixed(1)} times`}
           >
-            {playbackRate === 0.75 ? "0.75×" : "1×"}
+            {playbackRateLabel.replace("x", "×")}
           </button>
           <button
             type="button"
@@ -416,7 +417,7 @@ export default function PracticeScreen(props: Props) {
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs hover:bg-neutral-50"
             title="Toggle audio speed"
           >
-            {playbackRate === 0.75 ? "0.75x" : "1x"}
+            {playbackRateLabel}
           </button>
 
           <button
