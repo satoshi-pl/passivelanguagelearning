@@ -626,18 +626,6 @@ export default function PracticeScreen(props: Props) {
             </>
           )}
 
-          {isReview ? (
-            !revealed ? (
-              <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-                Press <b>0</b> or <b>1</b> to reveal the translation.
-              </div>
-            ) : (
-              <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-                Press <b>0</b> for Hard. Press <b>1</b> for Easy.
-              </div>
-            )
-          ) : null}
-
           <details className="hidden rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 sm:block">
             <summary className="cursor-pointer list-none font-medium text-neutral-600">
               Keyboard tips
