@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Container } from "../../components/Container";
 import { Button } from "../../components/ui/Button";
@@ -14,7 +14,9 @@ import {
 } from "../../components/ui/Card";
 
 type LanguagePair = { target_lang: string; native_lang: string };
-type PairRow = { target_lang: string | null; native_lang: string | null };
+type PairTemplateRow = { target_lang: string | null; native_lang: string | null };
+type DeckRow = { id: string; target_lang: string | null; native_lang: string | null; level: string | null };
+type ManagedPair = { target_lang: string; native_lang: string; levels: string[]; deckCount: number };
 
 function pairKey(targetLang: string, nativeLang: string) {
   return `${targetLang}__${nativeLang}`;
@@ -41,16 +43,25 @@ function langName(codeOrName: string) {
   return map[key] ?? codeOrName;
 }
 
+function normalizeLevel(level: string | null | undefined) {
+  const t = String(level || "").trim().toUpperCase();
+  return t || "Other";
+}
+
 export default function AddLanguagePairClient() {
   const [loadingPairs, setLoadingPairs] = useState(true);
   const [loadErrorMsg, setLoadErrorMsg] = useState<string | null>(null);
   const [submitErrorMsg, setSubmitErrorMsg] = useState<string | null>(null);
+  const [removeErrorMsg, setRemoveErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [availableTargets, setAvailableTargets] = useState<string[]>([]);
-  const [supportsByTarget, setSupportsByTarget] = useState<Record<string, string[]>>({});
+  const [templateRows, setTemplateRows] = useState<PairTemplateRow[]>([]);
+  const [ownedDeckRows, setOwnedDeckRows] = useState<DeckRow[]>([]);
   const [targetDraft, setTargetDraft] = useState("");
   const [supportDraft, setSupportDraft] = useState("");
   const [selectedPairs, setSelectedPairs] = useState<LanguagePair[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [confirmRemovePair, setConfirmRemovePair] = useState<ManagedPair | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const cancelledRef = useRef(false);
   const supabaseRef = useRef(createSupabaseBrowserClient());
@@ -58,7 +69,7 @@ export default function AddLanguagePairClient() {
   useEffect(() => {
     cancelledRef.current = false;
 
-    async function loadPairOptions() {
+    async function loadPairData() {
       setLoadingPairs(true);
       setLoadErrorMsg(null);
 
@@ -85,7 +96,7 @@ export default function AddLanguagePairClient() {
 
       const { data: existingDeckRows, error: decksErr } = await supabaseRef.current
         .from("decks")
-        .select("target_lang,native_lang");
+        .select("id,target_lang,native_lang,level");
 
       if (cancelledRef.current) return;
       if (decksErr) {
@@ -94,46 +105,100 @@ export default function AddLanguagePairClient() {
         return;
       }
 
-      const ownedPairKeys = new Set<string>();
-      for (const row of ((existingDeckRows as PairRow[] | null) ?? []).filter(Boolean)) {
-        const t = (row.target_lang || "").trim().toLowerCase();
-        const s = (row.native_lang || "").trim().toLowerCase();
-        if (!t || !s) continue;
-        ownedPairKeys.add(pairKey(t, s));
-      }
-
-      const map: Record<string, string[]> = {};
-      for (const row of ((deckTemplateRows as PairRow[] | null) ?? []).filter(Boolean)) {
-        const t = (row.target_lang || "").trim().toLowerCase();
-        const s = (row.native_lang || "").trim().toLowerCase();
-        if (!t || !s) continue;
-        if (ownedPairKeys.has(pairKey(t, s))) continue;
-        if (!map[t]) map[t] = [];
-        if (!map[t].includes(s)) map[t].push(s);
-      }
-
-      const targets = Object.keys(map).sort((a, b) => langName(a).localeCompare(langName(b)));
-      for (const t of targets) {
-        map[t] = map[t].sort((a, b) => langName(a).localeCompare(langName(b)));
-      }
-
-      setAvailableTargets(targets);
-      setSupportsByTarget(map);
-      setTargetDraft(targets[0] ?? "");
-      setSupportDraft(targets.length > 0 ? (map[targets[0]]?.[0] ?? "") : "");
+      setTemplateRows(((deckTemplateRows as PairTemplateRow[] | null) ?? []).filter(Boolean));
+      setOwnedDeckRows(((existingDeckRows as DeckRow[] | null) ?? []).filter(Boolean));
       setLoadingPairs(false);
     }
 
-    void loadPairOptions();
+    void loadPairData();
     return () => {
       cancelledRef.current = true;
     };
   }, []);
 
+  const ownedPairKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const row of ownedDeckRows) {
+      const t = (row.target_lang || "").trim().toLowerCase();
+      const s = (row.native_lang || "").trim().toLowerCase();
+      if (!t || !s) continue;
+      keys.add(pairKey(t, s));
+    }
+    return keys;
+  }, [ownedDeckRows]);
+
+  const managedPairs = useMemo<ManagedPair[]>(() => {
+    const grouped = new Map<string, ManagedPair>();
+    for (const row of ownedDeckRows) {
+      const t = (row.target_lang || "").trim().toLowerCase();
+      const s = (row.native_lang || "").trim().toLowerCase();
+      if (!t || !s) continue;
+      const k = pairKey(t, s);
+      const level = normalizeLevel(row.level);
+      const existing = grouped.get(k);
+      if (!existing) {
+        grouped.set(k, { target_lang: t, native_lang: s, levels: [level], deckCount: 1 });
+        continue;
+      }
+      if (!existing.levels.includes(level)) existing.levels.push(level);
+      existing.deckCount += 1;
+    }
+    return Array.from(grouped.values())
+      .map((p) => ({ ...p, levels: p.levels.slice().sort() }))
+      .sort((a, b) => {
+        const byTarget = langName(a.target_lang).localeCompare(langName(b.target_lang));
+        if (byTarget !== 0) return byTarget;
+        return langName(a.native_lang).localeCompare(langName(b.native_lang));
+      });
+  }, [ownedDeckRows]);
+
+  const supportsByTarget = useMemo<Record<string, string[]>>(() => {
+    const map: Record<string, string[]> = {};
+    for (const row of templateRows) {
+      const t = (row.target_lang || "").trim().toLowerCase();
+      const s = (row.native_lang || "").trim().toLowerCase();
+      if (!t || !s) continue;
+      if (ownedPairKeys.has(pairKey(t, s))) continue;
+      if (!map[t]) map[t] = [];
+      if (!map[t].includes(s)) map[t].push(s);
+    }
+
+    for (const target of Object.keys(map)) {
+      map[target] = map[target].sort((a, b) => langName(a).localeCompare(langName(b)));
+    }
+    return map;
+  }, [templateRows, ownedPairKeys]);
+
+  const availableTargets = useMemo(
+    () => Object.keys(supportsByTarget).sort((a, b) => langName(a).localeCompare(langName(b))),
+    [supportsByTarget]
+  );
+
+  useEffect(() => {
+    if (availableTargets.length === 0) {
+      setTargetDraft("");
+      setSupportDraft("");
+      return;
+    }
+
+    if (!targetDraft || !availableTargets.includes(targetDraft)) {
+      const nextTarget = availableTargets[0];
+      setTargetDraft(nextTarget);
+      setSupportDraft((supportsByTarget[nextTarget] ?? [])[0] ?? "");
+      return;
+    }
+
+    const supports = supportsByTarget[targetDraft] ?? [];
+    if (!supportDraft || !supports.includes(supportDraft)) {
+      setSupportDraft(supports[0] ?? "");
+    }
+  }, [availableTargets, supportsByTarget, targetDraft, supportDraft]);
+
   function addPair() {
     const t = targetDraft.trim().toLowerCase();
     const s = supportDraft.trim().toLowerCase();
     if (!t || !s) return;
+    if (ownedPairKeys.has(pairKey(t, s))) return;
     if (selectedPairs.some((p) => p.target_lang === t && p.native_lang === s)) return;
     setSelectedPairs((prev) => [...prev, { target_lang: t, native_lang: s }]);
   }
@@ -148,6 +213,7 @@ export default function AddLanguagePairClient() {
     if (selectedPairs.length === 0 || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitErrorMsg(null);
+    setRemoveErrorMsg(null);
     setSuccessMsg(null);
 
     const payload = selectedPairs.map((p) => ({
@@ -167,6 +233,42 @@ export default function AddLanguagePairClient() {
     window.location.assign("/decks");
   }
 
+  async function onConfirmRemove() {
+    if (!confirmRemovePair || isRemoving) return;
+    setIsRemoving(true);
+    setRemoveErrorMsg(null);
+    setSubmitErrorMsg(null);
+    setSuccessMsg(null);
+
+    const targetLang = confirmRemovePair.target_lang;
+    const nativeLang = confirmRemovePair.native_lang;
+
+    const res = await fetch("/api/language-pairs/remove", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ targetLang, nativeLang }),
+    });
+    const json = (await res.json().catch(() => ({}))) as { error?: string };
+
+    if (!res.ok) {
+      setIsRemoving(false);
+      setRemoveErrorMsg(json.error || "Could not remove language pair.");
+      return;
+    }
+
+    setOwnedDeckRows((prev) =>
+      prev.filter(
+        (row) =>
+          (row.target_lang || "").trim().toLowerCase() !== targetLang ||
+          (row.native_lang || "").trim().toLowerCase() !== nativeLang
+      )
+    );
+    setSelectedPairs((prev) => prev.filter((p) => !(p.target_lang === targetLang && p.native_lang === nativeLang)));
+    setConfirmRemovePair(null);
+    setIsRemoving(false);
+    setSuccessMsg(`${langName(targetLang)} from ${langName(nativeLang)} was removed.`);
+  }
+
   const hasAvailablePairs = availableTargets.length > 0;
 
   return (
@@ -175,12 +277,12 @@ export default function AddLanguagePairClient() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Add language pair</CardTitle>
-            <CardDescription>Add one or more new pairs to your deck library.</CardDescription>
+            <CardDescription>Manage language pairs in one place.</CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-6 text-center">
+          <CardContent className="space-y-6">
             {loadingPairs ? (
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-3 text-center">
                 <div
                   className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-900"
                   aria-hidden
@@ -191,66 +293,78 @@ export default function AddLanguagePairClient() {
               <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-left text-sm text-red-700">
                 {loadErrorMsg}
               </div>
-            ) : !hasAvailablePairs ? (
-              <div className="space-y-3">
-                <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
-                  You already have all currently available language pairs.
-                </p>
-                <Link className="text-sm font-medium text-neutral-900 underline" href="/decks">
-                  Back to decks
-                </Link>
-              </div>
             ) : (
               <>
-                <div className="grid gap-3 text-left">
-                  <div className="grid gap-1">
-                    <label className="text-sm text-neutral-700" htmlFor="add-pair-target">
-                      I want to learn
-                    </label>
-                    <select
-                      id="add-pair-target"
-                      className="h-11 rounded-xl border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
-                      value={targetDraft}
-                      onChange={(e) => {
-                        const nextTarget = e.target.value;
-                        setTargetDraft(nextTarget);
-                        const supports = supportsByTarget[nextTarget] ?? [];
-                        setSupportDraft(supports[0] ?? "");
-                      }}
-                    >
-                      {availableTargets.map((t) => (
-                        <option key={t} value={t}>
-                          {langName(t)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid gap-1">
-                    <label className="text-sm text-neutral-700" htmlFor="add-pair-support">
-                      From
-                    </label>
-                    <select
-                      id="add-pair-support"
-                      className="h-11 rounded-xl border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
-                      value={supportDraft}
-                      onChange={(e) => setSupportDraft(e.target.value)}
-                    >
-                      {(supportsByTarget[targetDraft] ?? []).map((s) => (
-                        <option key={s} value={s}>
-                          {langName(s)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <Button type="button" onClick={addPair}>
-                    Add pair
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => {
+                      if (!hasAvailablePairs) return;
+                      setShowAddForm((v) => !v);
+                    }}
+                    disabled={!hasAvailablePairs}
+                  >
+                    + Add new language pair
                   </Button>
+                  {showAddForm ? (
+                    <div className="grid gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-left">
+                      <div className="grid gap-1">
+                        <label className="text-sm text-neutral-700" htmlFor="add-pair-target">
+                          I want to learn
+                        </label>
+                        <select
+                          id="add-pair-target"
+                          className="h-11 rounded-xl border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+                          value={targetDraft}
+                          onChange={(e) => {
+                            const nextTarget = e.target.value;
+                            setTargetDraft(nextTarget);
+                            const supports = supportsByTarget[nextTarget] ?? [];
+                            setSupportDraft(supports[0] ?? "");
+                          }}
+                        >
+                          {availableTargets.map((t) => (
+                            <option key={t} value={t}>
+                              {langName(t)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="grid gap-1">
+                        <label className="text-sm text-neutral-700" htmlFor="add-pair-support">
+                          From
+                        </label>
+                        <select
+                          id="add-pair-support"
+                          className="h-11 rounded-xl border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+                          value={supportDraft}
+                          onChange={(e) => setSupportDraft(e.target.value)}
+                        >
+                          {(supportsByTarget[targetDraft] ?? []).map((s) => (
+                            <option key={s} value={s}>
+                              {langName(s)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <Button type="button" onClick={addPair}>
+                        Add pair
+                      </Button>
+                    </div>
+                  ) : null}
+                  {!hasAvailablePairs ? (
+                    <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
+                      You already have all currently available language pairs.
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2 text-left">
-                  <p className="text-sm font-medium text-neutral-900">Selected pairs</p>
+                  <p className="text-sm font-medium text-neutral-900">Selected pairs to add</p>
                   {selectedPairs.length === 0 ? (
                     <p className="text-sm text-neutral-500">Select at least one new pair to add.</p>
                   ) : (
@@ -274,6 +388,44 @@ export default function AddLanguagePairClient() {
                   )}
                 </div>
 
+                <div className="border-t border-neutral-200 pt-4" />
+
+                <div className="space-y-2 text-left">
+                  <p className="text-sm font-medium text-neutral-900">Existing language pairs</p>
+                  {managedPairs.length === 0 ? (
+                    <p className="text-sm text-neutral-500">No existing language pairs yet.</p>
+                  ) : (
+                    managedPairs.map((p) => (
+                      <div
+                        key={`${p.target_lang}-${p.native_lang}`}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium text-neutral-900">
+                            {langName(p.target_lang)} from {langName(p.native_lang)}
+                          </div>
+                          <div className="text-xs text-neutral-500">
+                            {p.levels.length > 0 ? `Levels: ${p.levels.join(", ")}` : null}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-neutral-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => {
+                            setSubmitErrorMsg(null);
+                            setRemoveErrorMsg(null);
+                            setConfirmRemovePair(p);
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
                 {successMsg ? (
                   <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-left text-sm text-green-700">
                     {successMsg}
@@ -283,6 +435,12 @@ export default function AddLanguagePairClient() {
                 {submitErrorMsg ? (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-left text-sm text-red-700">
                     {submitErrorMsg}
+                  </div>
+                ) : null}
+
+                {removeErrorMsg ? (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-left text-sm text-red-700">
+                    {removeErrorMsg}
                   </div>
                 ) : null}
 
@@ -299,6 +457,34 @@ export default function AddLanguagePairClient() {
           </CardContent>
         </Card>
       </div>
+
+      {confirmRemovePair ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-neutral-900">Remove language pair?</h2>
+            <p className="mt-2 text-sm text-neutral-700">
+              This will permanently delete all your progress for this language pair. This action cannot be undone.
+            </p>
+            <p className="mt-2 text-sm font-medium text-neutral-900">
+              {langName(confirmRemovePair.target_lang)} from {langName(confirmRemovePair.native_lang)}
+            </p>
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setConfirmRemovePair(null)}
+                disabled={isRemoving}
+              >
+                Cancel
+              </Button>
+              <Button type="button" variant="danger" onClick={onConfirmRemove} disabled={isRemoving}>
+                {isRemoving ? "Removing..." : "Remove"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </Container>
   );
 }
