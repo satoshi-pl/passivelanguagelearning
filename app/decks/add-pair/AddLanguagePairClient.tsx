@@ -363,12 +363,9 @@ export default function AddLanguagePairClient() {
                   ) : null}
                 </div>
 
-                <div className="space-y-2 text-left">
-                  <p className="text-sm font-medium text-neutral-900">Selected pairs to add</p>
-                  {selectedPairs.length === 0 ? (
-                    <p className="text-sm text-neutral-500">Select at least one new pair to add.</p>
-                  ) : (
-                    selectedPairs.map((p) => (
+                {selectedPairs.length > 0 ? (
+                  <div className="space-y-2 text-left">
+                    {selectedPairs.map((p) => (
                       <div
                         key={`${p.target_lang}-${p.native_lang}`}
                         className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2"
@@ -384,9 +381,9 @@ export default function AddLanguagePairClient() {
                           Remove
                         </button>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : null}
 
                 <div className="border-t border-neutral-200 pt-4" />
 
