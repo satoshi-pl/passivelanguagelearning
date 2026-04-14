@@ -636,15 +636,7 @@ export default function PracticeScreen(props: Props) {
                 Press <b>0</b> for Hard. Press <b>1</b> for Easy.
               </div>
             )
-          ) : !revealed ? (
-            <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-              Press <b>S</b> (or <b>0</b>) to reveal the translation. Press <b>V</b> to change speed.
-            </div>
-          ) : (
-            <div className="learning-support-text hidden text-center text-sm text-neutral-500 sm:block">
-              Press <b>S</b> (or <b>0</b>) for still learning. Press <b>D</b> (or <b>1</b>) for mastered. Press <b>V</b> to change speed.
-            </div>
-          )}
+          ) : null}
 
           <details className="hidden rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 sm:block">
             <summary className="cursor-pointer list-none font-medium text-neutral-600">
