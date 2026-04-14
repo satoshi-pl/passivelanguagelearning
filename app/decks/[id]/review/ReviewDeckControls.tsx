@@ -151,7 +151,7 @@ export default function ReviewDeckControls({
       </div>
 
       <div style={{ marginTop: 20 }}>
-        <div className="deck-mode-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div className="deck-mode-row flex flex-wrap gap-[10px] lg:flex-nowrap" style={{ display: "flex", gap: 10 }}>
           <Link
             className="deck-mode-button"
             href={buildReviewPageHref("words", selectedCategory)}
