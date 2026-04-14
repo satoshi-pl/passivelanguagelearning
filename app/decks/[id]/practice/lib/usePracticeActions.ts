@@ -7,6 +7,7 @@ import { useAudioController } from "./useAudioController";
 
 type AudioController = ReturnType<typeof useAudioController>;
 type ReviewDoneMap = Record<string, { word?: boolean; sentence?: boolean }>;
+const WS_REINSERT_DISTANCE = 5;
 
 type Args = {
   // core flags
@@ -120,6 +121,7 @@ export function usePracticeActions(args: Args) {
   } = args;
 
   const finishingRef = useRef(false);
+  const wsDeferredSentenceRef = useRef<Record<string, boolean>>({});
 
   // ✅ favourites sessions are "single-stage" even in ws review
   const isFavSession = safeDeckId === "favorites";
@@ -279,43 +281,31 @@ export function usePracticeActions(args: Args) {
     if (mode === "ws") {
       if (!wsSteps.length) return;
 
-      if (wsSteps.length === 1) {
-        setRevealed(false);
-        audio.stop();
-        const only = wsSteps[0];
-        if (only) {
-          setWsPos(0);
-          setIdx(only.pairIndex);
-          setLearnWsStage(only.stage);
-        }
-        return;
-      }
-
       const cur = wsSteps[wsPos];
       if (!cur) return;
 
-      const pairIndex = cur.pairIndex;
-
-      const indices: number[] = [];
-      for (let i = 0; i < wsSteps.length; i++) {
-        if (wsSteps[i]?.pairIndex === pairIndex) indices.push(i);
-      }
-      if (!indices.length) return;
-
-      const removedBeforeOrAt = indices.filter((i) => i <= wsPos).length;
-
       const nextSteps = wsSteps.slice();
-      const block: LearnStep[] = [];
-      for (let k = indices.length - 1; k >= 0; k--) {
-        const removed = nextSteps.splice(indices[k], 1)[0];
-        if (removed) block.unshift(removed);
+      const [removedStep] = nextSteps.splice(wsPos, 1);
+      if (!removedStep) return;
+
+      if (removedStep.stage === "word" && currentPair) {
+        let removedSentence = false;
+        for (let i = nextSteps.length - 1; i >= 0; i--) {
+          const step = nextSteps[i];
+          if (step?.pairIndex === removedStep.pairIndex && step.stage === "sentence") {
+            nextSteps.splice(i, 1);
+            removedSentence = true;
+          }
+        }
+        if (removedSentence) {
+          wsDeferredSentenceRef.current[currentPair.id] = true;
+        }
       }
 
-      block.sort((a, b) => (a.stage === "word" ? 0 : 1) - (b.stage === "word" ? 0 : 1));
-      nextSteps.push(...block);
+      const insertPos = Math.min(wsPos + WS_REINSERT_DISTANCE, nextSteps.length);
+      nextSteps.splice(insertPos, 0, removedStep);
 
-      let newPos = wsPos - removedBeforeOrAt;
-      if (newPos < 0) newPos = 0;
+      let newPos = wsPos;
       if (newPos >= nextSteps.length) newPos = 0;
 
       const next = nextSteps[newPos];
@@ -537,6 +527,43 @@ export function usePracticeActions(args: Args) {
       });
 
       // LEARN words/sentences: remove mastered item from learnQueue
+      if (!isReview && mode === "ws" && args.currentStage === "word" && currentPair) {
+        const pairId = currentPair.id;
+        const pairIndex =
+          wsSteps[wsPos]?.pairIndex ??
+          args.sessionPairs.findIndex((p) => p.id === pairId);
+
+        const hadDeferredSentence = !!wsDeferredSentenceRef.current[pairId];
+        const hasUpcomingSentence =
+          pairIndex >= 0 &&
+          wsSteps.some(
+            (step, i) => i > wsPos && step.pairIndex === pairIndex && step.stage === "sentence"
+          );
+        const shouldShowSentenceNow =
+          pairIndex >= 0 &&
+          hasSentence(currentPair) &&
+          (hadDeferredSentence || hasUpcomingSentence);
+
+        if (shouldShowSentenceNow) {
+          if (hadDeferredSentence) delete wsDeferredSentenceRef.current[pairId];
+
+          const withoutSentence = wsSteps.filter(
+            (step, i) => !(i > wsPos && step.pairIndex === pairIndex && step.stage === "sentence")
+          );
+          const insertAt = Math.min(wsPos + 1, withoutSentence.length);
+          const nextSteps = withoutSentence.slice();
+          nextSteps.splice(insertAt, 0, { pairIndex, stage: "sentence" });
+
+          setWsSteps(nextSteps);
+          setWsPos(insertAt);
+          setIdx(pairIndex);
+          setLearnWsStage("sentence");
+          setRevealed(false);
+          audio.stop();
+          return;
+        }
+      }
+
       if (!isReview && (mode === "words" || mode === "sentences")) {
         const q = learnQueue;
         if (!q.length) {
