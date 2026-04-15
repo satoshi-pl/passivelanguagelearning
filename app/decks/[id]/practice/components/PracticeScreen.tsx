@@ -178,7 +178,7 @@ export default function PracticeScreen(props: Props) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl xl:max-w-6xl space-y-2 px-4 sm:space-y-4 sm:px-6 md:space-y-5">
+    <div className="pll-workspace mx-auto max-w-5xl xl:max-w-6xl space-y-2 px-4 sm:space-y-4 sm:px-6 md:space-y-5">
       <ReportModal
         open={reportOpen}
         onClose={() => setReportOpen(false)}

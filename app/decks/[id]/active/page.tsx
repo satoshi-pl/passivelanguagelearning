@@ -118,7 +118,7 @@ export default async function DeckActivePage({
 
   if (deckErr || !deck) {
     return (
-      <div style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
+      <div className="pll-workspace" style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
         <Link href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
         </Link>
@@ -313,7 +313,7 @@ export default async function DeckActivePage({
       : "← Back to My decks";
 
   return (
-    <div style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
+    <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
       <div
         style={{
           border: "1px solid var(--border)",
@@ -324,7 +324,7 @@ export default async function DeckActivePage({
           boxShadow: "var(--shadow)",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
+        <div className="pll-card-inner" style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
           <Link href={backToDecksHref} style={{ textDecoration: "none", color: "inherit" }}>
             {backLabel}
           </Link>

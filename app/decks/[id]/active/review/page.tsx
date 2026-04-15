@@ -83,7 +83,7 @@ export default async function DeckActiveReviewPage({
 
   if (deckErr || !deck) {
     return (
-      <div style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
+      <div className="pll-workspace" style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
         <Link href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
         </Link>
@@ -195,7 +195,7 @@ export default async function DeckActiveReviewPage({
 
   if (!hasAny) {
     return (
-      <div style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
+      <div className="pll-workspace" style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
         <div
           style={{
             border: "1px solid var(--border)",
@@ -206,7 +206,7 @@ export default async function DeckActiveReviewPage({
             boxShadow: "var(--shadow)",
           }}
         >
-          <div style={{ width: "100%", maxWidth: 920, margin: "0 auto" }}>
+          <div className="pll-card-inner" style={{ width: "100%", maxWidth: 920, margin: "0 auto" }}>
             <Link href={activeDeckHref} style={{ textDecoration: "none", color: "inherit" }}>
               ← Back to {deck.name} Active Learning
             </Link>
@@ -273,7 +273,7 @@ export default async function DeckActiveReviewPage({
   }
 
   return (
-    <div style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
+    <div className="pll-workspace" style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
       <div
         style={{
           border: "1px solid var(--border)",
@@ -284,7 +284,7 @@ export default async function DeckActiveReviewPage({
           boxShadow: "var(--shadow)",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 920, margin: "0 auto" }}>
+        <div className="pll-card-inner" style={{ width: "100%", maxWidth: 920, margin: "0 auto" }}>
           <Link href={activeDeckHref} style={{ textDecoration: "none", color: "inherit" }}>
             ← Back to {deck.name} Active Learning
           </Link>

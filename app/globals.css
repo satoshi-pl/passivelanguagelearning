@@ -510,6 +510,16 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   min-width: 0;
 }
 
+@media (min-width: 1024px) {
+  .pll-workspace {
+    max-width: 1120px !important;
+  }
+
+  .pll-card-inner {
+    max-width: 980px !important;
+  }
+}
+
 @media (min-width: 768px) {
   .deck-review-size-row {
     flex-wrap: nowrap;

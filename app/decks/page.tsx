@@ -266,7 +266,7 @@ export default async function DecksPage({
 
   if (decksError) {
     return (
-      <div style={{ maxWidth: 1040, margin: "40px auto", padding: "0 24px" }}>
+      <div className="pll-workspace" style={{ maxWidth: 1040, margin: "40px auto", padding: "0 24px" }}>
         <pre>{JSON.stringify(decksError, null, 2)}</pre>
       </div>
     );
@@ -358,7 +358,7 @@ export default async function DecksPage({
   });
 
   return (
-    <div style={{ maxWidth: 1040, margin: "40px auto", padding: "0 24px" }}>
+    <div className="pll-workspace" style={{ maxWidth: 1040, margin: "40px auto", padding: "0 24px" }}>
       <RememberDecksHref href={currentDecksHref} />
 
       <div
