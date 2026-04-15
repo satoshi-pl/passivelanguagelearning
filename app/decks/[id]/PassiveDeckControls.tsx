@@ -326,7 +326,7 @@ export default function PassiveDeckControls({
                 <span
                   className="entry-action-info"
                   aria-hidden="true"
-                  data-tooltip="Uses unlocked items from this deck."
+                  data-tooltip="Active Learning uses recall and only includes items already mastered in Passive Learning."
                 >
                   i
                 </span>

@@ -293,13 +293,6 @@ export default function ActiveDeckControls({
         <ProgressBar label="Sentences" pr={prSentences} />
       </div>
 
-      <div className="entry-helper-text entry-helper-note" style={{ marginTop: 14, color: "var(--foreground-muted)" }}>
-        <span className="entry-helper-note__icon" aria-hidden="true">
-          i
-        </span>
-        <span>Active Learning includes items already mastered in Passive Learning.</span>
-      </div>
-
       <div className="deck-actions-group">
         {currentModePending > 0 ? (
           <div

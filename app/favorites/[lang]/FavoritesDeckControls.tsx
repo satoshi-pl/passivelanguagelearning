@@ -36,7 +36,12 @@ export default function FavoritesDeckControls({
   );
   const currentModeTotal = favoriteTotalsByMode[mode] ?? 0;
 
-  const sizes = [5, 10, 15, 20];
+  const reviewSizes = [
+    { value: 5, label: "Review 5" },
+    { value: 10, label: "Review 10" },
+    { value: 15, label: "Review 15" },
+    { value: 0, label: "No limit" },
+  ];
 
   const buildPageHref = useCallback((nextMode: Mode, nextCategory: string | null) => {
     const qs = new URLSearchParams();
@@ -221,20 +226,16 @@ export default function FavoritesDeckControls({
       {currentModeTotal > 0 ? (
         <div style={{ marginTop: 18 }}>
           <div className="deck-action-row deck-learn-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {sizes.map((n) => (
+            {reviewSizes.map((size) => (
               <Link
-                key={n}
-                href={buildPracticeHref(n)}
+                key={size.label}
+                href={buildPracticeHref(size.value)}
                 style={reviewButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >
-                Review {n}
+                {size.label}
               </Link>
             ))}
-          </div>
-
-          <div style={{ marginTop: 10, fontSize: 12, color: "var(--foreground-muted)" }}>
-            Starts immediately. No preview. Reveal → rate.
           </div>
         </div>
       ) : (
