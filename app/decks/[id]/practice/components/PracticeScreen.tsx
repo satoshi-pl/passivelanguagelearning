@@ -284,6 +284,9 @@ export default function PracticeScreen(props: Props) {
               <span aria-hidden="true" className="practice-icon-control__glyph">
                 {favVisualFilled ? "★" : "☆"}
               </span>
+              <span className="practice-icon-control__shortcut" aria-hidden="true">
+                F
+              </span>
             </button>
 
             <button
@@ -296,6 +299,9 @@ export default function PracticeScreen(props: Props) {
               <span aria-hidden="true" className="practice-icon-control__speed-text">
                 {playbackRateLabel}
               </span>
+              <span className="practice-icon-control__shortcut" aria-hidden="true">
+                V
+              </span>
             </button>
 
             <button
@@ -307,6 +313,9 @@ export default function PracticeScreen(props: Props) {
             >
               <span aria-hidden="true" className="practice-icon-control__glyph">
                 ▶
+              </span>
+              <span className="practice-icon-control__shortcut" aria-hidden="true">
+                A
               </span>
             </button>
 
@@ -321,6 +330,9 @@ export default function PracticeScreen(props: Props) {
               <span aria-hidden="true" className="practice-icon-control__glyph">
                 {audioMuted ? "🔇" : "🔊"}
               </span>
+              <span className="practice-icon-control__shortcut" aria-hidden="true">
+                M
+              </span>
             </button>
 
             <button
@@ -332,6 +344,9 @@ export default function PracticeScreen(props: Props) {
             >
               <span aria-hidden="true" className="practice-icon-control__glyph">
                 ⚑
+              </span>
+              <span className="practice-icon-control__shortcut" aria-hidden="true">
+                R
               </span>
             </button>
           </div>
@@ -597,16 +612,16 @@ export default function PracticeScreen(props: Props) {
               {!revealed ? (
                 <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                   <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button practice-decision-button w-full sm:w-auto" variant="secondary">
-                    Reveal translation
+                    Reveal translation <span className="practice-shortcut-hint">0 / 1</span>
                   </Button>
                 </div>
               ) : (
                 <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                   <Button onClick={onReviewHard} disabled={busy} className="practice-decision-button practice-choice-secondary w-full sm:w-auto" variant="secondary">
-                    {reviewSecondaryLabel}
+                    {reviewSecondaryLabel} <span className="practice-shortcut-hint">0</span>
                   </Button>
                   <Button onClick={onReviewEasy} disabled={busy} className="practice-decision-button practice-choice-primary w-full sm:w-auto">
-                    {reviewPrimaryLabel}
+                    {reviewPrimaryLabel} <span className="practice-shortcut-hint">1</span>
                   </Button>
                 </div>
               )}
@@ -665,12 +680,12 @@ export default function PracticeScreen(props: Props) {
               {/* Learn actions: in-flow on sm+ (desktop / tablet unchanged) */}
               <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                 <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button practice-decision-button practice-choice-secondary w-full sm:w-auto" variant="secondary">
-                  {revealed ? "Still learning" : "Reveal translation"}
+                  {revealed ? "Still learning" : "Reveal translation"} <span className="practice-shortcut-hint">0 / S</span>
                 </Button>
 
                 {revealed ? (
                   <Button onClick={onMastered} disabled={busy} className="practice-decision-button practice-choice-primary w-full sm:w-auto">
-                    {busy ? "Saving..." : "Mastered"}
+                    {busy ? "Saving..." : "Mastered"} <span className="practice-shortcut-hint">1 / D</span>
                   </Button>
                 ) : null}
               </div>
