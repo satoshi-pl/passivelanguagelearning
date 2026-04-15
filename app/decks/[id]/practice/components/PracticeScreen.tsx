@@ -764,16 +764,10 @@ export default function PracticeScreen(props: Props) {
               ) : (
                 <>
                   <div className="preview-shortcuts__item">
-                    <b>S</b> — {revealed ? "Still learning" : "Reveal translation"}
+                    <b>0 / S</b> — {revealed ? "Still learning" : "Reveal translation"}
                   </div>
                   <div className="preview-shortcuts__item">
-                    <b>D</b> — Mastered
-                  </div>
-                  <div className="preview-shortcuts__item">
-                    <b>0</b> — {revealed ? "Still learning" : "Reveal translation"}
-                  </div>
-                  <div className="preview-shortcuts__item">
-                    <b>1</b> — Mastered
+                    <b>1 / D</b> — Mastered
                   </div>
                 </>
               )}

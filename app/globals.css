@@ -560,6 +560,14 @@ html[data-theme="dark"] .learning-support-text {
   font-weight: 600;
 }
 
+.preview-control-shortcut--on-dark {
+  color: inherit;
+}
+
+html[data-theme="dark"] .preview-control-shortcut--on-dark {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .practice-shortcut-hint {
   margin-left: 0.35rem;
   font-size: 0.73em;
@@ -637,6 +645,58 @@ html[data-theme="dark"] .preview-shortcuts__item b {
 }
 
 @media (min-width: 1024px) {
+  .entry-controls-shell .deck-mode-row .deck-mode-button,
+  .entry-controls-shell .deck-learn-row .deck-learn-button,
+  .entry-controls-shell .deck-review-size-row .deck-review-size-link {
+    flex: 1 1 0;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  html[data-theme="dark"] .entry-progress-row {
+    max-width: 860px;
+    border: 1px solid color-mix(in srgb, var(--border-strong) 90%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface-soft) 78%, var(--surface-muted) 22%);
+    padding: 0.56rem 0.72rem;
+    grid-template-columns: 6rem minmax(0, 1fr) auto;
+    grid-template-areas: "label track stats";
+    row-gap: 0;
+    align-items: center;
+  }
+
+  html[data-theme="dark"] .entry-progress-row__label {
+    font-size: 0.86rem;
+    font-weight: 650;
+    color: #c3cfde;
+  }
+
+  html[data-theme="dark"] .entry-progress-row__stats {
+    font-size: 0.84rem;
+    font-weight: 620;
+    color: #a9b7c8;
+  }
+
+  html[data-theme="dark"] .entry-progress-row__stats b {
+    color: #e8edf7;
+  }
+
+  html[data-theme="dark"] .entry-progress-row__track-wrap {
+    min-width: 0;
+  }
+
+  html[data-theme="dark"] .entry-progress-row__track {
+    border-color: color-mix(in srgb, var(--border-strong) 90%, transparent);
+    background: color-mix(in srgb, var(--surface-muted) 82%, var(--surface-soft) 18%);
+    height: 0.72rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  html[data-theme="dark"] .entry-progress-row__fill {
+    background: linear-gradient(90deg, #c1d2e7 0%, #89a4c2 100%);
+    box-shadow: inset 0 -1px 0 rgba(2, 6, 23, 0.3);
+  }
+
   html:not([data-theme="dark"]) {
     --background: #f6f8fb;
     --shell-halo: radial-gradient(

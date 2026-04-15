@@ -247,8 +247,13 @@ export default function PreviewScreen(props: Props) {
                 type="button"
                 onClick={startPractice}
                 className="min-h-11 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/90"
+                title="Start practice (Enter)"
               >
-                Start practice
+                <span className="md:hidden">Start practice</span>
+                <span className="hidden md:inline">
+                  Start practice
+                  <span className="preview-control-shortcut preview-control-shortcut--on-dark"> • Enter</span>
+                </span>
               </button>
             </div>
           </div>
