@@ -691,6 +691,31 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     border-color: #cfd9e6 !important;
   }
 
+  html:not([data-theme="dark"]) .preview-control-button--speed,
+  html:not([data-theme="dark"]) .preview-control-button--playall {
+    min-height: 2.55rem;
+    border-radius: 0.78rem;
+    border-color: #d6dee9 !important;
+    background: #fbfcfe !important;
+    color: #374357 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  html:not([data-theme="dark"]) .preview-control-button--speed:hover,
+  html:not([data-theme="dark"]) .preview-control-button--playall:hover {
+    border-color: #c5d1e0 !important;
+    background: #f2f6fb !important;
+    color: #1f2937 !important;
+  }
+
+  html:not([data-theme="dark"]) .preview-control-speed-text {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #253246;
+    font-variant-numeric: tabular-nums;
+  }
+
   html:not([data-theme="dark"]) .preview-shortcuts {
     border-color: #d3dde8;
     background: #f7f9fc;

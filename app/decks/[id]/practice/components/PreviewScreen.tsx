@@ -198,7 +198,7 @@ export default function PreviewScreen(props: Props) {
                   <button
                     type="button"
                     onClick={() => setShowTranslations(!showTranslations)}
-                    className="preview-control-button min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                    className="preview-control-button preview-control-button--text min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
                   >
                     <span className="md:hidden">{showTranslations ? "Hide translation" : "Show translation"}</span>
                     <span className="hidden md:inline">
@@ -210,11 +210,11 @@ export default function PreviewScreen(props: Props) {
                   <button
                     type="button"
                     onClick={onTogglePlaybackRate}
-                    className="preview-control-button min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                    className="preview-control-button preview-control-button--speed min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
                     title="Toggle audio speed"
                   >
                     <span className="md:hidden">{playbackRateLabel}</span>
-                    <span className="hidden md:inline">
+                    <span className="preview-control-speed-text hidden md:inline">
                       {playbackRateLabel} • V
                     </span>
                   </button>
@@ -225,10 +225,12 @@ export default function PreviewScreen(props: Props) {
                       playAllPreviewWords(previewWords);
                     }}
                     disabled={playAllBusy || previewWords.length === 0}
-                    className="preview-control-button min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50"
+                    className="preview-control-button preview-control-button--playall min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50"
                   >
                     <span className="md:hidden">{playAllBusy ? "Playing..." : "Play all"}</span>
-                    <span className="hidden md:inline">{playAllBusy ? "Playing..." : "Play all • A"}</span>
+                    <span className="hidden md:inline">
+                      <span aria-hidden="true">▶</span> {playAllBusy ? "Playing..." : "Play all • A"}
+                    </span>
                   </button>
                 </>
               )}
