@@ -315,6 +315,7 @@ export default async function DeckActivePage({
   return (
     <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
       <div
+        className="pll-primary-card"
         style={{
           border: "1px solid var(--border)",
           borderRadius: 16,

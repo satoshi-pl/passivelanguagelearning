@@ -289,6 +289,7 @@ export default async function FavoritesLangPage({
   return (
     <div className="pll-workspace" style={{ maxWidth: 980, margin: "40px auto", padding: "0 24px" }}>
       <div
+        className="pll-primary-card"
         style={{
           border: "1px solid var(--border)",
           borderRadius: 16,

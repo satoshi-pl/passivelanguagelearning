@@ -32,9 +32,9 @@ export default async function HomePage() {
 
   return (
     <Container>
-      <div className="mx-auto max-w-2xl">
-        <Card>
-          <CardHeader className="pb-4">
+      <div className="mx-auto max-w-2xl lg:max-w-4xl">
+        <Card className="homepage-hero-shell">
+          <CardHeader className="pb-4 lg:pb-6">
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Passive Language Learning
             </div>
@@ -50,7 +50,7 @@ export default async function HomePage() {
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-5 lg:space-y-6">
             {showDebug && (
               <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
                 <div className="flex items-center justify-between gap-3">

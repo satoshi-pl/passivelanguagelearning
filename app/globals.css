@@ -511,12 +511,93 @@ html[data-theme="dark"] .preview-shortcuts__item b {
 }
 
 @media (min-width: 1024px) {
+  html:not([data-theme="dark"]) {
+    --background: #f6f8fb;
+    --shell-halo: radial-gradient(
+      ellipse at top,
+      rgba(148, 163, 184, 0.14) 0%,
+      rgba(148, 163, 184, 0.04) 46%,
+      transparent 72%
+    );
+  }
+
+  html:not([data-theme="dark"]) body {
+    background: #f6f8fb;
+  }
+
   .pll-workspace {
-    max-width: 1120px !important;
+    max-width: 1180px !important;
   }
 
   .pll-card-inner {
-    max-width: 980px !important;
+    max-width: 1040px !important;
+  }
+
+  html:not([data-theme="dark"]) .pll-primary-card,
+  html:not([data-theme="dark"]) .preview-shell,
+  html:not([data-theme="dark"]) .practice-shell {
+    background: #ffffff !important;
+    border-color: #dfe6ef !important;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.045) !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-shell {
+    border-radius: 20px;
+  }
+
+  html:not([data-theme="dark"]) .practice-prompt-card {
+    border-color: #e2e8f0 !important;
+    background: #ffffff !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-kbd-tips {
+    border-color: #dce4ee !important;
+    background: #f8fafd !important;
+    color: #5f6977 !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-kbd-tips summary {
+    color: #4d596b !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-reveal-button {
+    border-color: #d5deea !important;
+    background: #f8fafd !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-reveal-button:hover {
+    background: #eff4fa !important;
+    border-color: #c8d4e3 !important;
+  }
+
+  html:not([data-theme="dark"]) .preview-control-button {
+    border-color: #dce3ec !important;
+    background: #fbfcfe !important;
+    color: #1f2937 !important;
+  }
+
+  html:not([data-theme="dark"]) .preview-control-button:hover {
+    background: #f3f6fa !important;
+    border-color: #cfd9e6 !important;
+  }
+
+  html:not([data-theme="dark"]) .preview-shortcuts {
+    border-color: #d3dde8;
+    background: #f7f9fc;
+  }
+
+  html:not([data-theme="dark"]) .preview-shortcuts__summary:hover {
+    background: #eef3f9;
+  }
+
+  html:not([data-theme="dark"]) .preview-shortcuts__list {
+    border-top-color: #dfe7f1;
+    background: #fcfdff;
+  }
+
+  html:not([data-theme="dark"]) .homepage-hero-shell {
+    border-color: #dfe6ef !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05) !important;
   }
 }
 

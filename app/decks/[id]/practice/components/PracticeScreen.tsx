@@ -464,14 +464,14 @@ export default function PracticeScreen(props: Props) {
         ) : null}
       </div>
 
-      <Card className="border-neutral-200">
+      <Card className="practice-shell border-neutral-200">
         <CardHeader className="hidden pb-3 pt-5 sm:block md:pt-6">
           <CardTitle className="text-lg">{deckName}</CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-4 px-4 pb-6 pt-3 sm:space-y-5 sm:px-6 sm:pt-0">
+        <CardContent className="space-y-4 px-4 pb-6 pt-3 sm:space-y-5 sm:px-6 sm:pt-0 lg:px-7 lg:pb-7">
           <div
-            className="max-sm:mb-2 rounded-2xl border border-neutral-200 bg-white px-4 py-6 sm:px-8 sm:py-10"
+            className="practice-prompt-card max-sm:mb-2 rounded-2xl border border-neutral-200 bg-white px-4 py-6 sm:px-8 sm:py-10 lg:px-10 lg:py-12"
           >
             <div className="text-center text-[1.65rem] font-semibold leading-tight tracking-tight sm:text-[2.25rem]">
               {prompt}
@@ -496,7 +496,7 @@ export default function PracticeScreen(props: Props) {
               {/* Review actions: in-flow on sm+ (no Back — use header / browser to leave) */}
               {!revealed ? (
                 <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
-                  <Button onClick={onRevealOrNext} disabled={busy} className="w-full sm:w-auto" variant="secondary">
+                  <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button w-full sm:w-auto" variant="secondary">
                     Reveal translation
                   </Button>
                 </div>
@@ -564,7 +564,7 @@ export default function PracticeScreen(props: Props) {
             <>
               {/* Learn actions: in-flow on sm+ (desktop / tablet unchanged) */}
               <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
-                <Button onClick={onRevealOrNext} disabled={busy} className="w-full sm:w-auto" variant="secondary">
+                <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button w-full sm:w-auto" variant="secondary">
                   {revealed ? "Still learning" : "Reveal translation"}
                 </Button>
 
@@ -626,7 +626,7 @@ export default function PracticeScreen(props: Props) {
             </>
           )}
 
-          <details className="hidden rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 sm:block">
+          <details className="practice-kbd-tips hidden rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 sm:block">
             <summary className="cursor-pointer list-none font-medium text-neutral-600">
               Keyboard tips
             </summary>

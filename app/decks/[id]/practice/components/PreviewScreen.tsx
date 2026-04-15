@@ -176,7 +176,7 @@ export default function PreviewScreen(props: Props) {
   return (
     <>
       <div className="pll-workspace mx-auto max-w-5xl xl:max-w-6xl px-4 pt-1 pb-4 sm:px-6 sm:pt-4 sm:pb-6 md:py-6">
-        <div className="preview-shell rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
+        <div className="preview-shell rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6 lg:p-7">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="text-sm opacity-70">{plannedCountLabel}</div>
@@ -191,7 +191,7 @@ export default function PreviewScreen(props: Props) {
                   <button
                     type="button"
                     onClick={() => setShowTranslations(!showTranslations)}
-                    className="min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                    className="preview-control-button min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
                   >
                     <span className="md:hidden">{showTranslations ? "Hide translation" : "Show translation"}</span>
                     <span className="hidden md:inline">
@@ -203,7 +203,7 @@ export default function PreviewScreen(props: Props) {
                   <button
                     type="button"
                     onClick={onTogglePlaybackRate}
-                    className="min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                    className="preview-control-button min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
                     title="Toggle audio speed"
                   >
                     <span className="md:hidden">{playbackRateLabel}</span>
@@ -218,7 +218,7 @@ export default function PreviewScreen(props: Props) {
                       playAllPreviewWords(previewWords);
                     }}
                     disabled={playAllBusy || previewWords.length === 0}
-                    className="min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50"
+                    className="preview-control-button min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50"
                   >
                     <span className="md:hidden">{playAllBusy ? "Playing..." : "Play all"}</span>
                     <span className="hidden md:inline">{playAllBusy ? "Playing..." : "Play all • A"}</span>
