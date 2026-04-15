@@ -181,13 +181,11 @@ export default function FavoritesDeckControls({
       </div>
 
       {currentCategoryOptions.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 12, color: "var(--foreground-muted)", marginBottom: 6 }}>
-            Category
-          </div>
+        <div className="entry-category-row" style={{ marginTop: 16 }}>
+          <div className="entry-category-label">Category</div>
 
           <select
-            className="deck-category-select"
+            className="deck-category-select entry-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
@@ -200,7 +198,7 @@ export default function FavoritesDeckControls({
             }}
             style={{
               width: "100%",
-              maxWidth: 560,
+              maxWidth: 420,
               minWidth: 0,
               padding: "10px 12px",
               borderRadius: 12,

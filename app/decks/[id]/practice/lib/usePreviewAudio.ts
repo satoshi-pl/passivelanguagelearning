@@ -32,12 +32,17 @@ export function usePreviewAudio(audio: AudioLike, debugAudio = false) {
     setPlayAllBusy(false);
   }, []);
 
+  const getPreviewAudioRaw = useCallback((p: PairRow) => {
+    return p.word_target_audio_url ?? p.sentence_target_audio_url ?? null;
+  }, []);
+
   const onPreviewRowPlay = useCallback(
     (p: PairRow) => {
+      const rawAudio = getPreviewAudioRaw(p);
       if (debugAudio) {
         console.debug("[audio-debug]", "preview single-play handler fired", {
           pairId: p.id,
-          rawAudio: p.word_target_audio_url ?? null,
+          rawAudio,
         });
       }
       setSelectedPreviewId(p.id);
@@ -45,9 +50,9 @@ export function usePreviewAudio(audio: AudioLike, debugAudio = false) {
 
       audio.enable();
       audio.setMuted(false);
-      void audio.play(p.word_target_audio_url);
+      void audio.play(rawAudio);
     },
-    [audio, debugAudio]
+    [audio, debugAudio, getPreviewAudioRaw]
   );
 
 const playAllPreviewWords = useCallback(
@@ -63,7 +68,7 @@ const playAllPreviewWords = useCallback(
 
     try {
       await audio.playAll(rows, {
-        getRaw: (p) => p.word_target_audio_url,
+        getRaw: getPreviewAudioRaw,
         onRowStart: (p) => setPlayingPreviewId(p.id),
         gapMs: 700,
         ensureAudible: true,
@@ -73,7 +78,7 @@ const playAllPreviewWords = useCallback(
       setPlayingPreviewId(null);
     }
   },
-  [audio, debugAudio]
+  [audio, debugAudio, getPreviewAudioRaw]
 );
 
   return {

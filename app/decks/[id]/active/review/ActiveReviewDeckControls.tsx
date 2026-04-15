@@ -147,8 +147,11 @@ export default function ActiveReviewDeckControls({
 
   return (
     <div className="entry-controls-shell">
-      <div className="entry-helper-text" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
-        Active review uses items already mastered in Active Learning. No preview. No mastery changes.
+      <div className="entry-helper-text entry-helper-note" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
+        <span className="entry-helper-note__icon" aria-hidden="true">
+          i
+        </span>
+        <span>Active review uses items already mastered in Active Learning. No preview. No mastery changes.</span>
       </div>
 
       <div style={{ marginTop: 20 }}>
@@ -178,11 +181,11 @@ export default function ActiveReviewDeckControls({
       </div>
 
       {currentCategoryOptions.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 12, color: "var(--foreground-muted)", marginBottom: 6 }}>Category</div>
+        <div className="entry-category-row" style={{ marginTop: 16 }}>
+          <div className="entry-category-label">Category</div>
 
           <select
-            className="deck-category-select"
+            className="deck-category-select entry-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
@@ -195,7 +198,7 @@ export default function ActiveReviewDeckControls({
             }}
             style={{
               width: "100%",
-              maxWidth: 560,
+              maxWidth: 420,
               minWidth: 0,
               padding: "10px 12px",
               borderRadius: 12,

@@ -116,6 +116,10 @@ function getWordNative(p: PreviewLikeRow) {
   );
 }
 
+function getPreviewAudioRaw(p: PreviewLikeRow) {
+  return p.word_target_audio_url ?? p.sentence_target_audio_url ?? null;
+}
+
 export default function PreviewScreen(props: Props) {
   const {
     mode,
@@ -342,7 +346,7 @@ function WordsPreviewTable({
           const native = getWordNative(row);
           const leftValue = isActive ? native : target;
           const rightValue = isActive ? target : native;
-          const url = resolveAudioUrl(row.word_target_audio_url ?? "");
+          const url = resolveAudioUrl(getPreviewAudioRaw(row));
           const hasAudio = !!url;
 
           return (
@@ -410,7 +414,7 @@ function WordsPreviewTable({
               const leftValue = isActive ? native : target;
               const rightValue = isActive ? target : native;
 
-              const url = resolveAudioUrl(row.word_target_audio_url ?? "");
+              const url = resolveAudioUrl(getPreviewAudioRaw(row));
               const hasAudio = !!url;
 
               return (

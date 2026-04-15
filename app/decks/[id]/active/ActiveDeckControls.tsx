@@ -35,40 +35,16 @@ type Props = {
 
 function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
   return (
-    <div style={{ marginTop: 10, width: "100%", maxWidth: "none" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: 12,
-          color: "var(--foreground-muted)",
-        }}
-      >
-        <span>{label}</span>
-        <span style={{ fontWeight: 600 }}>
-          {pr.mastered}/{pr.total} · <b style={{ color: "var(--foreground)" }}>{pr.pct}%</b>
+    <div className="entry-progress-row">
+      <div className="entry-progress-row__meta">
+        <span className="entry-progress-row__label">{label}</span>
+        <span className="entry-progress-row__stats">
+          {pr.mastered}/{pr.total} · <b>{pr.pct}%</b>
         </span>
       </div>
 
-      <div
-        style={{
-          marginTop: 8,
-          height: 13,
-          borderRadius: 999,
-          background: "var(--surface-muted)",
-          border: "1px solid var(--border)",
-          overflow: "hidden",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-        }}
-      >
-        <div
-          style={{
-            height: "100%",
-            width: `${pr.pct}%`,
-            background: "linear-gradient(90deg, var(--foreground) 0%, var(--foreground-muted) 100%)",
-            borderRadius: 999,
-          }}
-        />
+      <div className="entry-progress-row__track">
+        <div className="entry-progress-row__fill" style={{ width: `${pr.pct}%` }} />
       </div>
     </div>
   );
@@ -276,11 +252,11 @@ export default function ActiveDeckControls({
       </div>
 
       {currentCategoryOptions.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 12, color: "var(--foreground-muted)", marginBottom: 6 }}>Category</div>
+        <div className="entry-category-row" style={{ marginTop: 16 }}>
+          <div className="entry-category-label">Category</div>
 
           <select
-            className="deck-category-select"
+            className="deck-category-select entry-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
@@ -293,7 +269,7 @@ export default function ActiveDeckControls({
             }}
             style={{
               width: "100%",
-              maxWidth: 560,
+              maxWidth: 420,
               minWidth: 0,
               padding: "10px 12px",
               borderRadius: 12,
@@ -314,12 +290,15 @@ export default function ActiveDeckControls({
       )}
 
       <div style={{ marginTop: 12 }}>
-        <ProgressBar label="Active words" pr={prWords} />
-        <ProgressBar label="Active sentences" pr={prSentences} />
+        <ProgressBar label="Words" pr={prWords} />
+        <ProgressBar label="Sentences" pr={prSentences} />
       </div>
 
-      <div className="entry-helper-text" style={{ marginTop: 14, color: "var(--foreground-muted)" }}>
-        Active Learning only includes items already mastered in Passive Learning.
+      <div className="entry-helper-text entry-helper-note" style={{ marginTop: 14, color: "var(--foreground-muted)" }}>
+        <span className="entry-helper-note__icon" aria-hidden="true">
+          i
+        </span>
+        <span>Active learning includes items already mastered in Passive Learning.</span>
       </div>
 
       <div className="deck-actions-group">
