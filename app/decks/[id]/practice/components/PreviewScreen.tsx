@@ -182,8 +182,6 @@ export default function PreviewScreen(props: Props) {
               <div className="md:hidden text-sm opacity-70">{plannedCountLabel}</div>
               <div className="preview-meta-strip hidden md:flex">
                 <span className="preview-meta-chip">{plannedCountLabel}</span>
-                {noLimitPreviewHint ? <span className="preview-meta-chip">Preview: first 5 items</span> : null}
-                {isActive ? <span className="preview-meta-chip">{`Direction: ${previewDirectionLabel}`}</span> : null}
               </div>
               {noLimitPreviewHint ? (
                 <div className="md:hidden mt-1 text-xs opacity-60">Preview: first 5 items</div>

@@ -243,14 +243,6 @@ export default function PracticeScreen(props: Props) {
               <span className="practice-status-chip">
                 Mode <b>{modeLabel}</b>
               </span>
-              {!isFavoritesSession ? (
-                <span className="practice-status-chip">
-                  Now <b>{badge}</b>
-                </span>
-              ) : null}
-              <span className="practice-status-chip">
-                Track <b>{isActive ? "Active review" : "Passive review"}</b>
-              </span>
               {isFavoritesSession ? (
                 <span className="practice-status-chip">
                   Source <b>Favourites</b>
@@ -260,18 +252,7 @@ export default function PracticeScreen(props: Props) {
           ) : (
             <>
               <span className="practice-status-chip">
-                Set <b>{sessionPlanLabel}</b>
-              </span>
-              <span className="practice-status-chip">
                 Mode <b>{modeLabel}</b>
-              </span>
-              {!isFavoritesSession ? (
-                <span className="practice-status-chip">
-                  Now <b>{badge}</b>
-                </span>
-              ) : null}
-              <span className="practice-status-chip">
-                Track <b>{isActive ? "Active learning" : "Passive learning"}</b>
               </span>
             </>
           )}
@@ -672,12 +653,12 @@ export default function PracticeScreen(props: Props) {
             <>
               {/* Learn actions: in-flow on sm+ (desktop / tablet unchanged) */}
               <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
-                <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button practice-decision-button w-full sm:w-auto" variant="secondary">
+                <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button practice-decision-button practice-choice-secondary w-full sm:w-auto" variant="secondary">
                   {revealed ? "Still learning" : "Reveal translation"}
                 </Button>
 
                 {revealed ? (
-                  <Button onClick={onMastered} disabled={busy} className="practice-decision-button w-full sm:w-auto">
+                  <Button onClick={onMastered} disabled={busy} className="practice-decision-button practice-choice-primary w-full sm:w-auto">
                     {busy ? "Saving..." : "Mastered"}
                   </Button>
                 ) : null}

@@ -378,8 +378,8 @@ export default async function DeckPracticePage({
         ? "Active review"
         : "Passive review"
       : dir === "active"
-      ? "Active"
-      : "Passive";
+      ? "Active Learning"
+      : "Passive Learning";
 
   const backLabel =
     source === "favorites"

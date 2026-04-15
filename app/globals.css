@@ -547,7 +547,7 @@ html[data-theme="dark"] .preview-shortcuts__item b {
 
   html:not([data-theme="dark"]) .practice-prompt-card {
     border-color: #e5ebf2 !important;
-    background: #fdfefe !important;
+    background: #f7f8fa !important;
   }
 
   html:not([data-theme="dark"]) .practice-kbd-tips {
@@ -561,13 +561,14 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-reveal-button {
-    border-color: #d5deea !important;
-    background: #f8fafd !important;
+    border-color: #c5d3e3 !important;
+    background: #eaf0f7 !important;
+    color: #1f2f45 !important;
   }
 
   html:not([data-theme="dark"]) .practice-reveal-button:hover {
-    background: #eff4fa !important;
-    border-color: #c8d4e3 !important;
+    background: #dde8f4 !important;
+    border-color: #b7c8dd !important;
   }
 
   html:not([data-theme="dark"]) .preview-control-button {
@@ -751,10 +752,32 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-decision-button {
-    min-height: 2.85rem;
-    padding-inline: 1rem;
+    min-height: 3rem;
+    padding-inline: 1.15rem;
     font-weight: 700;
     border-radius: 0.78rem;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-secondary {
+    border-color: #c5d3e3 !important;
+    background: #e9eff6 !important;
+    color: #1f2f45 !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-secondary:hover {
+    background: #dde7f2 !important;
+    border-color: #b5c7dd !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-primary {
+    background: #223247 !important;
+    border-color: #1b2a3d !important;
+    color: #f8fafc !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-primary:hover {
+    background: #1d2c3f !important;
+    border-color: #162335 !important;
   }
 }
 
