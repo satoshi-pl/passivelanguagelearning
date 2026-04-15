@@ -370,8 +370,78 @@ html[data-theme="dark"] .learning-support-text {
 }
 
 .preview-table-head {
-  background: linear-gradient(180deg, rgba(250, 250, 249, 0.95) 0%, rgba(245, 245, 244, 0.9) 100%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, var(--surface-soft) 76%, #ffffff);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.preview-shortcuts {
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-soft) 78%, #ffffff);
+  color: var(--foreground-muted);
+  overflow: hidden;
+}
+
+.preview-shortcuts__summary {
+  position: relative;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  padding: 0.62rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
+}
+
+.preview-shortcuts__summary::-webkit-details-marker {
+  display: none;
+}
+
+.preview-shortcuts__summary::after {
+  content: "▾";
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground-muted) 88%, transparent);
+  transition: transform 160ms ease;
+}
+
+.preview-shortcuts[open] .preview-shortcuts__summary::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.preview-shortcuts__summary:hover {
+  background: color-mix(in srgb, var(--surface-soft) 70%, #ffffff);
+}
+
+.preview-shortcuts__summary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  outline-offset: -2px;
+}
+
+.preview-shortcuts__list {
+  border-top: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  padding: 0.3rem 0.9rem;
+}
+
+.preview-shortcuts__item {
+  padding: 0.32rem 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--foreground-muted) 92%, transparent);
+}
+
+.preview-shortcuts__item + .preview-shortcuts__item {
+  border-top: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+}
+
+.preview-shortcuts__item b {
+  color: color-mix(in srgb, var(--foreground) 88%, transparent);
+  font-weight: 650;
 }
 
 html[data-theme="dark"] .hero-slogan {
@@ -384,8 +454,46 @@ html[data-theme="dark"] .hero-slogan {
 }
 
 html[data-theme="dark"] .preview-table-head {
-  background: linear-gradient(180deg, rgba(37, 48, 65, 0.65) 0%, rgba(22, 29, 39, 0.82) 100%);
+  background: color-mix(in srgb, var(--surface-soft) 70%, var(--surface-muted));
   border-bottom-color: var(--border);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+}
+
+html[data-theme="dark"] .preview-shortcuts {
+  border-color: color-mix(in srgb, var(--border-strong) 86%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 74%, var(--surface-muted));
+}
+
+html[data-theme="dark"] .preview-shortcuts__summary {
+  color: color-mix(in srgb, var(--foreground) 84%, transparent);
+}
+
+html[data-theme="dark"] .preview-shortcuts__summary:hover {
+  background: color-mix(in srgb, var(--surface-soft) 84%, var(--surface-muted));
+}
+
+html[data-theme="dark"] .preview-shortcuts__summary::after {
+  color: color-mix(in srgb, var(--foreground-muted) 90%, transparent);
+}
+
+html[data-theme="dark"] .preview-shortcuts__summary:focus-visible {
+  outline-color: rgba(96, 165, 250, 0.42);
+}
+
+html[data-theme="dark"] .preview-shortcuts__list {
+  border-top-color: color-mix(in srgb, var(--border) 90%, transparent);
+}
+
+html[data-theme="dark"] .preview-shortcuts__item {
+  color: color-mix(in srgb, var(--foreground-muted) 92%, transparent);
+}
+
+html[data-theme="dark"] .preview-shortcuts__item + .preview-shortcuts__item {
+  border-top-color: color-mix(in srgb, var(--border) 92%, transparent);
+}
+
+html[data-theme="dark"] .preview-shortcuts__item b {
+  color: color-mix(in srgb, var(--foreground) 90%, transparent);
 }
 
 /* Passive / active review: Review 5–20 stay one row on desktop; 2×2 grid on small screens */

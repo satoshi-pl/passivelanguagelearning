@@ -259,27 +259,27 @@ export default function PreviewScreen(props: Props) {
             </div>
           )}
 
-          <details className="mt-4 hidden rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 md:block">
-            <summary className="cursor-pointer list-none font-medium text-neutral-600">
+          <details className="preview-shortcuts mt-4 hidden md:block">
+            <summary className="preview-shortcuts__summary">
               Keyboard shortcuts
             </summary>
-            <div className="mt-2 space-y-1">
-              <div>
+            <div className="preview-shortcuts__list">
+              <div className="preview-shortcuts__item">
                 <b>Enter</b> — Start practice
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>A</b> — Play all
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>H</b> — Hide translation
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>S</b> — Show translation
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>V</b> — Change speed
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>R</b> — Report
               </div>
             </div>
