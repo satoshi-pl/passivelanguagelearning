@@ -113,7 +113,7 @@ export default async function DeckDetailPage({
 
   if (deckErr || !deck) {
     return (
-      <div style={{ maxWidth: 920, margin: "24px auto", padding: "0 16px" }}>
+      <div style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
         <Link href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
         </Link>
@@ -227,7 +227,7 @@ export default async function DeckDetailPage({
   const backToDecksHref = decodedBack || defaultDecksHref;
 
   return (
-    <div style={{ maxWidth: 920, margin: "24px auto", padding: "0 16px" }}>
+    <div style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
       <div
         style={{
           border: "1px solid var(--border)",
@@ -238,7 +238,7 @@ export default async function DeckDetailPage({
           boxShadow: "var(--shadow)",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 820, margin: "0 auto" }}>
+        <div style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
           <Link href={backToDecksHref} style={{ textDecoration: "none", color: "inherit" }}>
             ← Back to My decks
           </Link>

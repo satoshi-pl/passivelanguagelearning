@@ -175,7 +175,7 @@ export default function PreviewScreen(props: Props) {
 
   return (
     <>
-      <div className="preview-workspace mx-auto max-w-5xl px-4 pt-1 pb-4 sm:px-6 sm:pt-4 sm:pb-6 md:py-6">
+      <div className="mx-auto max-w-5xl xl:max-w-6xl px-4 pt-1 pb-4 sm:px-6 sm:pt-4 sm:pb-6 md:py-6">
         <div className="preview-shell rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>

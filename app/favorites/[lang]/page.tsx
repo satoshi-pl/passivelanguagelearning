@@ -94,7 +94,7 @@ function ErrorBlock({
   error: unknown;
 }) {
   return (
-    <div style={{ maxWidth: 860, margin: "40px auto", padding: "0 24px" }}>
+    <div style={{ maxWidth: 980, margin: "40px auto", padding: "0 24px" }}>
       <Link href={href} style={{ textDecoration: "none", color: "var(--foreground)" }}>
         ← Back to My decks
       </Link>
@@ -287,7 +287,7 @@ export default async function FavoritesLangPage({
   };
 
   return (
-    <div style={{ maxWidth: 860, margin: "40px auto", padding: "0 24px" }}>
+    <div style={{ maxWidth: 980, margin: "40px auto", padding: "0 24px" }}>
       <div
         style={{
           border: "1px solid var(--border)",
@@ -297,7 +297,7 @@ export default async function FavoritesLangPage({
           boxShadow: "var(--shadow)",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 760, margin: "0 auto" }}>
+        <div style={{ width: "100%", maxWidth: 900, margin: "0 auto" }}>
           <Link href={decksHref} style={{ textDecoration: "none", color: "var(--foreground)" }}>
             ← Back to My decks
           </Link>

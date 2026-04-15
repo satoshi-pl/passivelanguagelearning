@@ -214,7 +214,7 @@ export default async function DeckPracticePage({
   if (deckErr || !deck) {
     return (
       <Container>
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-3xl lg:max-w-4xl">
           <Link href="/decks" className="text-sm text-neutral-600 hover:underline">
             ← Back to My decks
           </Link>
@@ -331,7 +331,7 @@ export default async function DeckPracticePage({
 
     return (
       <Container>
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-3xl lg:max-w-4xl">
           <Link href={backHref} className="text-sm text-neutral-600 hover:underline">
             {sessionErrorBackText}
           </Link>
@@ -417,7 +417,7 @@ export default async function DeckPracticePage({
 
   return (
     <Container>
-      <div className="mx-auto max-w-5xl px-1 sm:px-0">
+      <div className="mx-auto max-w-5xl lg:max-w-6xl px-1 sm:px-0">
         <div className="mb-1 sm:mb-4 md:mb-5">
           <div className="flex items-center gap-2">
             <Link

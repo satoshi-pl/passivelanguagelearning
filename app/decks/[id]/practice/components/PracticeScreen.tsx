@@ -178,7 +178,7 @@ export default function PracticeScreen(props: Props) {
   };
 
   return (
-    <div className="practice-workspace mx-auto max-w-5xl space-y-2 px-4 sm:space-y-4 sm:px-6 md:space-y-5">
+    <div className="mx-auto max-w-5xl xl:max-w-6xl space-y-2 px-4 sm:space-y-4 sm:px-6 md:space-y-5">
       <ReportModal
         open={reportOpen}
         onClose={() => setReportOpen(false)}
@@ -464,7 +464,7 @@ export default function PracticeScreen(props: Props) {
         ) : null}
       </div>
 
-      <Card className="practice-main-card border-neutral-200">
+      <Card className="border-neutral-200">
         <CardHeader className="hidden pb-3 pt-5 sm:block md:pt-6">
           <CardTitle className="text-lg">{deckName}</CardTitle>
         </CardHeader>

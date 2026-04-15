@@ -83,7 +83,7 @@ export default async function DeckReviewPage({
 
   if (deckErr || !deck) {
     return (
-      <div style={{ maxWidth: 720, margin: "24px auto", padding: "0 16px" }}>
+      <div style={{ maxWidth: 900, margin: "24px auto", padding: "0 16px" }}>
         <Link href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
         </Link>
@@ -195,7 +195,7 @@ export default async function DeckReviewPage({
 
   if (!hasAny) {
     return (
-      <div style={{ maxWidth: 900, margin: "24px auto", padding: "0 16px" }}>
+      <div style={{ maxWidth: 1000, margin: "24px auto", padding: "0 16px" }}>
         <div
           style={{
             border: "1px solid var(--border)",
@@ -206,7 +206,7 @@ export default async function DeckReviewPage({
             boxShadow: "var(--shadow)",
           }}
         >
-          <div style={{ width: "100%", maxWidth: 820, margin: "0 auto" }}>
+          <div style={{ width: "100%", maxWidth: 920, margin: "0 auto" }}>
             <Link href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
               ← Back to {deck.name} Passive Learning
             </Link>
@@ -273,7 +273,7 @@ export default async function DeckReviewPage({
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: "24px auto", padding: "0 16px" }}>
+    <div style={{ maxWidth: 900, margin: "24px auto", padding: "0 16px" }}>
       <div
         style={{
           border: "1px solid var(--border)",
@@ -284,7 +284,7 @@ export default async function DeckReviewPage({
           boxShadow: "var(--shadow)",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 640, margin: "0 auto" }}>
+        <div style={{ width: "100%", maxWidth: 820, margin: "0 auto" }}>
           <Link href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
             ← Back to {deck.name} Passive Learning
           </Link>
