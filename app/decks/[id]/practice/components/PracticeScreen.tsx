@@ -62,6 +62,7 @@ type Props = {
   debugAudioHasUrl?: boolean;
   /** Active Learning: brief message when play is tapped before reveal */
   audioGateHint?: string;
+  sourceChipLabel?: string;
 };
 
 export default function PracticeScreen(props: Props) {
@@ -105,6 +106,7 @@ export default function PracticeScreen(props: Props) {
     debugAudioStage = null,
     debugAudioHasUrl = false,
     audioGateHint = "",
+    sourceChipLabel = "Favourites",
   } = props;
 
   const [favBusy, setFavBusy] = useState(false);
@@ -151,6 +153,8 @@ export default function PracticeScreen(props: Props) {
     favFlash === "Added!" ||
     favFlash === "Already in your favourites";
   const speedAria = `Change speed (${playbackRateLabel})`;
+  const reviewSecondaryLabel = isFavoritesSession ? "Still learning" : "Hard";
+  const reviewPrimaryLabel = isFavoritesSession ? "Mastered" : "Easy";
 
   const onFavClick = async () => {
     if (favBusy) return;
@@ -245,7 +249,7 @@ export default function PracticeScreen(props: Props) {
                 </span>
                 {isFavoritesSession ? (
                   <span className="practice-status-chip">
-                    Source <b>Favourites</b>
+                    Source <b>{sourceChipLabel}</b>
                   </span>
                 ) : null}
               </>
@@ -450,7 +454,7 @@ export default function PracticeScreen(props: Props) {
               <p className="mt-2 border-t border-[var(--border)] pt-2 text-[10px] leading-snug text-[var(--foreground-muted)]">
                 {isReview
                   ? revealed
-                    ? "Bottom: Hard · Easy"
+                    ? `Bottom: ${reviewSecondaryLabel} · ${reviewPrimaryLabel}`
                     : "Bottom: Reveal"
                   : revealed
                     ? "Bottom: Still learning · Mastered"
@@ -598,11 +602,11 @@ export default function PracticeScreen(props: Props) {
                 </div>
               ) : (
                 <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
-                  <Button onClick={onReviewHard} disabled={busy} className="practice-decision-button w-full sm:w-auto" variant="secondary">
-                    Hard
+                  <Button onClick={onReviewHard} disabled={busy} className="practice-decision-button practice-choice-secondary w-full sm:w-auto" variant="secondary">
+                    {reviewSecondaryLabel}
                   </Button>
-                  <Button onClick={onReviewEasy} disabled={busy} className="practice-decision-button w-full sm:w-auto">
-                    Easy
+                  <Button onClick={onReviewEasy} disabled={busy} className="practice-decision-button practice-choice-primary w-full sm:w-auto">
+                    {reviewPrimaryLabel}
                   </Button>
                 </div>
               )}
@@ -640,7 +644,7 @@ export default function PracticeScreen(props: Props) {
                         size="lg"
                         className="h-12 w-full text-base font-semibold"
                       >
-                        Hard
+                        {reviewSecondaryLabel}
                       </Button>
                       <Button
                         type="button"
@@ -649,7 +653,7 @@ export default function PracticeScreen(props: Props) {
                         size="lg"
                         className="h-12 w-full text-base font-semibold"
                       >
-                        Easy
+                        {reviewPrimaryLabel}
                       </Button>
                     </div>
                   )}
@@ -735,10 +739,10 @@ export default function PracticeScreen(props: Props) {
                 ) : (
                   <>
                     <div className="preview-shortcuts__item">
-                      <b>0</b> — Hard
+                      <b>0</b> — {reviewSecondaryLabel}
                     </div>
                     <div className="preview-shortcuts__item">
-                      <b>1</b> — Easy
+                      <b>1</b> — {reviewPrimaryLabel}
                     </div>
                   </>
                 )

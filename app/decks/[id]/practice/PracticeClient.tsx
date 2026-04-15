@@ -54,6 +54,7 @@ type Props = {
   pairs?: PairRow[];
   initialProgress?: ProgressMap;
   deckNameById?: Record<string, string>;
+  deckLevelById?: Record<string, string | null>;
 };
 
 export default function PracticeClient({
@@ -65,6 +66,7 @@ export default function PracticeClient({
   pairs = [],
   initialProgress = {},
   deckNameById = {},
+  deckLevelById = {},
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -183,6 +185,21 @@ export default function PracticeClient({
     resolveAudioUrl,
     deckNameById,
   });
+
+  const sourceChipLabel = useMemo(() => {
+    if (!isFavoritesSession) return "Favourites";
+
+    const favDir = String((flow.currentPair as { fav_dir?: string | null } | null)?.fav_dir ?? "")
+      .toLowerCase()
+      .trim();
+    const sourceLabel = favDir === "active" ? "Active Learning" : "Passive Learning";
+
+    const deckId = String((flow.currentPair as { deck_id?: string | null } | null)?.deck_id ?? "").trim();
+    const rawLevel = deckId ? String(deckLevelById[deckId] ?? "").trim().toUpperCase() : "";
+    if (!rawLevel) return sourceLabel;
+
+    return `${sourceLabel} ${rawLevel}`;
+  }, [isFavoritesSession, flow.currentPair, deckLevelById]);
 
   useEffect(() => {
     if (!debugAudio) return;
@@ -713,6 +730,7 @@ export default function PracticeClient({
         debugAudio={debugAudio}
         debugAudioStage={flow.currentStage}
         debugAudioHasUrl={!!resolveAudioUrl(derived.rawAudio ?? null)}
+        sourceChipLabel={sourceChipLabel}
       />
     </>
   );

@@ -303,10 +303,11 @@ export default async function FavoritesPracticePage({
   );
 
   const deckNameById: Record<string, string> = {};
+  const deckLevelById: Record<string, string | null> = {};
   if (deckIds.length > 0) {
     const { data: deckRows, error: deckErr } = await supabase
       .from("decks")
-      .select("id, name")
+      .select("id, name, level")
       .in("id", deckIds);
 
     if (!deckErr) {
@@ -314,6 +315,10 @@ export default async function FavoritesPracticePage({
         const id = String((d as any).id ?? "").trim();
         const name = String((d as any).name ?? "").trim();
         if (id && name) deckNameById[id] = name;
+        if (id) {
+          const level = String((d as any).level ?? "").trim();
+          deckLevelById[id] = level || null;
+        }
       }
     }
   }
@@ -343,6 +348,7 @@ export default async function FavoritesPracticePage({
   pairs={pairs as any}
   initialProgress={progressMap as any}
   deckNameById={deckNameById}
+  deckLevelById={deckLevelById}
 />
     </div>
   );
