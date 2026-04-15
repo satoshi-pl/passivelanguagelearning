@@ -334,6 +334,22 @@ html[data-theme="dark"] .learning-support-text {
   white-space: nowrap;
 }
 
+.deck-progress-bar__track {
+  margin-top: 8px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.deck-progress-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--foreground) 0%, var(--foreground-muted) 100%);
+}
+
 .entry-progress-row {
   margin-top: 0.75rem;
   width: 100%;
@@ -758,7 +774,7 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .entry-controls-shell .entry-category-select {
-    max-width: 420px !important;
+    max-width: 396px !important;
     background: #fbfcfe !important;
     border-color: #d7e0ea !important;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -782,13 +798,15 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .entry-progress-row__label {
-    font-size: 0.8rem;
+    font-size: 0.86rem;
+    font-weight: 650;
     color: #334155;
   }
 
   html:not([data-theme="dark"]) .entry-progress-row__stats {
-    font-size: 0.78rem;
-    color: #607188;
+    font-size: 0.84rem;
+    font-weight: 620;
+    color: #526377;
   }
 
   html:not([data-theme="dark"]) .entry-progress-row__track-wrap {
@@ -796,14 +814,49 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .entry-progress-row__track {
-    border-color: #d4deea;
-    background: #eef3f8;
-    height: 0.7rem;
-    box-shadow: none;
+    border-color: #cad7e6;
+    background: #e9f0f8;
+    height: 0.72rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
   }
 
   html:not([data-theme="dark"]) .entry-progress-row__fill {
-    background: linear-gradient(90deg, #334155 0%, #64748b 100%);
+    background: linear-gradient(90deg, #2d415b 0%, #5f7896 100%);
+    box-shadow: inset 0 -1px 0 rgba(13, 25, 42, 0.15);
+  }
+
+  html:not([data-theme="dark"]) .deck-progress-bar__meta {
+    font-size: 0.86rem;
+    color: #526377;
+    gap: 10px;
+  }
+
+  html:not([data-theme="dark"]) .deck-progress-bar__label {
+    font-size: 0.88rem;
+    font-weight: 650;
+    color: #334155;
+  }
+
+  html:not([data-theme="dark"]) .deck-progress-bar__stats {
+    font-size: 0.84rem;
+    color: #526377;
+  }
+
+  html:not([data-theme="dark"]) .deck-progress-bar__pct {
+    color: #1f2f45;
+    font-weight: 760;
+  }
+
+  html:not([data-theme="dark"]) .deck-progress-bar__track {
+    border-color: #c9d6e6;
+    background: #e8eff8;
+    height: 11px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  }
+
+  html:not([data-theme="dark"]) .deck-progress-bar__fill {
+    background: linear-gradient(90deg, #2d415b 0%, #5f7896 100%);
+    box-shadow: inset 0 -1px 0 rgba(13, 25, 42, 0.15);
   }
 
   html:not([data-theme="dark"]) .entry-controls-shell .entry-helper-text {

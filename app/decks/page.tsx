@@ -180,23 +180,11 @@ function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
         </span>
       </div>
 
-      <div
-        style={{
-          marginTop: 8,
-          height: 10,
-          borderRadius: 999,
-          background: "var(--surface-muted)",
-          border: "1px solid var(--border)",
-          overflow: "hidden",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-        }}
-      >
+      <div className="deck-progress-bar__track">
         <div
+          className="deck-progress-bar__fill"
           style={{
-            height: "100%",
             width: `${pr.pct}%`,
-            background: "linear-gradient(90deg, var(--foreground) 0%, var(--foreground-muted) 100%)",
-            borderRadius: 999,
             transition: "width 250ms ease",
           }}
         />
