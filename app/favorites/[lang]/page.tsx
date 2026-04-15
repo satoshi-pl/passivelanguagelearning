@@ -95,7 +95,7 @@ function ErrorBlock({
 }) {
   return (
     <div className="pll-workspace" style={{ maxWidth: 980, margin: "40px auto", padding: "0 24px" }}>
-      <Link href={href} style={{ textDecoration: "none", color: "var(--foreground)" }}>
+      <Link className="pll-back-link" href={href} style={{ textDecoration: "none", color: "var(--foreground)" }}>
         ← Back to My decks
       </Link>
       <h1 style={{ marginTop: 12, fontSize: 30, fontWeight: 900 }}>Favourites</h1>
@@ -299,7 +299,7 @@ export default async function FavoritesLangPage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 900, margin: "0 auto" }}>
-          <Link href={decksHref} style={{ textDecoration: "none", color: "var(--foreground)" }}>
+          <Link className="pll-back-link" href={decksHref} style={{ textDecoration: "none", color: "var(--foreground)" }}>
             ← Back to My decks
           </Link>
 

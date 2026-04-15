@@ -128,12 +128,15 @@ export default function FavoritesDeckControls({
       color: active ? "var(--surface-solid)" : "var(--foreground)",
       textDecoration: "none",
       fontWeight: 800,
-      minWidth: 170,
+      width: "100%",
+      flex: "1 1 0",
+      minWidth: 0,
       textAlign: "center",
       boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
     }) as const;
 
   const reviewButtonStyle = {
+    width: "100%",
     display: "inline-block",
     padding: "12px 16px",
     borderRadius: 12,
@@ -142,13 +145,13 @@ export default function FavoritesDeckControls({
     textDecoration: "none",
     color: "var(--foreground)",
     fontWeight: 800,
-    minWidth: 120,
+    minWidth: 0,
     textAlign: "center",
     boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
   } as const;
 
   return (
-    <>
+    <div className="entry-controls-shell">
       <div style={{ marginTop: 18 }}>
         <div className="deck-mode-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <Link
@@ -184,6 +187,7 @@ export default function FavoritesDeckControls({
           </div>
 
           <select
+            className="deck-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
@@ -196,8 +200,8 @@ export default function FavoritesDeckControls({
             }}
             style={{
               width: "100%",
-              maxWidth: 320,
-              minWidth: 240,
+              maxWidth: 560,
+              minWidth: 0,
               padding: "10px 12px",
               borderRadius: 12,
               border: "1px solid var(--border)",
@@ -244,6 +248,6 @@ export default function FavoritesDeckControls({
               : "No favourites in this category right now."}
         </div>
       )}
-    </>
+    </div>
   );
 }

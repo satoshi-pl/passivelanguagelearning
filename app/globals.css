@@ -536,9 +536,9 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   html:not([data-theme="dark"]) .pll-primary-card,
   html:not([data-theme="dark"]) .preview-shell,
   html:not([data-theme="dark"]) .practice-shell {
-    background: #ffffff !important;
-    border-color: #dfe6ef !important;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.045) !important;
+    background: #fcfdff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
   }
 
   html:not([data-theme="dark"]) .practice-shell {
@@ -546,8 +546,8 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-prompt-card {
-    border-color: #e2e8f0 !important;
-    background: #ffffff !important;
+    border-color: #e5ebf2 !important;
+    background: #fdfefe !important;
   }
 
   html:not([data-theme="dark"]) .practice-kbd-tips {
@@ -596,8 +596,85 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .homepage-hero-shell {
-    border-color: #dfe6ef !important;
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05) !important;
+    border-color: #e2e8f0 !important;
+    background: #fcfdff !important;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, 0.045) !important;
+  }
+
+  html:not([data-theme="dark"]) .pll-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #4f5d71 !important;
+    font-weight: 600;
+    letter-spacing: 0.002em;
+    text-decoration: none !important;
+    transition:
+      color 160ms ease,
+      transform 160ms ease;
+  }
+
+  html:not([data-theme="dark"]) .pll-back-link:hover {
+    color: #1f2937 !important;
+    transform: translateX(-1px);
+  }
+
+  html:not([data-theme="dark"]) .pll-back-link:focus-visible {
+    outline: 2px solid rgba(148, 163, 184, 0.42);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+
+  html:not([data-theme="dark"]) .entry-controls-shell {
+    width: 100%;
+    max-width: 920px;
+  }
+
+  html:not([data-theme="dark"]) .entry-controls-shell .deck-mode-row .deck-mode-button {
+    flex: 1 1 0;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  html:not([data-theme="dark"]) .entry-controls-shell .deck-learn-row .deck-learn-button,
+  html:not([data-theme="dark"]) .entry-controls-shell .deck-review-size-row .deck-review-size-link {
+    flex: 1 1 0;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  html:not([data-theme="dark"]) .entry-controls-shell .deck-category-select {
+    max-width: 560px !important;
+  }
+
+  html:not([data-theme="dark"]) .entry-controls-shell .entry-helper-text {
+    max-width: 860px;
+  }
+
+  html:not([data-theme="dark"]) .practice-status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.1rem;
+  }
+
+  html:not([data-theme="dark"]) .practice-status-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    border: 1px solid #dce4ee;
+    background: #f8fafd;
+    border-radius: 999px;
+    padding: 0.25rem 0.58rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    color: #516175;
+  }
+
+  html:not([data-theme="dark"]) .practice-status-chip b {
+    color: #111827;
+    font-weight: 700;
   }
 }
 

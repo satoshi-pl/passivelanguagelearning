@@ -197,7 +197,7 @@ export default async function FavoritesPracticePage({
   if (supportDecksErr) {
     return (
       <div className="pll-workspace mx-auto max-w-[920px] px-4 pt-2 pb-8 sm:px-6 md:pt-10 md:pb-10">
-        <Link href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
+        <Link className="pll-back-link" href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
         </Link>
         <h1 className="mt-2 text-3xl font-black tracking-tight sm:mt-3">Favourites</h1>
@@ -270,7 +270,7 @@ export default async function FavoritesPracticePage({
   if (error) {
     return (
       <div className="pll-workspace mx-auto max-w-[920px] px-4 pt-2 pb-8 sm:px-6 md:pt-10 md:pb-10">
-        <Link href={pageHref} style={{ textDecoration: "none", color: "inherit" }}>
+        <Link className="pll-back-link" href={pageHref} style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to {langName(targetLang)} favourites
         </Link>
         <h1 className="mt-2 text-3xl font-black tracking-tight sm:mt-3">
@@ -321,7 +321,7 @@ export default async function FavoritesPracticePage({
   return (
     <div className="pll-workspace mx-auto max-w-[920px] px-4 pt-2 pb-8 sm:px-6 md:pt-10 md:pb-10">
       <div className="mb-2 sm:mb-4 md:mb-4">
-        <Link href={finishHref} style={{ textDecoration: "none", color: "inherit" }}>
+        <Link className="pll-back-link" href={finishHref} style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to {langName(targetLang)} favourites
         </Link>
 

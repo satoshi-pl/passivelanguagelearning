@@ -127,13 +127,14 @@ export default function ActiveReviewDeckControls({
       textDecoration: "none",
       fontWeight: 800,
       width: "100%",
-      maxWidth: 220,
+      flex: "1 1 0",
       minWidth: 0,
       textAlign: "center",
       boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
     }) as const;
 
   const reviewAmountLinkStyle = {
+    width: "100%",
     padding: "12px 16px",
     borderRadius: 12,
     border: "1px solid var(--border)",
@@ -145,8 +146,8 @@ export default function ActiveReviewDeckControls({
   } as const;
 
   return (
-    <>
-      <div style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
+    <div className="entry-controls-shell">
+      <div className="entry-helper-text" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
         Active review uses items already mastered in Active Learning. No preview. No mastery changes.
       </div>
 
@@ -181,6 +182,7 @@ export default function ActiveReviewDeckControls({
           <div style={{ fontSize: 12, color: "var(--foreground-muted)", marginBottom: 6 }}>Category</div>
 
           <select
+            className="deck-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
@@ -193,7 +195,7 @@ export default function ActiveReviewDeckControls({
             }}
             style={{
               width: "100%",
-              maxWidth: 320,
+              maxWidth: 560,
               minWidth: 0,
               padding: "10px 12px",
               borderRadius: 12,
@@ -241,6 +243,6 @@ export default function ActiveReviewDeckControls({
             : "No reviewable active items right now."}
         </div>
       )}
-    </>
+    </div>
   );
 }

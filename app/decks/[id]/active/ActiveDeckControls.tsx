@@ -35,7 +35,7 @@ type Props = {
 
 function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
   return (
-    <div style={{ marginTop: 10, width: "100%", maxWidth: 620 }}>
+    <div style={{ marginTop: 10, width: "100%", maxWidth: "none" }}>
       <div
         style={{
           display: "flex",
@@ -209,7 +209,7 @@ export default function ActiveDeckControls({
       textDecoration: "none",
       fontWeight: 800,
       width: "100%",
-      maxWidth: 220,
+      flex: "1 1 0",
       minWidth: 0,
       textAlign: "center",
       boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
@@ -225,7 +225,8 @@ export default function ActiveDeckControls({
     color: "var(--foreground)",
     fontWeight: 700,
     width: "100%",
-    maxWidth: 220,
+    flex: "1 1 0",
+    minWidth: 0,
     textAlign: "center",
     boxShadow: "0 1px 0 rgba(0,0,0,0.03)",
   } as const;
@@ -240,14 +241,14 @@ export default function ActiveDeckControls({
     color: "var(--foreground)",
     fontWeight: 700,
     width: "100%",
-    maxWidth: 160,
+    flex: "1 1 0",
     minWidth: 0,
     textAlign: "center",
     boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
   } as const;
 
   return (
-    <>
+    <div className="entry-controls-shell">
       <div style={{ marginTop: 20 }}>
         <div className="deck-mode-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <Link
@@ -279,6 +280,7 @@ export default function ActiveDeckControls({
           <div style={{ fontSize: 12, color: "var(--foreground-muted)", marginBottom: 6 }}>Category</div>
 
           <select
+            className="deck-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
@@ -291,7 +293,7 @@ export default function ActiveDeckControls({
             }}
             style={{
               width: "100%",
-              maxWidth: 320,
+              maxWidth: 560,
               minWidth: 0,
               padding: "10px 12px",
               borderRadius: 12,
@@ -316,7 +318,7 @@ export default function ActiveDeckControls({
         <ProgressBar label="Active sentences" pr={prSentences} />
       </div>
 
-      <div style={{ marginTop: 14, color: "var(--foreground-muted)" }}>
+      <div className="entry-helper-text" style={{ marginTop: 14, color: "var(--foreground-muted)" }}>
         Active Learning only includes items already mastered in Passive Learning.
       </div>
 
@@ -357,6 +359,6 @@ export default function ActiveDeckControls({
           </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 }

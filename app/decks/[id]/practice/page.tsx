@@ -215,7 +215,7 @@ export default async function DeckPracticePage({
     return (
       <Container>
         <div className="pll-workspace mx-auto max-w-3xl lg:max-w-4xl">
-          <Link href="/decks" className="text-sm text-neutral-600 hover:underline">
+          <Link href="/decks" className="pll-back-link text-sm text-neutral-600 hover:underline">
             ← Back to My decks
           </Link>
 
@@ -332,7 +332,7 @@ export default async function DeckPracticePage({
     return (
       <Container>
         <div className="pll-workspace mx-auto max-w-3xl lg:max-w-4xl">
-          <Link href={backHref} className="text-sm text-neutral-600 hover:underline">
+          <Link href={backHref} className="pll-back-link text-sm text-neutral-600 hover:underline">
             {sessionErrorBackText}
           </Link>
 
@@ -422,7 +422,7 @@ export default async function DeckPracticePage({
           <div className="flex items-center gap-2">
             <Link
               href={backHref}
-              className="text-[11px] font-medium text-neutral-600 hover:underline sm:text-sm"
+              className="pll-back-link text-[11px] font-medium text-neutral-600 hover:underline sm:text-sm"
               title={backText}
             >
               <span className="sm:hidden">← Back</span>

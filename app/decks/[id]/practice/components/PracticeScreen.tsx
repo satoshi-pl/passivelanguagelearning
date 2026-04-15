@@ -195,7 +195,7 @@ export default function PracticeScreen(props: Props) {
       />
 
       <div className="space-y-1.5 sm:space-y-2">
-        <div className="hidden text-sm text-neutral-500 sm:block">
+        <div className="hidden text-sm text-neutral-500 sm:block lg:hidden">
           {isReview ? (
             <>
               Remaining: <b>{reviewRemaining}</b> • Mode: <b>{modeLabel}</b>
@@ -229,6 +229,49 @@ export default function PracticeScreen(props: Props) {
                   • <b>Active</b>
                 </>
               ) : null}
+            </>
+          )}
+        </div>
+
+        <div className="practice-status-strip hidden lg:flex">
+          {isReview ? (
+            <>
+              <span className="practice-status-chip">
+                Remaining <b>{reviewRemaining}</b>
+              </span>
+              <span className="practice-status-chip">
+                Mode <b>{modeLabel}</b>
+              </span>
+              {!isFavoritesSession ? (
+                <span className="practice-status-chip">
+                  Now <b>{badge}</b>
+                </span>
+              ) : null}
+              <span className="practice-status-chip">
+                Track <b>{isActive ? "Active review" : "Passive review"}</b>
+              </span>
+              {isFavoritesSession ? (
+                <span className="practice-status-chip">
+                  Source <b>Favourites</b>
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <span className="practice-status-chip">
+                Set <b>{sessionPlanLabel}</b>
+              </span>
+              <span className="practice-status-chip">
+                Mode <b>{modeLabel}</b>
+              </span>
+              {!isFavoritesSession ? (
+                <span className="practice-status-chip">
+                  Now <b>{badge}</b>
+                </span>
+              ) : null}
+              <span className="practice-status-chip">
+                Track <b>{isActive ? "Active learning" : "Passive learning"}</b>
+              </span>
             </>
           )}
         </div>
