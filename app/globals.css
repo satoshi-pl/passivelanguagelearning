@@ -369,6 +369,11 @@ html[data-theme="dark"] .learning-support-text {
   outline-offset: 2px;
 }
 
+.preview-table-head {
+  background: linear-gradient(180deg, rgba(250, 250, 249, 0.95) 0%, rgba(245, 245, 244, 0.9) 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 html[data-theme="dark"] .hero-slogan {
   background-image: linear-gradient(
     90deg,
@@ -376,6 +381,11 @@ html[data-theme="dark"] .hero-slogan {
     #eef3fb 58%,
     #8fb4ff 100%
   ) !important;
+}
+
+html[data-theme="dark"] .preview-table-head {
+  background: linear-gradient(180deg, rgba(37, 48, 65, 0.65) 0%, rgba(22, 29, 39, 0.82) 100%);
+  border-bottom-color: var(--border);
 }
 
 /* Passive / active review: Review 5–20 stay one row on desktop; 2×2 grid on small screens */

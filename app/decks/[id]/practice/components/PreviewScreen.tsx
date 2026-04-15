@@ -193,7 +193,11 @@ export default function PreviewScreen(props: Props) {
                     onClick={() => setShowTranslations(!showTranslations)}
                     className="min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
                   >
-                    {showTranslations ? "Hide translation" : "Show translation"}
+                    <span className="md:hidden">{showTranslations ? "Hide translation" : "Show translation"}</span>
+                    <span className="hidden md:inline">
+                      {showTranslations ? "Hide translation" : "Show translation"}{" "}
+                      {showTranslations ? "• H" : "• S"}
+                    </span>
                   </button>
 
                   <button
@@ -216,7 +220,8 @@ export default function PreviewScreen(props: Props) {
                     disabled={playAllBusy || previewWords.length === 0}
                     className="min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50"
                   >
-                    {playAllBusy ? "Playing..." : "Play all"}
+                    <span className="md:hidden">{playAllBusy ? "Playing..." : "Play all"}</span>
+                    <span className="hidden md:inline">{playAllBusy ? "Playing..." : "Play all • A"}</span>
                   </button>
                 </>
               )}
@@ -254,9 +259,31 @@ export default function PreviewScreen(props: Props) {
             </div>
           )}
 
-          <div className="mt-4 hidden text-xs opacity-60 md:block">
-            Tip: Enter starts • A plays all audio • H hides translation • S shows translation • V changes speed • R reports an issue
-          </div>
+          <details className="mt-4 hidden rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 md:block">
+            <summary className="cursor-pointer list-none font-medium text-neutral-600">
+              Keyboard shortcuts
+            </summary>
+            <div className="mt-2 space-y-1">
+              <div>
+                <b>Enter</b> — Start practice
+              </div>
+              <div>
+                <b>A</b> — Play all
+              </div>
+              <div>
+                <b>H</b> — Hide translation
+              </div>
+              <div>
+                <b>S</b> — Show translation
+              </div>
+              <div>
+                <b>V</b> — Change speed
+              </div>
+              <div>
+                <b>R</b> — Report
+              </div>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -362,7 +389,7 @@ function WordsPreviewTable({
 
       <div className="hidden overflow-x-auto rounded-2xl border border-black/10 md:block">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-black/5">
+          <thead className="preview-table-head">
             <tr>
               <th className="w-[52%] px-4 py-3 text-left font-semibold">{leftHeader}</th>
               <th className="w-[40%] px-4 py-3 text-left font-semibold">{showTranslations ? rightHeader : ""}</th>
