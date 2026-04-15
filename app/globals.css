@@ -1363,12 +1363,12 @@ html[data-theme="dark"] .preview-shortcuts__item b {
 }
 
 @media (min-width: 1024px) {
-  html[data-theme="dark"] .practice-desktop-icon-controls {
-    display: none !important;
+  .practice-desktop-icon-controls {
+    display: flex !important;
   }
 
-  html[data-theme="dark"] .practice-desktop-text-controls {
-    display: flex !important;
+  .practice-desktop-text-controls {
+    display: none !important;
   }
 }
 
