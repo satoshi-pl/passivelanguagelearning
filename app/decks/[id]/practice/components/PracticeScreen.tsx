@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import ReportModal from "./ReportModal";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card";
+import { Card, CardContent } from "../../../../components/ui/Card";
 import { Button } from "../../../../components/ui/Button";
 
 import type { PairRow, Stage, UiCategory } from "../lib/types";
@@ -66,7 +66,6 @@ type Props = {
 
 export default function PracticeScreen(props: Props) {
   const {
-    deckName,
     modeLabel,
     badge,
     isReview,
@@ -142,7 +141,7 @@ export default function PracticeScreen(props: Props) {
     : isFavoritesSession
       ? "Remove from favourites"
       : isFavourited
-        ? "In favourites"
+        ? "Added to favourites"
         : "Add to favourites";
 
   /** Filled gold star: in-list remove, already saved, or brief success / already flash */
@@ -263,8 +262,20 @@ export default function PracticeScreen(props: Props) {
               onClick={onFavClick}
               disabled={favBusy}
               className={`practice-icon-control ${favVisualFilled ? "practice-icon-control--active" : ""}`}
-              title={isFavoritesSession ? "Remove from favourites · F" : "Add to favourites · F"}
-              aria-label={isFavoritesSession ? "Remove from favourites (F)" : "Add to favourites (F)"}
+              title={
+                isFavoritesSession
+                  ? "Remove from favourites · F"
+                  : favVisualFilled
+                    ? "Added to favourites · F"
+                    : "Add to favourites · F"
+              }
+              aria-label={
+                isFavoritesSession
+                  ? "Remove from favourites (F)"
+                  : favVisualFilled
+                    ? "Added to favourites (F)"
+                    : "Add to favourites (F)"
+              }
             >
               <span aria-hidden="true" className="practice-icon-control__glyph">
                 {favVisualFilled ? "★" : "☆"}
@@ -274,12 +285,12 @@ export default function PracticeScreen(props: Props) {
             <button
               type="button"
               onClick={onTogglePlaybackRate}
-              className="practice-icon-control"
+              className="practice-icon-control practice-icon-control--speed"
               title={`Change speed · V (${playbackRateLabel})`}
               aria-label={`${speedAria} (V)`}
             >
-              <span aria-hidden="true" className="practice-icon-control__glyph">
-                ⟳
+              <span aria-hidden="true" className="practice-icon-control__speed-text">
+                {playbackRateLabel}
               </span>
             </button>
 
@@ -299,8 +310,8 @@ export default function PracticeScreen(props: Props) {
               type="button"
               onClick={onToggleMute}
               className="practice-icon-control"
-              title="Toggle audio · M"
-              aria-label={audioMuted ? "Enable audio (M)" : "Mute audio (M)"}
+              title={`Audio on/off · M (${audioMuted ? "currently off" : "currently on"})`}
+              aria-label={`Audio on/off (M), currently ${audioMuted ? "off" : "on"}`}
               aria-pressed={!audioMuted}
             >
               <span aria-hidden="true" className="practice-icon-control__glyph">
@@ -554,10 +565,6 @@ export default function PracticeScreen(props: Props) {
       </div>
 
       <Card className="practice-shell border-neutral-200">
-        <CardHeader className="hidden pb-3 pt-5 sm:block md:pt-6">
-          <CardTitle className="text-lg">{deckName}</CardTitle>
-        </CardHeader>
-
         <CardContent className="space-y-4 px-4 pb-6 pt-3 sm:space-y-5 sm:px-6 sm:pt-0 lg:px-7 lg:pb-7">
           <div
             className="practice-prompt-card max-sm:mb-2 rounded-2xl border border-neutral-200 bg-white px-4 py-6 sm:px-8 sm:py-10 lg:px-10 lg:py-12"
@@ -567,7 +574,7 @@ export default function PracticeScreen(props: Props) {
             </div>
 
             {revealed ? (
-              <div className="learning-translation mt-6 rounded-xl border border-neutral-200 bg-neutral-50 px-5 py-5 text-center text-lg">
+              <div className="learning-translation practice-translation-field mt-6 rounded-xl border border-neutral-200 bg-neutral-50 px-5 py-5 text-center text-lg">
                 {answer}
               </div>
             ) : null}

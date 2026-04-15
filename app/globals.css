@@ -749,6 +749,19 @@ html[data-theme="dark"] .preview-shortcuts__item b {
       0 1px 2px rgba(145, 116, 20, 0.12);
   }
 
+  html:not([data-theme="dark"]) .practice-icon-control--speed {
+    min-width: 3.35rem;
+    padding-inline: 0.5rem;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control__speed-text {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #253246;
+    font-variant-numeric: tabular-nums;
+  }
+
   html:not([data-theme="dark"]) .practice-icon-control--report {
     border-color: #e8c9cf;
     background: #fff6f7;
@@ -789,6 +802,12 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   html:not([data-theme="dark"]) .practice-choice-primary:hover {
     background: #1d2c3f !important;
     border-color: #162335 !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-translation-field {
+    background: #f8fafd !important;
+    border-color: #dce4ee !important;
+    color: #253246 !important;
   }
 }
 
