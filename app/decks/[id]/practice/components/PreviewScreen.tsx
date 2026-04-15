@@ -206,8 +206,11 @@ export default function PreviewScreen(props: Props) {
                     }
                   >
                     <span className="md:hidden">{showTranslations ? "Hide translation" : "Show translation"}</span>
-                    <span className="hidden md:inline">
-                      {showTranslations ? "Hide translation" : "Show translation"}
+                    <span className="preview-control-inline hidden md:inline">
+                      <span aria-hidden="true" className="preview-control-inline__icon">
+                        {showTranslations ? "🙈" : "👁"}
+                      </span>
+                      <span>{showTranslations ? "Hide translation" : "Show translation"}</span>
                       <span className="preview-control-shortcut"> • {showTranslations ? "H" : "S"}</span>
                     </span>
                   </button>
@@ -235,8 +238,9 @@ export default function PreviewScreen(props: Props) {
                     title="Play all (A)"
                   >
                     <span className="md:hidden">{playAllBusy ? "Playing..." : "Play all"}</span>
-                    <span className="hidden md:inline">
-                      <span aria-hidden="true">▶</span> {playAllBusy ? "Playing..." : "Play all"}
+                    <span className="preview-control-inline hidden md:inline">
+                      <span aria-hidden="true" className="preview-control-inline__icon">▶</span>
+                      <span>{playAllBusy ? "Playing..." : "Play all"}</span>
                       <span className="preview-control-shortcut"> • A</span>
                     </span>
                   </button>

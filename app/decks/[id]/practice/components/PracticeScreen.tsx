@@ -155,6 +155,7 @@ export default function PracticeScreen(props: Props) {
   const speedAria = `Change speed (${playbackRateLabel})`;
   const reviewSecondaryLabel = isFavoritesSession ? "Still learning" : "Hard";
   const reviewPrimaryLabel = isFavoritesSession ? "Mastered" : "Easy";
+  const audioControlLabel = audioMuted ? "Audio Off" : "Audio On";
 
   const onFavClick = async () => {
     if (favBusy) return;
@@ -265,7 +266,7 @@ export default function PracticeScreen(props: Props) {
               type="button"
               onClick={onFavClick}
               disabled={favBusy}
-              className={`practice-icon-control ${favVisualFilled ? "practice-icon-control--active" : ""}`}
+              className={`practice-inline-control ${favVisualFilled ? "practice-inline-control--active" : ""}`}
               title={
                 isFavoritesSession
                   ? "Remove from favourites · F"
@@ -281,11 +282,12 @@ export default function PracticeScreen(props: Props) {
                     : "Add to favourites (F)"
               }
             >
-              <span aria-hidden="true" className="practice-icon-control__glyph">
+              <span aria-hidden="true" className="practice-inline-control__icon">
                 {favVisualFilled ? "★" : "☆"}
               </span>
-              <span className="practice-icon-control__shortcut" aria-hidden="true">
-                F
+              <span className="practice-inline-control__text">{favLabel}</span>
+              <span className="practice-inline-control__shortcut" aria-hidden="true">
+                • F
               </span>
             </button>
 
@@ -322,16 +324,17 @@ export default function PracticeScreen(props: Props) {
             <button
               type="button"
               onClick={onToggleMute}
-              className="practice-icon-control"
+              className="practice-inline-control"
               title={`Audio on/off · M (${audioMuted ? "currently off" : "currently on"})`}
               aria-label={`Audio on/off (M), currently ${audioMuted ? "off" : "on"}`}
               aria-pressed={!audioMuted}
             >
-              <span aria-hidden="true" className="practice-icon-control__glyph">
+              <span aria-hidden="true" className="practice-inline-control__icon">
                 {audioMuted ? "🔇" : "🔊"}
               </span>
-              <span className="practice-icon-control__shortcut" aria-hidden="true">
-                M
+              <span className="practice-inline-control__text">{audioControlLabel}</span>
+              <span className="practice-inline-control__shortcut" aria-hidden="true">
+                • M
               </span>
             </button>
 
@@ -513,21 +516,17 @@ export default function PracticeScreen(props: Props) {
             type="button"
             onClick={onFavClick}
             disabled={favBusy}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs shadow-sm transition-colors hover:bg-[var(--surface-muted)] disabled:opacity-50 ${
-              favVisualFilled
-                ? "border-amber-500/45 bg-amber-500/10 text-[var(--foreground)]"
-                : "border-[var(--border-strong)] bg-[var(--surface-solid)] text-[var(--foreground)]"
-            }`}
+            className={`practice-inline-control ${favVisualFilled ? "practice-inline-control--active" : ""}`}
             title={isFavoritesSession ? "Remove from favourites (F)" : "Add to favourites (F)"}
           >
             <span
               aria-hidden="true"
-              className={favVisualFilled ? "text-lg text-amber-400" : "text-lg text-[var(--foreground-muted)]"}
+              className="practice-inline-control__icon"
             >
               {favVisualFilled ? "★" : "☆"}
             </span>
-            <span>{favLabel}</span>
-            <span className="text-[var(--foreground-muted)]">• F</span>
+            <span className="practice-inline-control__text">{favLabel}</span>
+            <span className="practice-inline-control__shortcut">• F</span>
           </button>
 
           <button
@@ -551,15 +550,15 @@ export default function PracticeScreen(props: Props) {
           <button
             type="button"
             onClick={onToggleMute}
-            className={`audio-switch ${audioMuted ? "" : "audio-switch--on"}`}
+            className="practice-inline-control"
             title="Mute/unmute (M)"
             aria-pressed={!audioMuted}
           >
-            <span>{audioMuted ? "Audio Off" : "Audio On"}</span>
-            <span className="audio-switch__track" aria-hidden="true">
-              <span className="audio-switch__thumb" />
+            <span aria-hidden="true" className="practice-inline-control__icon">
+              {audioMuted ? "🔇" : "🔊"}
             </span>
-            <span className="text-neutral-400">• M</span>
+            <span className="practice-inline-control__text">{audioControlLabel}</span>
+            <span className="practice-inline-control__shortcut">• M</span>
           </button>
 
           <button

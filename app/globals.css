@@ -576,6 +576,85 @@ html[data-theme="dark"] .preview-control-shortcut--on-dark {
   color: var(--foreground-muted);
 }
 
+.preview-control-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.preview-control-inline__icon {
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
+.practice-inline-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 2.55rem;
+  border-radius: 0.78rem;
+  border: 1px solid;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.practice-inline-control__icon {
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.practice-inline-control__text {
+  font-weight: 650;
+}
+
+.practice-inline-control__shortcut {
+  font-size: 0.7rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="dark"] .practice-inline-control {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--surface-soft) 68%, var(--surface-muted) 32%);
+  color: var(--foreground);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme="dark"] .practice-inline-control:hover {
+  border-color: color-mix(in srgb, var(--border-strong) 94%, #dbe6f5 6%);
+  background: color-mix(in srgb, var(--surface-soft) 78%, var(--surface-muted) 22%);
+}
+
+html[data-theme="dark"] .practice-inline-control:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.45);
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] .practice-inline-control__shortcut {
+  color: #9fb0c5;
+}
+
+html[data-theme="dark"] .practice-inline-control--active {
+  border-color: #c6ab50;
+  background: #3a331f;
+  color: #f7ecd1;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1px 2px rgba(145, 116, 20, 0.16);
+}
+
+html[data-theme="dark"] .practice-inline-control--active .practice-inline-control__shortcut {
+  color: #dfcb8a;
+}
+
 html[data-theme="dark"] .hero-slogan {
   background-image: linear-gradient(
     90deg,
@@ -1072,6 +1151,50 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   html:not([data-theme="dark"]) .practice-status-chip b {
     color: #111827;
     font-weight: 700;
+  }
+
+  html:not([data-theme="dark"]) .practice-inline-control {
+    border-color: #d6dee9;
+    background: #fbfcfe;
+    color: #374357;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  html:not([data-theme="dark"]) .practice-inline-control:hover {
+    border-color: #c5d1e0;
+    background: #f2f6fb;
+    color: #1f2937;
+  }
+
+  html:not([data-theme="dark"]) .practice-inline-control:focus-visible {
+    outline: 2px solid rgba(148, 163, 184, 0.42);
+    outline-offset: 2px;
+  }
+
+  html:not([data-theme="dark"]) .practice-inline-control__shortcut {
+    color: #66778d;
+  }
+
+  html:not([data-theme="dark"]) .practice-inline-control--active {
+    border-color: #c9ae52;
+    background: #fff7da;
+    color: #8c6b16;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.62),
+      0 1px 2px rgba(145, 116, 20, 0.12);
+  }
+
+  html:not([data-theme="dark"]) .practice-inline-control--active:hover {
+    border-color: #bf9e3c;
+    background: #ffefbd;
+    color: #7a5d13;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.66),
+      0 1px 2px rgba(145, 116, 20, 0.14);
+  }
+
+  html:not([data-theme="dark"]) .practice-inline-control--active .practice-inline-control__shortcut {
+    color: #8f6e1b;
   }
 
   html:not([data-theme="dark"]) .preview-meta-strip {
