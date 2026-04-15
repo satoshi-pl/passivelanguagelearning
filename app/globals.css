@@ -570,40 +570,43 @@ html[data-theme="dark"] .preview-table-head {
 }
 
 html[data-theme="dark"] .preview-shortcuts {
-  border-color: color-mix(in srgb, var(--border-strong) 86%, transparent);
-  background: color-mix(in srgb, var(--surface-soft) 74%, var(--surface-muted));
+  border-color: color-mix(in srgb, var(--border-strong) 90%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 72%, var(--surface-muted) 28%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 html[data-theme="dark"] .preview-shortcuts__summary {
-  color: color-mix(in srgb, var(--foreground) 84%, transparent);
+  color: color-mix(in srgb, var(--foreground) 88%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 80%, var(--surface-muted) 20%);
 }
 
 html[data-theme="dark"] .preview-shortcuts__summary:hover {
-  background: color-mix(in srgb, var(--surface-soft) 84%, var(--surface-muted));
+  background: color-mix(in srgb, var(--surface-soft) 90%, var(--surface-muted) 10%);
 }
 
 html[data-theme="dark"] .preview-shortcuts__summary::after {
-  color: color-mix(in srgb, var(--foreground-muted) 90%, transparent);
+  color: color-mix(in srgb, var(--foreground-muted) 96%, transparent);
 }
 
 html[data-theme="dark"] .preview-shortcuts__summary:focus-visible {
-  outline-color: rgba(96, 165, 250, 0.42);
+  outline-color: rgba(96, 165, 250, 0.45);
 }
 
 html[data-theme="dark"] .preview-shortcuts__list {
-  border-top-color: color-mix(in srgb, var(--border) 90%, transparent);
+  border-top-color: color-mix(in srgb, var(--border) 96%, transparent);
+  background: color-mix(in srgb, var(--surface-muted) 82%, var(--surface-soft) 18%);
 }
 
 html[data-theme="dark"] .preview-shortcuts__item {
-  color: color-mix(in srgb, var(--foreground-muted) 92%, transparent);
+  color: color-mix(in srgb, var(--foreground-muted) 98%, transparent);
 }
 
 html[data-theme="dark"] .preview-shortcuts__item + .preview-shortcuts__item {
-  border-top-color: color-mix(in srgb, var(--border) 92%, transparent);
+  border-top-color: color-mix(in srgb, var(--border) 94%, transparent);
 }
 
 html[data-theme="dark"] .preview-shortcuts__item b {
-  color: color-mix(in srgb, var(--foreground) 90%, transparent);
+  color: color-mix(in srgb, var(--foreground) 95%, transparent);
 }
 
 /* Passive / active review: Review 5–20 stay one row on desktop; 2×2 grid on small screens */
