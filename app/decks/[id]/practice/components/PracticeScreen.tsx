@@ -150,7 +150,7 @@ export default function PracticeScreen(props: Props) {
   const favVisualFilled =
     isFavoritesSession ||
     isFavourited ||
-    favFlash === "Added!" ||
+    favFlash === "Added to favourites" ||
     favFlash === "Already in your favourites";
   const speedAria = `Change speed (${playbackRateLabel})`;
   const reviewSecondaryLabel = isFavoritesSession ? "Still learning" : "Hard";
@@ -174,7 +174,7 @@ export default function PracticeScreen(props: Props) {
       }
 
       const res = await onAddFavourite();
-      if (res === "added") setFavFlash("Added!");
+      if (res === "added") setFavFlash("Added to favourites");
       else if (res === "already") setFavFlash("Already in your favourites");
       else setFavFlash("Couldn't add");
     } finally {
@@ -488,7 +488,7 @@ export default function PracticeScreen(props: Props) {
             >
               <span
                 className={
-                  favFlash === "Added!" || favFlash === "Removed!"
+                  favFlash === "Added to favourites" || favFlash === "Removed!"
                     ? "text-amber-400"
                     : favFlash === "Couldn't add" || favFlash === "Couldn't remove"
                       ? "text-[var(--report-soft-text)]"
