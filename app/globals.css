@@ -546,8 +546,8 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-prompt-card {
-    border-color: #e5ebf2 !important;
-    background: #f7f8fa !important;
+    border-color: #e3e9f1 !important;
+    background: #fdfefe !important;
   }
 
   html:not([data-theme="dark"]) .practice-kbd-tips {
@@ -660,6 +660,13 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     margin-bottom: 0.1rem;
   }
 
+  html:not([data-theme="dark"]) .practice-top-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
   html:not([data-theme="dark"]) .practice-status-chip {
     display: inline-flex;
     align-items: baseline;
@@ -734,9 +741,12 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-icon-control--active {
-    border-color: #d2c089;
-    background: #fbf7ea;
-    color: #6f5b2b;
+    border-color: #c9ae52;
+    background: #fff7da;
+    color: #8c6b16;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.62),
+      0 1px 2px rgba(145, 116, 20, 0.12);
   }
 
   html:not([data-theme="dark"]) .practice-icon-control--report {
@@ -752,8 +762,9 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-decision-button {
-    min-height: 3rem;
-    padding-inline: 1.15rem;
+    min-height: 3.1rem;
+    min-width: 11rem;
+    padding-inline: 1.25rem;
     font-weight: 700;
     border-radius: 0.78rem;
   }

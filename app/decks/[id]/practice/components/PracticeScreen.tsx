@@ -234,28 +234,92 @@ export default function PracticeScreen(props: Props) {
           )}
         </div>
 
-        <div className="practice-status-strip hidden lg:flex">
-          {isReview ? (
-            <>
-              <span className="practice-status-chip">
-                Remaining <b>{reviewRemaining}</b>
-              </span>
-              <span className="practice-status-chip">
-                Mode <b>{modeLabel}</b>
-              </span>
-              {isFavoritesSession ? (
+        <div className="practice-top-strip hidden lg:flex">
+          <div className="practice-status-strip">
+            {isReview ? (
+              <>
                 <span className="practice-status-chip">
-                  Source <b>Favourites</b>
+                  Remaining <b>{reviewRemaining}</b>
                 </span>
-              ) : null}
-            </>
-          ) : (
-            <>
+                <span className="practice-status-chip">
+                  Mode <b>{modeLabel}</b>
+                </span>
+                {isFavoritesSession ? (
+                  <span className="practice-status-chip">
+                    Source <b>Favourites</b>
+                  </span>
+                ) : null}
+              </>
+            ) : (
               <span className="practice-status-chip">
                 Mode <b>{modeLabel}</b>
               </span>
-            </>
-          )}
+            )}
+          </div>
+
+          <div className="practice-desktop-icon-controls hidden flex-wrap items-center justify-end gap-2 lg:flex">
+            <button
+              type="button"
+              onClick={onFavClick}
+              disabled={favBusy}
+              className={`practice-icon-control ${favVisualFilled ? "practice-icon-control--active" : ""}`}
+              title={isFavoritesSession ? "Remove from favourites · F" : "Add to favourites · F"}
+              aria-label={isFavoritesSession ? "Remove from favourites (F)" : "Add to favourites (F)"}
+            >
+              <span aria-hidden="true" className="practice-icon-control__glyph">
+                {favVisualFilled ? "★" : "☆"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onTogglePlaybackRate}
+              className="practice-icon-control"
+              title={`Change speed · V (${playbackRateLabel})`}
+              aria-label={`${speedAria} (V)`}
+            >
+              <span aria-hidden="true" className="practice-icon-control__glyph">
+                ⟳
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onPlayAudio}
+              className="practice-icon-control"
+              title="Play audio · A"
+              aria-label="Play audio (A)"
+            >
+              <span aria-hidden="true" className="practice-icon-control__glyph">
+                ▶
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onToggleMute}
+              className="practice-icon-control"
+              title="Toggle audio · M"
+              aria-label={audioMuted ? "Enable audio (M)" : "Mute audio (M)"}
+              aria-pressed={!audioMuted}
+            >
+              <span aria-hidden="true" className="practice-icon-control__glyph">
+                {audioMuted ? "🔇" : "🔊"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="practice-icon-control practice-icon-control--report"
+              title="Report · R"
+              aria-label="Report an issue (R)"
+            >
+              <span aria-hidden="true" className="practice-icon-control__glyph">
+                ⚑
+              </span>
+            </button>
+          </div>
         </div>
 
         <div className="text-[11px] leading-snug text-neutral-500 sm:hidden">
@@ -478,70 +542,6 @@ export default function PracticeScreen(props: Props) {
           </button>
         </div>
 
-        <div className="practice-desktop-icon-controls hidden flex-wrap items-center justify-end gap-2 lg:flex">
-          <button
-            type="button"
-            onClick={onFavClick}
-            disabled={favBusy}
-            className={`practice-icon-control ${favVisualFilled ? "practice-icon-control--active" : ""}`}
-            title={isFavoritesSession ? "Remove from favourites · F" : "Add to favourites · F"}
-            aria-label={isFavoritesSession ? "Remove from favourites (F)" : "Add to favourites (F)"}
-          >
-            <span aria-hidden="true" className="practice-icon-control__glyph">
-              {favVisualFilled ? "★" : "☆"}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onTogglePlaybackRate}
-            className="practice-icon-control"
-            title={`Change speed · V (${playbackRateLabel})`}
-            aria-label={`${speedAria} (V)`}
-          >
-            <span aria-hidden="true" className="practice-icon-control__glyph">
-              ◔
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onPlayAudio}
-            className="practice-icon-control"
-            title="Play audio · A"
-            aria-label="Play audio (A)"
-          >
-            <span aria-hidden="true" className="practice-icon-control__glyph">
-              ▶
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onToggleMute}
-            className="practice-icon-control"
-            title="Toggle audio · M"
-            aria-label={audioMuted ? "Enable audio (M)" : "Mute audio (M)"}
-            aria-pressed={!audioMuted}
-          >
-            <span aria-hidden="true" className="practice-icon-control__glyph">
-              {audioMuted ? "∅" : "◉"}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setReportOpen(true)}
-            className="practice-icon-control practice-icon-control--report"
-            title="Report · R"
-            aria-label="Report an issue (R)"
-          >
-            <span aria-hidden="true" className="practice-icon-control__glyph">
-              !
-            </span>
-          </button>
-        </div>
-
         {audioGateHint ? (
           <p
             role="status"
@@ -715,55 +715,55 @@ export default function PracticeScreen(props: Props) {
             </>
           )}
 
-          <details className="practice-kbd-tips hidden rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500 sm:block">
-            <summary className="cursor-pointer list-none font-medium text-neutral-600">
+          <details className="preview-shortcuts hidden sm:block">
+            <summary className="preview-shortcuts__summary">
               Keyboard shortcuts
             </summary>
-            <div className="mt-2 space-y-1">
+            <div className="preview-shortcuts__list">
               {isReview ? (
                 !revealed ? (
-                  <div>
+                  <div className="preview-shortcuts__item">
                     <b>0</b> / <b>1</b> — Reveal translation
                   </div>
                 ) : (
                   <>
-                    <div>
+                    <div className="preview-shortcuts__item">
                       <b>0</b> — Hard
                     </div>
-                    <div>
+                    <div className="preview-shortcuts__item">
                       <b>1</b> — Easy
                     </div>
                   </>
                 )
               ) : (
                 <>
-                  <div>
+                  <div className="preview-shortcuts__item">
                     <b>S</b> — {revealed ? "Still learning" : "Reveal translation"}
                   </div>
-                  <div>
+                  <div className="preview-shortcuts__item">
                     <b>D</b> — Mastered
                   </div>
-                  <div>
+                  <div className="preview-shortcuts__item">
                     <b>0</b> — {revealed ? "Still learning" : "Reveal translation"}
                   </div>
-                  <div>
+                  <div className="preview-shortcuts__item">
                     <b>1</b> — Mastered
                   </div>
                 </>
               )}
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>V</b> — Change speed
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>A</b> — Play audio
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>M</b> — Toggle audio
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>F</b> — {isFavoritesSession ? "Remove from favourites" : "Add to favourites"}
               </div>
-              <div>
+              <div className="preview-shortcuts__item">
                 <b>R</b> — Report
               </div>
             </div>
