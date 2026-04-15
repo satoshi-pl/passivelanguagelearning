@@ -304,7 +304,16 @@ export default function PassiveDeckControls({
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
             >
-              Passive review
+              <span className="entry-action-label">
+                Passive Learning review
+                <span
+                  className="entry-action-info"
+                  aria-hidden="true"
+                  data-tooltip="Uses items already mastered here."
+                >
+                  i
+                </span>
+              </span>
             </Link>
 
             <Link
@@ -312,15 +321,17 @@ export default function PassiveDeckControls({
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
             >
-              Active learning
+              <span className="entry-action-label">
+                Active Learning review
+                <span
+                  className="entry-action-info"
+                  aria-hidden="true"
+                  data-tooltip="Uses unlocked items from this deck."
+                >
+                  i
+                </span>
+              </span>
             </Link>
-          </div>
-
-          <div className="entry-helper-text entry-helper-note" style={{ marginTop: 8, fontSize: 12, color: "var(--foreground-muted)", maxWidth: 700 }}>
-            <span className="entry-helper-note__icon" aria-hidden="true">
-              i
-            </span>
-            <span>Passive review uses items already mastered here. Active learning uses unlocked items from this deck.</span>
           </div>
         </div>
       </div>
