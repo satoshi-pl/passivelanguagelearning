@@ -36,16 +36,15 @@ type Props = {
 function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
   return (
     <div className="entry-progress-row">
-      <div className="entry-progress-row__meta">
-        <span className="entry-progress-row__label">{label}</span>
-        <span className="entry-progress-row__stats">
-          {pr.mastered}/{pr.total} · <b>{pr.pct}%</b>
-        </span>
+      <span className="entry-progress-row__label">{label}</span>
+      <div className="entry-progress-row__track-wrap">
+        <div className="entry-progress-row__track">
+          <div className="entry-progress-row__fill" style={{ width: `${pr.pct}%` }} />
+        </div>
       </div>
-
-      <div className="entry-progress-row__track">
-        <div className="entry-progress-row__fill" style={{ width: `${pr.pct}%` }} />
-      </div>
+      <span className="entry-progress-row__stats">
+        {pr.mastered}/{pr.total} · <b>{pr.pct}%</b>
+      </span>
     </div>
   );
 }
