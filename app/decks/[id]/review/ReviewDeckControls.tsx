@@ -151,7 +151,7 @@ export default function ReviewDeckControls({
         <span className="entry-helper-note__icon" aria-hidden="true">
           i
         </span>
-        <span>Passive review uses items already mastered in Passive Learning. No preview. No mastery changes.</span>
+        <span>Passive Learning review uses items already mastered in Passive Learning. No preview. No mastery changes.</span>
       </div>
 
       <div style={{ marginTop: 20 }}>

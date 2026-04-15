@@ -322,7 +322,7 @@ export default function PassiveDeckControls({
               className="deck-action-button deck-action-button--secondary"
             >
               <span className="entry-action-label">
-                Active Learning review
+                Active Learning
                 <span
                   className="entry-action-info"
                   aria-hidden="true"

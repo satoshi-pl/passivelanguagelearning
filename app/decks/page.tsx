@@ -166,29 +166,22 @@ async function getDeckProgressDual(
 
 function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
   return (
-    <div className="deck-progress-bar">
-      <div className="deck-progress-bar__meta">
-        <span className="deck-progress-bar__label">{label}</span>
-        <span className="deck-progress-bar__stats">
-          <b className="deck-progress-bar__pct">{pr.pct}%</b>
-          <span className="deck-progress-bar__sep" aria-hidden="true">
-            •
-          </span>
-          <span className="deck-progress-bar__count">
-            {pr.mastered} of {pr.total}
-          </span>
-        </span>
+    <div className="entry-progress-row deck-progress-bar">
+      <span className="entry-progress-row__label">{label}</span>
+      <div className="entry-progress-row__track-wrap">
+        <div className="entry-progress-row__track deck-progress-bar__track">
+          <div
+            className="entry-progress-row__fill deck-progress-bar__fill"
+            style={{
+              width: `${pr.pct}%`,
+              transition: "width 250ms ease",
+            }}
+          />
+        </div>
       </div>
-
-      <div className="deck-progress-bar__track">
-        <div
-          className="deck-progress-bar__fill"
-          style={{
-            width: `${pr.pct}%`,
-            transition: "width 250ms ease",
-          }}
-        />
-      </div>
+      <span className="entry-progress-row__stats">
+        {pr.mastered}/{pr.total} · <b>{pr.pct}%</b>
+      </span>
     </div>
   );
 }

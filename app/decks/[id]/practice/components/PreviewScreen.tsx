@@ -427,7 +427,7 @@ function WordsPreviewTable({
                   ].join(" ")}
                 >
                   <td className="px-4 py-3">
-                    <div className="font-semibold">{leftValue || "—"}</div>
+                    <div className="preview-table-word font-semibold">{leftValue || "—"}</div>
                   </td>
 
                   <td className="px-4 py-3">

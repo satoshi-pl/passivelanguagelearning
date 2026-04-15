@@ -222,7 +222,7 @@ export default async function DeckActiveReviewPage({
                   lineHeight: 1.15,
                 }}
               >
-                {deck.name} — Active review
+                {deck.name} — Active Learning review
               </h1>
 
               <div
@@ -301,7 +301,7 @@ export default async function DeckActiveReviewPage({
                 lineHeight: 1.15,
               }}
             >
-              {deck.name} — Active review
+              {deck.name} — Active Learning review
               {initialSelectedCategory ? ` · ${initialSelectedCategory}` : ""}
             </h1>
 

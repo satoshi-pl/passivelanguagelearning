@@ -206,7 +206,7 @@ export default function PracticeScreen(props: Props) {
                 </>
               ) : null}
               {" "}
-              • <b>{isActive ? "Active review" : "Passive review"}</b>
+              • <b>{isActive ? "Active Learning review" : "Passive Learning review"}</b>
               {isFavoritesSession ? (
                 <>
                   {" "}
@@ -343,7 +343,7 @@ export default function PracticeScreen(props: Props) {
                   · {badge}
                 </>
               ) : null}
-              {` · ${isActive ? "Active review" : "Passive review"}`}
+              {` · ${isActive ? "Active Learning review" : "Passive Learning review"}`}
               {isFavoritesSession ? " · Fav" : ""}
             </>
           ) : (

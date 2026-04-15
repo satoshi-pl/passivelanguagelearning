@@ -151,7 +151,7 @@ export default function ActiveReviewDeckControls({
         <span className="entry-helper-note__icon" aria-hidden="true">
           i
         </span>
-        <span>Active review uses items already mastered in Active Learning. No preview. No mastery changes.</span>
+        <span>Active Learning review uses items already mastered in Active Learning. No preview. No mastery changes.</span>
       </div>
 
       <div style={{ marginTop: 20 }}>

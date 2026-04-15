@@ -222,7 +222,7 @@ export default async function DeckReviewPage({
                   lineHeight: 1.15,
                 }}
               >
-                {deck.name} — Passive review
+                {deck.name} — Passive Learning review
               </h1>
 
               <div
@@ -301,7 +301,7 @@ export default async function DeckReviewPage({
                 lineHeight: 1.15,
               }}
             >
-              {deck.name} — Passive review
+              {deck.name} — Passive Learning review
               {initialSelectedCategory ? ` · ${initialSelectedCategory}` : ""}
             </h1>
 

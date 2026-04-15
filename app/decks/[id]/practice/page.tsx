@@ -322,8 +322,8 @@ export default async function DeckPracticePage({
         : `← Back to ${deck.name} ${suffixDashboard(
             source === "review"
               ? dir === "active"
-                ? "Active review"
-                : "Passive review"
+                ? "Active Learning review"
+                : "Passive Learning review"
               : dir === "active"
               ? "Active Learning"
               : "Dashboard"
@@ -375,8 +375,8 @@ export default async function DeckPracticePage({
       ? "Favourites"
       : source === "review"
       ? dir === "active"
-        ? "Active review"
-        : "Passive review"
+        ? "Active Learning review"
+        : "Passive Learning review"
       : dir === "active"
       ? "Active Learning"
       : "Passive Learning";
@@ -386,8 +386,8 @@ export default async function DeckPracticePage({
       ? `${langName(targetLang)} · ${langName(supportLang)} Favourites`
       : source === "review"
       ? dir === "active"
-        ? "Active review"
-        : "Passive review"
+        ? "Active Learning review"
+        : "Passive Learning review"
       : dir === "active"
       ? "Active Learning"
       : "Dashboard";
@@ -404,7 +404,7 @@ export default async function DeckPracticePage({
       ? ["Favourites", modeShortLabel(mode), sessionSizeLabel].join(" · ")
       : source === "review"
         ? [
-            dir === "active" ? "Active review" : "Passive review",
+            dir === "active" ? "Active Learning review" : "Passive Learning review",
             modeShortLabel(mode),
             sessionSizeLabel,
           ].join(" · ")

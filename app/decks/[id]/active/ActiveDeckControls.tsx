@@ -297,7 +297,7 @@ export default function ActiveDeckControls({
         <span className="entry-helper-note__icon" aria-hidden="true">
           i
         </span>
-        <span>Active learning includes items already mastered in Passive Learning.</span>
+        <span>Active Learning includes items already mastered in Passive Learning.</span>
       </div>
 
       <div className="deck-actions-group">
@@ -333,7 +333,7 @@ export default function ActiveDeckControls({
             style={secondaryActionStyle}
             className="deck-action-button deck-action-button--secondary"
           >
-            Active review
+            Active Learning review
           </Link>
         </div>
       </div>
