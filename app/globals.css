@@ -676,6 +676,96 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     color: #111827;
     font-weight: 700;
   }
+
+  html:not([data-theme="dark"]) .preview-meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+  }
+
+  html:not([data-theme="dark"]) .preview-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #dce4ee;
+    background: #f8fafd;
+    border-radius: 999px;
+    padding: 0.24rem 0.6rem;
+    font-size: 0.76rem;
+    line-height: 1.2;
+    color: #56657a;
+  }
+
+  html:not([data-theme="dark"]) .practice-desktop-icon-controls {
+    display: flex !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-desktop-text-controls {
+    display: none !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.55rem;
+    min-width: 2.55rem;
+    border-radius: 0.78rem;
+    border: 1px solid #d6dee9;
+    background: #fbfcfe;
+    color: #374357;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control:hover {
+    border-color: #c5d1e0;
+    background: #f2f6fb;
+    color: #1f2937;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control:focus-visible {
+    outline: 2px solid rgba(148, 163, 184, 0.42);
+    outline-offset: 2px;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control--active {
+    border-color: #d2c089;
+    background: #fbf7ea;
+    color: #6f5b2b;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control--report {
+    border-color: #e8c9cf;
+    background: #fff6f7;
+    color: #9b3b4e;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control__glyph {
+    font-size: 0.92rem;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  html:not([data-theme="dark"]) .practice-decision-button {
+    min-height: 2.85rem;
+    padding-inline: 1rem;
+    font-weight: 700;
+    border-radius: 0.78rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-theme="dark"] .practice-desktop-icon-controls {
+    display: none !important;
+  }
+
+  html[data-theme="dark"] .practice-desktop-text-controls {
+    display: flex !important;
+  }
 }
 
 @media (min-width: 768px) {

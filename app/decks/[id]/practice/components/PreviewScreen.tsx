@@ -179,9 +179,14 @@ export default function PreviewScreen(props: Props) {
         <div className="preview-shell rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6 lg:p-7">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="text-sm opacity-70">{plannedCountLabel}</div>
+              <div className="md:hidden text-sm opacity-70">{plannedCountLabel}</div>
+              <div className="preview-meta-strip hidden md:flex">
+                <span className="preview-meta-chip">{plannedCountLabel}</span>
+                {noLimitPreviewHint ? <span className="preview-meta-chip">Preview: first 5 items</span> : null}
+                {isActive ? <span className="preview-meta-chip">{`Direction: ${previewDirectionLabel}`}</span> : null}
+              </div>
               {noLimitPreviewHint ? (
-                <div className="mt-1 text-xs opacity-60">Preview: first 5 items</div>
+                <div className="md:hidden mt-1 text-xs opacity-60">Preview: first 5 items</div>
               ) : null}
             </div>
 
@@ -239,7 +244,7 @@ export default function PreviewScreen(props: Props) {
           {showWordsTable && (
             <div className="mt-5">
               {isActive && (
-                <div className="learning-support-text mb-3 text-sm opacity-75">
+                <div className="learning-support-text mb-3 text-sm opacity-75 md:hidden">
                   Active direction: {previewDirectionLabel}
                 </div>
               )}
