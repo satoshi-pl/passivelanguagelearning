@@ -298,8 +298,9 @@ export default function PracticeScreen(props: Props) {
               title={`Change speed · V (${playbackRateLabel})`}
               aria-label={`${speedAria} (V)`}
             >
-              <span aria-hidden="true" className="practice-icon-control__speed-text">
-                {playbackRateLabel}
+              <span aria-hidden="true" className="practice-icon-control__speed-content">
+                <span className="practice-icon-control__glyph">▶</span>
+                <span className="practice-icon-control__speed-text">{playbackRateLabel}</span>
               </span>
               <span className="practice-icon-control__shortcut" aria-hidden="true">
                 V
@@ -309,15 +310,12 @@ export default function PracticeScreen(props: Props) {
             <button
               type="button"
               onClick={onPlayAudio}
-              className="practice-icon-control"
+              className="practice-icon-control practice-icon-control--play"
               title="Play audio · A"
               aria-label="Play audio (A)"
             >
-              <span aria-hidden="true" className="practice-icon-control__glyph">
-                ▶
-              </span>
-              <span className="practice-icon-control__shortcut" aria-hidden="true">
-                A
+              <span aria-hidden="true" className="practice-icon-control__play-text">
+                Play · A
               </span>
             </button>
 
