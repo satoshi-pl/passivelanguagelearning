@@ -162,7 +162,7 @@ export default function ReviewDeckControls({
 
   return (
     <div className="entry-controls-shell">
-      <div className="entry-helper-text entry-helper-note hidden sm:flex" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
+      <div className="entry-helper-text entry-helper-note !hidden sm:!flex" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
         <span className="entry-helper-note__icon" aria-hidden="true">
           i
         </span>
