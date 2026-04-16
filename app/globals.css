@@ -637,10 +637,22 @@ html[data-theme="dark"] .preview-control-shortcut--on-dark {
   padding-inline: 0.62rem;
 }
 
+.practice-icon-control--report-text {
+  min-width: 5.45rem;
+  padding-inline: 0.68rem;
+}
+
 .practice-icon-control__play-text {
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+.practice-icon-control__report-text {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .practice-icon-control__speed-shortcut {
@@ -1343,18 +1355,6 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     font-size: 0.92rem;
     line-height: 1;
     font-weight: 700;
-  }
-
-  html:not([data-theme="dark"]) .practice-icon-control__shortcut {
-    position: absolute;
-    right: 0.24rem;
-    bottom: 0.2rem;
-    font-size: 0.58rem;
-    line-height: 1;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    color: #66778d;
-    pointer-events: none;
   }
 
   html:not([data-theme="dark"]) .practice-decision-button {

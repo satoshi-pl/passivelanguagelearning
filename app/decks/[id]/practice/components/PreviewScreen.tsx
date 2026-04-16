@@ -206,11 +206,8 @@ export default function PreviewScreen(props: Props) {
                     }
                   >
                     <span className="md:hidden">{showTranslations ? "Hide translation" : "Show translation"}</span>
-                    <span className="preview-control-inline hidden md:inline">
-                      <span aria-hidden="true" className="preview-control-inline__icon">
-                        {showTranslations ? "🙈" : "👁"}
-                      </span>
-                      <span>{showTranslations ? "Hide translation" : "Show translation"}</span>
+                    <span className="hidden md:inline">
+                      {showTranslations ? "Hide translation" : "Show translation"}
                       <span className="preview-control-shortcut"> • {showTranslations ? "H" : "S"}</span>
                     </span>
                   </button>

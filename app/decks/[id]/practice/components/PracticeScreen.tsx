@@ -337,15 +337,12 @@ export default function PracticeScreen(props: Props) {
             <button
               type="button"
               onClick={() => setReportOpen(true)}
-              className="practice-icon-control practice-icon-control--report"
+              className="practice-icon-control practice-icon-control--report practice-icon-control--report-text"
               title="Report · R"
               aria-label="Report an issue (R)"
             >
-              <span aria-hidden="true" className="practice-icon-control__glyph">
-                ⚑
-              </span>
-              <span className="practice-icon-control__shortcut" aria-hidden="true">
-                R
+              <span aria-hidden="true" className="practice-icon-control__report-text">
+                Report · R
               </span>
             </button>
           </div>
