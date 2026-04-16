@@ -55,6 +55,20 @@ body {
     color 180ms ease;
 }
 
+.nav-link-pending {
+  opacity: 0.68;
+  transform: translateY(0.5px);
+  transition:
+    opacity 130ms ease,
+    transform 130ms ease;
+}
+
+.deck-mode-button.nav-link-pending,
+.deck-action-button.nav-link-pending,
+.pll-back-link.nav-link-pending {
+  filter: saturate(0.92);
+}
+
 .app-shell-glow {
   background: var(--background);
 }

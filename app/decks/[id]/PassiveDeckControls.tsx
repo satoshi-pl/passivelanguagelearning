@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -98,7 +99,7 @@ export default function PassiveDeckControls({
     return `/decks/${deckId}?${qs.toString()}`;
   }, [deckId]);
 
-  const buildPracticeHref = (n: number) => {
+  const buildPracticeHref = useCallback((n: number) => {
     const qs = new URLSearchParams();
     qs.set("n", String(n));
     qs.set("o", "0");
@@ -110,7 +111,7 @@ export default function PassiveDeckControls({
     }
 
     return `/decks/${deckId}/practice?${qs.toString()}`;
-  };
+  }, [deckId, mode, buildDashboardBackHref, selectedCategory]);
 
   const buildOptionalHref = (pathname: string) => {
     const qs = new URLSearchParams();
@@ -172,6 +173,24 @@ export default function PassiveDeckControls({
 
   const prWords = selectedProgress?.words ?? overallWordsProgress;
   const prSentences = selectedProgress?.sentences ?? overallSentencesProgress;
+  const modeWordsHref = buildDeckPageHref("words", selectedCategory);
+  const modeWsHref = buildDeckPageHref("ws", selectedCategory);
+  const modeSentencesHref = buildDeckPageHref("sentences", selectedCategory);
+  const passiveReviewHref = buildOptionalHref(`/decks/${deckId}/review`);
+  const activeHref = buildOptionalHref(`/decks/${deckId}/active`);
+
+  const prefetchHrefs = useMemo(
+    () => [
+      modeWordsHref,
+      modeWsHref,
+      modeSentencesHref,
+      ...[5, 10, 15, 0].map((n) => buildPracticeHref(n)),
+      passiveReviewHref,
+      activeHref,
+    ],
+    [modeWordsHref, modeWsHref, modeSentencesHref, buildPracticeHref, passiveReviewHref, activeHref]
+  );
+  usePrefetchRoutes(prefetchHrefs);
 
   const modeButtonStyle = (active: boolean) =>
     ({
@@ -226,15 +245,15 @@ export default function PassiveDeckControls({
     <div className="entry-controls-shell">
       <div style={{ marginTop: 20 }}>
         <div className="deck-mode-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link className="deck-mode-button" href={buildDeckPageHref("words", selectedCategory)} style={modeButtonStyle(mode === "words")}>
+          <ResponsiveNavLink className="deck-mode-button" href={modeWordsHref} style={modeButtonStyle(mode === "words")}>
             Words
-          </Link>
-          <Link className="deck-mode-button" href={buildDeckPageHref("ws", selectedCategory)} style={modeButtonStyle(mode === "ws")}>
+          </ResponsiveNavLink>
+          <ResponsiveNavLink className="deck-mode-button" href={modeWsHref} style={modeButtonStyle(mode === "ws")}>
             Words + Sentences
-          </Link>
-          <Link className="deck-mode-button" href={buildDeckPageHref("sentences", selectedCategory)} style={modeButtonStyle(mode === "sentences")}>
+          </ResponsiveNavLink>
+          <ResponsiveNavLink className="deck-mode-button" href={modeSentencesHref} style={modeButtonStyle(mode === "sentences")}>
             Sentences
-          </Link>
+          </ResponsiveNavLink>
         </div>
       </div>
 
@@ -284,14 +303,14 @@ export default function PassiveDeckControls({
       <div className="deck-actions-group">
         <div className="deck-action-row deck-learn-row" style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
           {sessionSizes.map((size) => (
-            <Link
+            <ResponsiveNavLink
               key={size.label}
               href={buildPracticeHref(size.value)}
               style={learnButtonStyle}
               className="deck-action-button deck-action-button--primary deck-learn-button"
             >
               {size.label}
-            </Link>
+            </ResponsiveNavLink>
           ))}
         </div>
 
@@ -299,8 +318,8 @@ export default function PassiveDeckControls({
           <div style={{ fontSize: 12, color: "var(--foreground-muted)", marginBottom: 8 }}>Also available</div>
 
           <div className="deck-action-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link
-              href={buildOptionalHref(`/decks/${deckId}/review`)}
+            <ResponsiveNavLink
+              href={passiveReviewHref}
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
             >
@@ -314,10 +333,10 @@ export default function PassiveDeckControls({
                   i
                 </span>
               </span>
-            </Link>
+            </ResponsiveNavLink>
 
-            <Link
-              href={buildOptionalHref(`/decks/${deckId}/active`)}
+            <ResponsiveNavLink
+              href={activeHref}
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
             >
@@ -331,7 +350,7 @@ export default function PassiveDeckControls({
                   i
                 </span>
               </span>
-            </Link>
+            </ResponsiveNavLink>
           </div>
         </div>
       </div>

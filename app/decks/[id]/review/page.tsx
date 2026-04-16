@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ReviewDeckControls from "./ReviewDeckControls";
 
@@ -84,9 +84,9 @@ export default async function DeckReviewPage({
   if (deckErr || !deck) {
     return (
       <div className="pll-workspace" style={{ maxWidth: 900, margin: "24px auto", padding: "0 16px" }}>
-        <Link className="pll-back-link" href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
+        <ResponsiveNavLink className="pll-back-link" href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
-        </Link>
+        </ResponsiveNavLink>
         <h1 style={{ marginTop: 12 }}>Deck not found</h1>
         <pre>{JSON.stringify({ deckId, deckErr }, null, 2)}</pre>
       </div>
@@ -208,9 +208,9 @@ export default async function DeckReviewPage({
           }}
         >
           <div className="pll-card-inner" style={{ width: "100%", maxWidth: 920, margin: "0 auto" }}>
-            <Link className="pll-back-link" href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
+            <ResponsiveNavLink className="pll-back-link" href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
               ← Back to {deck.name} Passive Learning
-            </Link>
+            </ResponsiveNavLink>
 
             <div style={{ marginTop: 20 }}>
               <h1
@@ -249,7 +249,7 @@ export default async function DeckReviewPage({
                 </div>
 
                 <div style={{ marginTop: 24 }}>
-                  <Link
+                  <ResponsiveNavLink
                     href={deckDetailHref}
                     style={{
                       display: "inline-block",
@@ -263,7 +263,7 @@ export default async function DeckReviewPage({
                     }}
                   >
                     Go back
-                  </Link>
+                  </ResponsiveNavLink>
                 </div>
               </div>
             </div>
@@ -287,9 +287,9 @@ export default async function DeckReviewPage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 820, margin: "0 auto" }}>
-          <Link className="pll-back-link" href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
+          <ResponsiveNavLink className="pll-back-link" href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
             ← Back to {deck.name} Passive Learning
-          </Link>
+          </ResponsiveNavLink>
 
           <div style={{ marginTop: 18 }}>
             <h1

@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -85,11 +86,11 @@ export default function ActiveDeckControls({
     return `/decks/${deckId}/active?${qs.toString()}`;
   }, [backToDecksHref, deckId]);
 
-  const buildDashboardBackHref = (nextMode: Mode, nextCategory: string | null) => {
+  const buildDashboardBackHref = useCallback((nextMode: Mode, nextCategory: string | null) => {
     return buildActivePageHref(nextMode, nextCategory);
-  };
+  }, [buildActivePageHref]);
 
-  const buildPracticeHref = (n: number) => {
+  const buildPracticeHref = useCallback((n: number) => {
     const qs = new URLSearchParams();
     qs.set("n", String(n));
     qs.set("o", "0");
@@ -103,7 +104,7 @@ export default function ActiveDeckControls({
     }
 
     return `/decks/${deckId}/practice?${qs.toString()}`;
-  };
+  }, [deckId, mode, buildDashboardBackHref, selectedCategory]);
 
   const buildReviewHref = () => {
     const qs = new URLSearchParams();
@@ -172,6 +173,22 @@ export default function ActiveDeckControls({
 
   const prWords = selectedProgress?.words ?? overallWordsProgress;
   const prSentences = selectedProgress?.sentences ?? overallSentencesProgress;
+  const modeWordsHref = buildActivePageHref("words", selectedCategory);
+  const modeWsHref = buildActivePageHref("ws", selectedCategory);
+  const modeSentencesHref = buildActivePageHref("sentences", selectedCategory);
+  const activeReviewHref = buildReviewHref();
+
+  const prefetchHrefs = useMemo(
+    () => [
+      modeWordsHref,
+      modeWsHref,
+      modeSentencesHref,
+      ...[5, 10, 15, 0].map((n) => buildPracticeHref(n)),
+      activeReviewHref,
+    ],
+    [modeWordsHref, modeWsHref, modeSentencesHref, buildPracticeHref, activeReviewHref]
+  );
+  usePrefetchRoutes(prefetchHrefs);
 
   const modeButtonStyle = (active: boolean) =>
     ({
@@ -226,27 +243,27 @@ export default function ActiveDeckControls({
     <div className="entry-controls-shell">
       <div style={{ marginTop: 20 }}>
         <div className="deck-mode-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildActivePageHref("words", selectedCategory)}
+            href={modeWordsHref}
             style={modeButtonStyle(mode === "words")}
           >
             Words only
-          </Link>
-          <Link
+          </ResponsiveNavLink>
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildActivePageHref("ws", selectedCategory)}
+            href={modeWsHref}
             style={modeButtonStyle(mode === "ws")}
           >
             Words + Sentences
-          </Link>
-          <Link
+          </ResponsiveNavLink>
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildActivePageHref("sentences", selectedCategory)}
+            href={modeSentencesHref}
             style={modeButtonStyle(mode === "sentences")}
           >
             Sentences only
-          </Link>
+          </ResponsiveNavLink>
         </div>
       </div>
 
@@ -300,14 +317,14 @@ export default function ActiveDeckControls({
             style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}
           >
             {sessionSizes.map((size) => (
-              <Link
+              <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
                 style={learnButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >
                 {size.label}
-              </Link>
+              </ResponsiveNavLink>
             ))}
           </div>
         ) : (
@@ -321,13 +338,13 @@ export default function ActiveDeckControls({
         )}
 
         <div className="deck-optional-section" style={{ marginTop: 18 }}>
-          <Link
-            href={buildReviewHref()}
+          <ResponsiveNavLink
+            href={activeReviewHref}
             style={secondaryActionStyle}
             className="deck-action-button deck-action-button--secondary"
           >
             Active Learning review
-          </Link>
+          </ResponsiveNavLink>
         </div>
       </div>
     </div>

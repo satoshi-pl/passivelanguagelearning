@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Option = {
@@ -19,8 +20,10 @@ export default function AutoSubmitSupportSelect({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, setIsPending] = useState(false);
+  const pendingResetRef = useRef<number | null>(null);
 
-  function handleChange(nextValue: string) {
+  const buildHref = useCallback((nextValue: string) => {
     const qs = new URLSearchParams(searchParams.toString());
 
     if (target) qs.set("target", target);
@@ -32,7 +35,28 @@ export default function AutoSubmitSupportSelect({
     // Level is pair-specific; let /decks default to the first level for the new pair.
     qs.delete("level");
 
-    const next = qs.toString() ? `${pathname}?${qs.toString()}` : pathname;
+    return qs.toString() ? `${pathname}?${qs.toString()}` : pathname;
+  }, [pathname, searchParams, target]);
+
+  useEffect(() => {
+    for (const option of options) {
+      router.prefetch(buildHref(option.value));
+    }
+  }, [options, buildHref, router]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingResetRef.current) {
+        window.clearTimeout(pendingResetRef.current);
+      }
+    };
+  }, []);
+
+  function handleChange(nextValue: string) {
+    setIsPending(true);
+    if (pendingResetRef.current) window.clearTimeout(pendingResetRef.current);
+    pendingResetRef.current = window.setTimeout(() => setIsPending(false), 900);
+    const next = buildHref(nextValue);
     router.replace(next);
   }
 
@@ -46,6 +70,8 @@ export default function AutoSubmitSupportSelect({
       <select
         value={value}
         onChange={(e) => handleChange(e.target.value)}
+        aria-busy={isPending || undefined}
+        data-nav-pending={isPending ? "true" : "false"}
         style={{
           width: "100%",
           height: 46,
@@ -62,6 +88,8 @@ export default function AutoSubmitSupportSelect({
           MozAppearance: "none",
           boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
           cursor: "pointer",
+          opacity: isPending ? 0.72 : 1,
+          transition: "opacity 130ms ease",
         }}
       >
         {options.map((option) => (

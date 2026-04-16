@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import FavoritesDeckControls from "./FavoritesDeckControls";
 
 type Mode = "words" | "ws" | "sentences";
@@ -95,9 +95,9 @@ function ErrorBlock({
 }) {
   return (
     <div className="pll-workspace" style={{ maxWidth: 980, margin: "40px auto", padding: "0 24px" }}>
-      <Link className="pll-back-link" href={href} style={{ textDecoration: "none", color: "var(--foreground)" }}>
+      <ResponsiveNavLink className="pll-back-link" href={href} style={{ textDecoration: "none", color: "var(--foreground)" }}>
         ← Back to My decks
-      </Link>
+      </ResponsiveNavLink>
       <h1 style={{ marginTop: 12, fontSize: 30, fontWeight: 900 }}>Favourites</h1>
       <pre
         style={{
@@ -299,9 +299,9 @@ export default async function FavoritesLangPage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 900, margin: "0 auto" }}>
-          <Link className="pll-back-link" href={decksHref} style={{ textDecoration: "none", color: "var(--foreground)" }}>
+          <ResponsiveNavLink className="pll-back-link" href={decksHref} style={{ textDecoration: "none", color: "var(--foreground)" }}>
             ← Back to My decks
-          </Link>
+          </ResponsiveNavLink>
 
           <div style={{ marginTop: 18 }}>
             <h1

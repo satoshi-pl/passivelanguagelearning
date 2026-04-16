@@ -3,7 +3,7 @@ export const revalidate = 0;
 
 import RememberDecksHref from "./RememberDecksHref";
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import AutoSubmitSupportSelect from "./AutoSubmitSupportSelect";
 
@@ -18,15 +18,13 @@ type DeckRow = {
 
 type Progress = { total: number; mastered: number; pct: number };
 type DualProgress = { words: Progress; sentences: Progress };
-type CountResult = { count: number | null; error: unknown };
-type CountQuery = PromiseLike<CountResult> & {
-  eq: (column: string, value: string) => CountQuery;
-  not: (column: string, op: string, value: null) => CountQuery;
+type PairDeckRow = {
+  deck_id: string;
 };
-type SupabaseCountClient = {
-  from: (table: string) => {
-    select: (columns: string, options: { count: "exact"; head: true }) => CountQuery;
-  };
+type UserPairDeckRow = {
+  deck_id: string;
+  word_mastered_at: string | null;
+  sentence_mastered_at: string | null;
 };
 
 function toPct(mastered: number, total: number) {
@@ -127,43 +125,6 @@ function deckCardTitle(deck: DeckRow) {
   return deck.name;
 }
 
-async function getDeckProgressDual(
-  supabase: SupabaseCountClient,
-  userId: string,
-  deckId: string
-): Promise<DualProgress> {
-  const [
-    { count: totalPairs, error: totalErr },
-    { count: masteredWords, error: masteredWordsErr },
-    { count: masteredSentences, error: masteredSentencesErr },
-  ] = await Promise.all([
-    supabase.from("pairs").select("id", { count: "exact", head: true }).eq("deck_id", deckId),
-
-    supabase
-      .from("user_pairs")
-      .select("pair_id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("deck_id", deckId)
-      .not("word_mastered_at", "is", null),
-
-    supabase
-      .from("user_pairs")
-      .select("pair_id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("deck_id", deckId)
-      .not("sentence_mastered_at", "is", null),
-  ]);
-
-  const total = totalErr ? 0 : totalPairs ?? 0;
-  const wMastered = masteredWordsErr ? 0 : masteredWords ?? 0;
-  const sMastered = masteredSentencesErr ? 0 : masteredSentences ?? 0;
-
-  return {
-    words: { total, mastered: wMastered, pct: toPct(wMastered, total) },
-    sentences: { total, mastered: sMastered, pct: toPct(sMastered, total) },
-  };
-}
-
 function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
   return (
     <div className="entry-progress-row deck-progress-bar">
@@ -186,6 +147,78 @@ function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
   );
 }
 
+async function getDeckProgressByDeckBulk(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  userId: string,
+  deckIds: string[]
+): Promise<Record<string, DualProgress>> {
+  const empty: Record<string, DualProgress> = {};
+  for (const deckId of deckIds) {
+    empty[deckId] = {
+      words: { total: 0, mastered: 0, pct: 0 },
+      sentences: { total: 0, mastered: 0, pct: 0 },
+    };
+  }
+  if (deckIds.length === 0) return empty;
+
+  const [{ data: pairRows, error: pairErr }, { data: userPairRows, error: userPairErr }] = await Promise.all([
+    supabase.from("pairs").select("deck_id").in("deck_id", deckIds),
+    supabase
+      .from("user_pairs")
+      .select("deck_id, word_mastered_at, sentence_mastered_at")
+      .eq("user_id", userId)
+      .in("deck_id", deckIds),
+  ]);
+
+  if (pairErr || userPairErr) return empty;
+
+  const totalsByDeck: Record<string, number> = {};
+  for (const row of (pairRows ?? []) as PairDeckRow[]) {
+    const key = row.deck_id;
+    totalsByDeck[key] = (totalsByDeck[key] ?? 0) + 1;
+  }
+
+  const wordsByDeck: Record<string, number> = {};
+  const sentencesByDeck: Record<string, number> = {};
+  for (const row of (userPairRows ?? []) as UserPairDeckRow[]) {
+    const key = row.deck_id;
+    if (row.word_mastered_at) wordsByDeck[key] = (wordsByDeck[key] ?? 0) + 1;
+    if (row.sentence_mastered_at) sentencesByDeck[key] = (sentencesByDeck[key] ?? 0) + 1;
+  }
+
+  for (const deckId of deckIds) {
+    const total = totalsByDeck[deckId] ?? 0;
+    const wMastered = wordsByDeck[deckId] ?? 0;
+    const sMastered = sentencesByDeck[deckId] ?? 0;
+    empty[deckId] = {
+      words: { total, mastered: wMastered, pct: toPct(wMastered, total) },
+      sentences: { total, mastered: sMastered, pct: toPct(sMastered, total) },
+    };
+  }
+
+  return empty;
+}
+
+function linkInteractionStyle(active: boolean) {
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "12px 18px",
+    borderRadius: 999,
+    border: active ? "1px solid var(--foreground)" : "1px solid var(--border)",
+    background: active ? "var(--foreground)" : "var(--surface-solid)",
+    color: active ? "var(--surface-solid)" : "var(--foreground)",
+    textDecoration: "none",
+    fontWeight: 800,
+    fontSize: 15,
+    whiteSpace: "nowrap",
+    minHeight: 46,
+    boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
+    transition: "opacity 130ms ease",
+  } as const;
+}
+
 function FilterButton({
   href,
   active,
@@ -196,27 +229,25 @@ function FilterButton({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "12px 18px",
-        borderRadius: 999,
-        border: active ? "1px solid var(--foreground)" : "1px solid var(--border)",
-        background: active ? "var(--foreground)" : "var(--surface-solid)",
-        color: active ? "var(--surface-solid)" : "var(--foreground)",
-        textDecoration: "none",
-        fontWeight: 800,
-        fontSize: 15,
-        whiteSpace: "nowrap",
-        minHeight: 46,
-        boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
-      }}
-    >
+    <ResponsiveNavLink href={href} style={linkInteractionStyle(active)}>
       {children}
-    </Link>
+    </ResponsiveNavLink>
+  );
+}
+
+function DeckLink({
+  href,
+  children,
+  style,
+}: {
+  href: string;
+  children: React.ReactNode;
+  style: React.CSSProperties;
+}) {
+  return (
+    <ResponsiveNavLink href={href} style={style}>
+      {children}
+    </ResponsiveNavLink>
   );
 }
 
@@ -243,7 +274,7 @@ export default async function DecksPage({
       .order("native_lang", { ascending: true })
       .order("name", { ascending: true });
 
-  let { data: decks, error: decksError } = await loadDecks();
+  const { data: decks, error: decksError } = await loadDecks();
 
   if (decksError) {
     return (
@@ -253,7 +284,7 @@ export default async function DecksPage({
     );
   }
 
-  let allDecks = (decks as DeckRow[]) ?? [];
+  const allDecks = (decks as DeckRow[]) ?? [];
 
   if (allDecks.length === 0) {
     redirect("/setup");
@@ -306,22 +337,8 @@ export default async function DecksPage({
       : levelUrlOptions[0] ?? LEVEL_URL_OTHER;
 
   const displayDecks = pairDecks.filter((d) => deckLevelUrlValue(d.level) === selectedLevelUrl);
-
-  const progressEntries = await Promise.all(
-    displayDecks.map(async (deck) => {
-      const pr = await getDeckProgressDual(
-        supabase as unknown as SupabaseCountClient,
-        user.id,
-        deck.id
-      );
-      return [deck.id, pr] as const;
-    })
-  );
-
-  const progressByDeck: Record<string, DualProgress> = {};
-  for (const [deckId, pr] of progressEntries) {
-    progressByDeck[deckId] = pr;
-  }
+  const displayDeckIds = displayDecks.map((deck) => deck.id);
+  const progressByDeck = await getDeckProgressByDeckBulk(supabase, user.id, displayDeckIds);
 
   const { count: favoritesCount, error: favoritesErr } = await supabase
     .from("user_favorites")
@@ -365,7 +382,7 @@ export default async function DecksPage({
           My decks
         </h1>
 
-        <Link
+        <DeckLink
           href="/decks/add-pair"
           style={{
             display: "inline-flex",
@@ -384,7 +401,7 @@ export default async function DecksPage({
           }}
         >
           Add language pair
-        </Link>
+        </DeckLink>
       </div>
 
       <div
@@ -589,7 +606,7 @@ export default async function DecksPage({
             {langName(selectedTarget)}
           </div>
 
-          <Link
+          <DeckLink
             href={favoritesHref}
             style={{
               display: "inline-flex",
@@ -609,7 +626,7 @@ export default async function DecksPage({
           >
             <span style={{ fontSize: 16, lineHeight: 1, color: "#C89B1D" }}>★</span>
             <span>Favourites{favoritesTotal > 0 ? ` (${favoritesTotal})` : ""}</span>
-          </Link>
+          </DeckLink>
         </div>
 
         <div style={{ marginTop: 18, display: "grid", gap: 12 }}>
@@ -649,7 +666,7 @@ export default async function DecksPage({
                   <ProgressBar label="Sentences" pr={pr.sentences} />
                 </div>
 
-                <Link
+                <DeckLink
                   href={`/decks/${String(deck.id)}?back=${encodeURIComponent(currentDecksHref)}`}
                   style={{
                     whiteSpace: "nowrap",
@@ -662,7 +679,7 @@ export default async function DecksPage({
                   }}
                 >
                   Start practice
-                </Link>
+                </DeckLink>
               </div>
             );
           })}

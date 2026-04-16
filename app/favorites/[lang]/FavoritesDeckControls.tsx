@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -55,7 +56,7 @@ export default function FavoritesDeckControls({
     return `/favorites/${targetLang}?${qs.toString()}`;
   }, [supportLang, targetLang]);
 
-  const buildPracticeHref = (n: number) => {
+  const buildPracticeHref = useCallback((n: number) => {
     const qs = new URLSearchParams();
     qs.set("support", supportLang);
     qs.set("mode", mode);
@@ -68,7 +69,7 @@ export default function FavoritesDeckControls({
     }
 
     return `/favorites/${targetLang}/practice?${qs.toString()}`;
-  };
+  }, [supportLang, mode, buildPageHref, selectedCategory, targetLang]);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -155,33 +156,47 @@ export default function FavoritesDeckControls({
     boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
   } as const;
 
+  const modeWordsHref = buildPageHref("words", selectedCategory);
+  const modeWsHref = buildPageHref("ws", selectedCategory);
+  const modeSentencesHref = buildPageHref("sentences", selectedCategory);
+  const prefetchHrefs = useMemo(
+    () => [
+      modeWordsHref,
+      modeWsHref,
+      modeSentencesHref,
+      ...[5, 10, 15, 0].map((n) => buildPracticeHref(n)),
+    ],
+    [modeWordsHref, modeWsHref, modeSentencesHref, buildPracticeHref]
+  );
+  usePrefetchRoutes(prefetchHrefs);
+
   return (
     <div className="entry-controls-shell">
       <div style={{ marginTop: 18 }}>
         <div className="deck-mode-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildPageHref("words", selectedCategory)}
+            href={modeWordsHref}
             style={modeButtonStyle(mode === "words")}
           >
             Words
-          </Link>
+          </ResponsiveNavLink>
 
-          <Link
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildPageHref("ws", selectedCategory)}
+            href={modeWsHref}
             style={modeButtonStyle(mode === "ws")}
           >
             Words + Sentences
-          </Link>
+          </ResponsiveNavLink>
 
-          <Link
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildPageHref("sentences", selectedCategory)}
+            href={modeSentencesHref}
             style={modeButtonStyle(mode === "sentences")}
           >
             Sentences
-          </Link>
+          </ResponsiveNavLink>
         </div>
       </div>
 
@@ -227,14 +242,14 @@ export default function FavoritesDeckControls({
         <div style={{ marginTop: 18 }}>
           <div className="deck-action-row deck-learn-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {reviewSizes.map((size) => (
-              <Link
+              <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
                 style={reviewButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >
                 {size.label}
-              </Link>
+              </ResponsiveNavLink>
             ))}
           </div>
         </div>

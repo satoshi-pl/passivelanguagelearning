@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -47,7 +48,7 @@ export default function ActiveReviewDeckControls({
     return `/decks/${deckId}/active/review?${qs.toString()}`;
   }, [backToDeckHref, deckId]);
 
-  const buildPracticeHref = (n: number) => {
+  const buildPracticeHref = useCallback((n: number) => {
     const qs = new URLSearchParams();
     qs.set("n", String(n));
     qs.set("o", "0");
@@ -61,7 +62,7 @@ export default function ActiveReviewDeckControls({
     }
 
     return `/decks/${deckId}/practice?${qs.toString()}`;
-  };
+  }, [deckId, mode, buildReviewPageHref, selectedCategory]);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -145,6 +146,20 @@ export default function ActiveReviewDeckControls({
     boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
   } as const;
 
+  const modeWordsHref = buildReviewPageHref("words", selectedCategory);
+  const modeWsHref = buildReviewPageHref("ws", selectedCategory);
+  const modeSentencesHref = buildReviewPageHref("sentences", selectedCategory);
+  const prefetchHrefs = useMemo(
+    () => [
+      modeWordsHref,
+      modeWsHref,
+      modeSentencesHref,
+      ...[5, 10, 15, 20].map((n) => buildPracticeHref(n)),
+    ],
+    [modeWordsHref, modeWsHref, modeSentencesHref, buildPracticeHref]
+  );
+  usePrefetchRoutes(prefetchHrefs);
+
   return (
     <div className="entry-controls-shell">
       <div className="entry-helper-text entry-helper-note" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
@@ -156,27 +171,27 @@ export default function ActiveReviewDeckControls({
 
       <div style={{ marginTop: 20 }}>
         <div className="deck-mode-row flex flex-wrap gap-[10px] lg:flex-nowrap" style={{ display: "flex", gap: 10 }}>
-          <Link
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildReviewPageHref("words", selectedCategory)}
+            href={modeWordsHref}
             style={modeButtonStyle(mode === "words")}
           >
             Words only
-          </Link>
-          <Link
+          </ResponsiveNavLink>
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildReviewPageHref("ws", selectedCategory)}
+            href={modeWsHref}
             style={modeButtonStyle(mode === "ws")}
           >
             Words + Sentences
-          </Link>
-          <Link
+          </ResponsiveNavLink>
+          <ResponsiveNavLink
             className="deck-mode-button"
-            href={buildReviewPageHref("sentences", selectedCategory)}
+            href={modeSentencesHref}
             style={modeButtonStyle(mode === "sentences")}
           >
             Sentences only
-          </Link>
+          </ResponsiveNavLink>
         </div>
       </div>
 
@@ -222,14 +237,14 @@ export default function ActiveReviewDeckControls({
         <div style={{ marginTop: 18 }}>
           <div className="deck-action-row deck-review-size-row">
             {sizes.map((n) => (
-              <Link
+              <ResponsiveNavLink
                 key={n}
                 href={buildPracticeHref(n)}
                 style={reviewAmountLinkStyle}
                 className="deck-review-size-link deck-action-button deck-action-button--primary"
               >
                 Review {n}
-              </Link>
+              </ResponsiveNavLink>
             ))}
           </div>
 

@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { normalizeCategoryParam } from "./lib/categories";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import PracticeClient from "./PracticeClient";
 import { Container } from "../../../components/Container";
 import {
@@ -215,9 +215,9 @@ export default async function DeckPracticePage({
     return (
       <Container>
         <div className="pll-workspace mx-auto max-w-3xl lg:max-w-4xl">
-          <Link href="/decks" className="pll-back-link text-sm text-neutral-600 hover:underline">
+          <ResponsiveNavLink href="/decks" className="pll-back-link text-sm text-neutral-600 hover:underline">
             ← Back to My decks
-          </Link>
+          </ResponsiveNavLink>
 
           <div className="mt-4">
             <Card>
@@ -332,9 +332,9 @@ export default async function DeckPracticePage({
     return (
       <Container>
         <div className="pll-workspace mx-auto max-w-3xl lg:max-w-4xl">
-          <Link href={backHref} className="pll-back-link text-sm text-neutral-600 hover:underline">
+          <ResponsiveNavLink href={backHref} className="pll-back-link text-sm text-neutral-600 hover:underline">
             {sessionErrorBackText}
-          </Link>
+          </ResponsiveNavLink>
 
           <div className="mt-4">
             <Card>
@@ -420,14 +420,14 @@ export default async function DeckPracticePage({
       <div className="pll-workspace mx-auto max-w-5xl lg:max-w-6xl px-1 sm:px-0">
         <div className="mb-1 sm:mb-4 md:mb-5">
           <div className="flex items-center gap-2">
-            <Link
+            <ResponsiveNavLink
               href={backHref}
               className="pll-back-link text-[11px] font-medium text-neutral-600 hover:underline sm:text-sm"
               title={backText}
             >
               <span className="sm:hidden">← Back</span>
               <span className="hidden sm:inline">{backText}</span>
-            </Link>
+            </ResponsiveNavLink>
           </div>
 
           <h1 className="mt-0.5 text-base font-bold leading-snug tracking-tight text-neutral-900 sm:mt-2 sm:text-2xl sm:font-semibold md:mt-3 md:text-3xl">

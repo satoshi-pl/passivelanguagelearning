@@ -3,7 +3,7 @@ export const revalidate = 0;
 
 import { normalizeCategoryParam } from "./practice/lib/categories";
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import PassiveDeckControls from "./PassiveDeckControls";
 
@@ -114,9 +114,9 @@ export default async function DeckDetailPage({
   if (deckErr || !deck) {
     return (
       <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
-        <Link className="pll-back-link" href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
+        <ResponsiveNavLink className="pll-back-link" href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
-        </Link>
+        </ResponsiveNavLink>
         <h1 style={{ marginTop: 12 }}>Deck not found</h1>
         <pre>{JSON.stringify({ deckId, deckErr }, null, 2)}</pre>
       </div>
@@ -240,9 +240,9 @@ export default async function DeckDetailPage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
-          <Link className="pll-back-link" href={backToDecksHref} style={{ textDecoration: "none", color: "inherit" }}>
+          <ResponsiveNavLink className="pll-back-link" href={backToDecksHref} style={{ textDecoration: "none", color: "inherit" }}>
             ← Back to My decks
-          </Link>
+          </ResponsiveNavLink>
 
           <div style={{ marginTop: 20 }}>
             <h1

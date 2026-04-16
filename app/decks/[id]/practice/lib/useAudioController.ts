@@ -183,22 +183,19 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
       el.muted = mutedRef.current;
       applyPlaybackRate(el, playbackRateRef.current);
       el.load();
-      await new Promise<void>((resolve) => {
-        const syncRate = () => {
-          dlog("loadedmetadata", { readyState: el.readyState, src: el.currentSrc || el.src });
-          applyPlaybackRate(el, playbackRateRef.current);
-          resolve();
-        };
-        const onCanPlay = () => dlog("canplay", { path: "single", readyState: el.readyState });
-        const onCanPlayThrough = () =>
-          dlog("canplaythrough", { path: "single", readyState: el.readyState });
-        const onError = () => dlog("audio error event", { error: el.error?.message ?? null });
-        el.addEventListener("canplay", onCanPlay, { once: true });
-        el.addEventListener("canplaythrough", onCanPlayThrough, { once: true });
-        el.addEventListener("error", onError, { once: true });
-        el.addEventListener("loadedmetadata", syncRate, { once: true });
-        if (el.readyState >= 1) syncRate();
-      });
+      const syncRate = () => {
+        dlog("loadedmetadata", { readyState: el.readyState, src: el.currentSrc || el.src });
+        applyPlaybackRate(el, playbackRateRef.current);
+      };
+      const onCanPlay = () => dlog("canplay", { path: "single", readyState: el.readyState });
+      const onCanPlayThrough = () =>
+        dlog("canplaythrough", { path: "single", readyState: el.readyState });
+      const onError = () => dlog("audio error event", { error: el.error?.message ?? null });
+      el.addEventListener("canplay", onCanPlay, { once: true });
+      el.addEventListener("canplaythrough", onCanPlayThrough, { once: true });
+      el.addEventListener("error", onError, { once: true });
+      el.addEventListener("loadedmetadata", syncRate, { once: true });
+      if (el.readyState >= 1) syncRate();
 
       dlog("calling HTMLAudioElement.play()");
       await el.play();
@@ -270,31 +267,28 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
       el.muted = mutedRef.current;
       applyPlaybackRate(el, playbackRateRef.current);
       el.load();
-      await new Promise<void>((resolve) => {
-        const syncRate = () => {
-          dlog("loadedmetadata", {
-            path: "playAll",
-            readyState: el.readyState,
-            src: el.currentSrc || el.src,
-          });
-          applyPlaybackRate(el, playbackRateRef.current);
-          resolve();
-        };
-        const onCanPlay = () => dlog("canplay", { path: "playAll", readyState: el.readyState });
-        const onCanPlayThrough = () =>
-          dlog("canplaythrough", { path: "playAll", readyState: el.readyState });
-        const onError = () =>
-          dlog("audio error event", {
-            path: "playAll",
-            code: el.error?.code ?? null,
-            message: el.error?.message ?? null,
-          });
-        el.addEventListener("canplay", onCanPlay, { once: true });
-        el.addEventListener("canplaythrough", onCanPlayThrough, { once: true });
-        el.addEventListener("error", onError, { once: true });
-        el.addEventListener("loadedmetadata", syncRate, { once: true });
-        if (el.readyState >= 1) syncRate();
-      });
+      const syncRate = () => {
+        dlog("loadedmetadata", {
+          path: "playAll",
+          readyState: el.readyState,
+          src: el.currentSrc || el.src,
+        });
+        applyPlaybackRate(el, playbackRateRef.current);
+      };
+      const onCanPlay = () => dlog("canplay", { path: "playAll", readyState: el.readyState });
+      const onCanPlayThrough = () =>
+        dlog("canplaythrough", { path: "playAll", readyState: el.readyState });
+      const onError = () =>
+        dlog("audio error event", {
+          path: "playAll",
+          code: el.error?.code ?? null,
+          message: el.error?.message ?? null,
+        });
+      el.addEventListener("canplay", onCanPlay, { once: true });
+      el.addEventListener("canplaythrough", onCanPlayThrough, { once: true });
+      el.addEventListener("error", onError, { once: true });
+      el.addEventListener("loadedmetadata", syncRate, { once: true });
+      if (el.readyState >= 1) syncRate();
 
       await el.play();
       dlog("playAndWaitEnded() play resolved");
