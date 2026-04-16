@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
-import { buildTemplateAudioPath } from "@/app/decks/[id]/practice/lib/fallbackAudioPath";
+import { buildTemplateAudioPath } from "../../../decks/[id]/practice/lib/fallbackAudioPath";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import PracticeClient from "../../../decks/[id]/practice/PracticeClient";
