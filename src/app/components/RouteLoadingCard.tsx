@@ -31,3 +31,4 @@ export default function RouteLoadingCard({ label = "Loading..." }: { label?: str
     </div>
   );
 }
+

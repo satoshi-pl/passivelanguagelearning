@@ -13,3 +13,4 @@ export function usePrefetchRoutes(hrefs: string[]) {
     }
   }, [router, hrefs]);
 }
+
