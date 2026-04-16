@@ -184,13 +184,9 @@ export default function PreviewScreen(props: Props) {
         <div className="preview-shell rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6 lg:p-7">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="md:hidden text-sm opacity-70">{plannedCountLabel}</div>
               <div className="preview-meta-strip hidden md:flex">
                 <span className="preview-meta-chip">{plannedCountLabel}</span>
               </div>
-              {noLimitPreviewHint ? (
-                <div className="md:hidden mt-1 text-xs opacity-60">Preview: first 5 items</div>
-              ) : null}
             </div>
 
             <div className="flex flex-wrap items-stretch gap-2 lg:justify-end">

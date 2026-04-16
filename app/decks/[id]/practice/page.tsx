@@ -402,10 +402,6 @@ export default async function DeckPracticePage({
       ? `← Back to ${backLabel}`
       : `← Back to ${deck.name} ${suffixDashboard(backLabel)}`;
 
-  const sessionSizeLabel = chosenN === 0 ? "No limit" : `${chosenN} cards`;
-
-  const mobileMetaLine = [sessionSizeLabel, ...(selectedCategory ? [selectedCategory] : [])].join(" · ");
-
   return (
     <Container>
       <div className="pll-workspace mx-auto max-w-5xl lg:max-w-6xl px-1 sm:px-0">
@@ -429,7 +425,6 @@ export default async function DeckPracticePage({
               {`${deck.name} — ${pageModeLabel}${selectedCategory ? ` · ${selectedCategory}` : ""}`}
             </span>
           </h1>
-          <p className="mt-0.5 text-[10px] leading-tight text-neutral-500 sm:hidden">{mobileMetaLine}</p>
         </div>
 
         <PracticeClient

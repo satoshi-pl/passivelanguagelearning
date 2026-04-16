@@ -348,31 +348,6 @@ export default function PracticeScreen(props: Props) {
           </div>
         </div>
 
-        <div className="text-[11px] leading-snug text-neutral-500 sm:hidden">
-          {isReview ? (
-            <>
-              <b>{reviewRemaining}</b> left
-              {!isFavoritesSession ? (
-                <>
-                  {" "}
-                  · {badge}
-                </>
-              ) : null}
-              {isFavoritesSession ? " · Fav" : ""}
-            </>
-          ) : (
-            <>
-              <b>{sessionPlanLabel}</b>
-              {!isFavoritesSession ? (
-                <>
-                  {" "}
-                  · {badge}
-                </>
-              ) : null}
-            </>
-          )}
-        </div>
-
         <div ref={helpWrapRef} className="relative flex flex-wrap items-center justify-end gap-1 sm:hidden">
           <button
             type="button"
