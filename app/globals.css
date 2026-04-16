@@ -1402,6 +1402,21 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   .practice-desktop-text-controls {
     display: none !important;
   }
+
+  .practice-decision-button .practice-shortcut-hint {
+    font-size: 0.78em;
+    font-weight: 750;
+    letter-spacing: 0.015em;
+    opacity: 0.94;
+  }
+
+  html:not([data-theme="dark"]) .practice-decision-button .practice-shortcut-hint {
+    color: #4f637c;
+  }
+
+  html[data-theme="dark"] .practice-decision-button .practice-shortcut-hint {
+    color: #a4b5ca;
+  }
 }
 
 @media (min-width: 768px) {
