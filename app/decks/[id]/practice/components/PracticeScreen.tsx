@@ -114,6 +114,7 @@ export default function PracticeScreen(props: Props) {
   const [helpOpen, setHelpOpen] = useState(false);
   const helpWrapRef = useRef<HTMLDivElement | null>(null);
   const playbackRateLabel = `${playbackRate.toFixed(1)}x`;
+  const playArmedRef = useRef(false);
 
   useEffect(() => {
     if (!favFlash) return;
@@ -307,7 +308,17 @@ export default function PracticeScreen(props: Props) {
 
             <button
               type="button"
-              onClick={onPlayAudio}
+              onPointerDown={() => {
+                playArmedRef.current = true;
+                onPlayAudio();
+              }}
+              onClick={() => {
+                if (playArmedRef.current) {
+                  playArmedRef.current = false;
+                  return;
+                }
+                onPlayAudio();
+              }}
               className="practice-icon-control practice-icon-control--play"
               title="Play audio · A"
               aria-label="Play audio (A)"
@@ -401,7 +412,17 @@ export default function PracticeScreen(props: Props) {
           </button>
           <button
             type="button"
-            onClick={onPlayAudio}
+            onPointerDown={() => {
+              playArmedRef.current = true;
+              onPlayAudio();
+            }}
+            onClick={() => {
+              if (playArmedRef.current) {
+                playArmedRef.current = false;
+                return;
+              }
+              onPlayAudio();
+            }}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-solid)] text-base text-[var(--foreground)] shadow-sm hover:bg-[var(--surface-muted)] active:scale-[0.98]"
             title={!hasAudio ? "Play audio (A)" : "Play audio (A)"}
             aria-label="Play audio"
@@ -533,7 +554,17 @@ export default function PracticeScreen(props: Props) {
 
           <button
             type="button"
-            onClick={onPlayAudio}
+            onPointerDown={() => {
+              playArmedRef.current = true;
+              onPlayAudio();
+            }}
+            onClick={() => {
+              if (playArmedRef.current) {
+                playArmedRef.current = false;
+                return;
+              }
+              onPlayAudio();
+            }}
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs hover:bg-neutral-50"
             title={!hasAudio ? "Try play audio (A)" : "Play audio (A)"}
           >

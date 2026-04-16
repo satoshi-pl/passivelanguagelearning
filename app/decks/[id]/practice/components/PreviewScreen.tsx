@@ -176,6 +176,7 @@ export default function PreviewScreen(props: Props) {
     return sessionPlanLabel || "";
   }, [mode, previewWords?.length, sessionPlanLabel]);
   const playbackRateLabel = `${playbackRate.toFixed(1)}x`;
+  const playAllArmedRef = React.useRef(false);
 
   return (
     <>
@@ -227,7 +228,15 @@ export default function PreviewScreen(props: Props) {
 
                   <button
                     type="button"
+                    onPointerDown={() => {
+                      playAllArmedRef.current = true;
+                      playAllPreviewWords(previewWords);
+                    }}
                     onClick={() => {
+                      if (playAllArmedRef.current) {
+                        playAllArmedRef.current = false;
+                        return;
+                      }
                       playAllPreviewWords(previewWords);
                     }}
                     disabled={playAllBusy || previewWords.length === 0}
