@@ -1377,14 +1377,14 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-choice-primary {
-    background: #223247 !important;
-    border-color: #1b2a3d !important;
-    color: #f8fafc !important;
+    background: #dce7f5 !important;
+    border-color: #b9cbe3 !important;
+    color: #183153 !important;
   }
 
   html:not([data-theme="dark"]) .practice-choice-primary:hover {
-    background: #1d2c3f !important;
-    border-color: #162335 !important;
+    background: #d3e0f1 !important;
+    border-color: #adc1dc !important;
   }
 
   html:not([data-theme="dark"]) .practice-translation-field {
@@ -1415,8 +1415,8 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-choice-primary .practice-shortcut-hint {
-    color: #c2d2e6;
-    opacity: 0.97;
+    color: #35506f;
+    opacity: 0.92;
   }
 
   html[data-theme="dark"] .practice-decision-button .practice-shortcut-hint {
