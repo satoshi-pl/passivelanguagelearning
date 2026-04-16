@@ -78,12 +78,6 @@ function suffixDashboard(label: string) {
   return `${t} dashboard`;
 }
 
-function modeShortLabel(mode: LearnMode) {
-  if (mode === "ws") return "WS";
-  if (mode === "words") return "Words";
-  return "Sentences";
-}
-
 async function hydrateMissingAudioForPairs(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   pairs: PairRow[],
@@ -410,21 +404,7 @@ export default async function DeckPracticePage({
 
   const sessionSizeLabel = chosenN === 0 ? "No limit" : `${chosenN} cards`;
 
-  const mobileMetaLine =
-    source === "favorites"
-      ? ["Favourites", modeShortLabel(mode), sessionSizeLabel].join(" · ")
-      : source === "review"
-        ? [
-            dir === "active" ? "Active Learning review" : "Passive Learning review",
-            modeShortLabel(mode),
-            sessionSizeLabel,
-          ].join(" · ")
-        : [
-            dir === "active" ? "Active" : "Passive",
-            modeShortLabel(mode),
-            sessionSizeLabel,
-            ...(selectedCategory ? [selectedCategory] : []),
-          ].join(" · ");
+  const mobileMetaLine = [sessionSizeLabel, ...(selectedCategory ? [selectedCategory] : [])].join(" · ");
 
   return (
     <Container>
@@ -444,11 +424,6 @@ export default async function DeckPracticePage({
           <h1 className="mt-0.5 text-base font-bold leading-snug tracking-tight text-neutral-900 sm:mt-2 sm:text-2xl sm:font-semibold md:mt-3 md:text-3xl">
             <span className="sm:hidden">
               {deck.name}
-              <span className="font-semibold text-neutral-500">
-                {" "}
-                · {pageModeLabel}
-                {selectedCategory ? ` · ${selectedCategory}` : ""}
-              </span>
             </span>
             <span className="hidden sm:inline">
               {`${deck.name} — ${pageModeLabel}${selectedCategory ? ` · ${selectedCategory}` : ""}`}

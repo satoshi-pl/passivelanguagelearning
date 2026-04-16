@@ -351,26 +351,24 @@ export default function PracticeScreen(props: Props) {
         <div className="text-[11px] leading-snug text-neutral-500 sm:hidden">
           {isReview ? (
             <>
-              <b>{reviewRemaining}</b> left · {modeLabel}
+              <b>{reviewRemaining}</b> left
               {!isFavoritesSession ? (
                 <>
                   {" "}
                   · {badge}
                 </>
               ) : null}
-              {` · ${isActive ? "Active Learning review" : "Passive Learning review"}`}
               {isFavoritesSession ? " · Fav" : ""}
             </>
           ) : (
             <>
-              <b>{sessionPlanLabel}</b> · {modeLabel}
+              <b>{sessionPlanLabel}</b>
               {!isFavoritesSession ? (
                 <>
                   {" "}
                   · {badge}
                 </>
               ) : null}
-              {isActive ? " · Active" : ""}
             </>
           )}
         </div>
