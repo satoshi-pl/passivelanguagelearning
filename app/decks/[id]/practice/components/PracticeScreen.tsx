@@ -152,8 +152,8 @@ export default function PracticeScreen(props: Props) {
     favFlash === "Added to favourites" ||
     favFlash === "Already in your favourites";
   const speedAria = `Change speed (${playbackRateLabel})`;
-  const reviewSecondaryLabel = isFavoritesSession ? "Still learning" : "Hard";
-  const reviewPrimaryLabel = isFavoritesSession ? "Mastered" : "Easy";
+  const reviewSecondaryLabel = "Hard";
+  const reviewPrimaryLabel = "Easy";
   const audioControlLabel = audioMuted ? "Audio Off" : "Audio On";
 
   const onFavClick = async () => {
@@ -573,16 +573,16 @@ export default function PracticeScreen(props: Props) {
               {!revealed ? (
                 <div className="practice-decision-row hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                   <Button onClick={onRevealOrNext} disabled={busy} className="practice-action-reveal practice-decision-button w-full sm:w-auto" variant="secondary">
-                    Reveal translation <span className="practice-shortcut-hint">{isFavoritesSession ? "0 / S" : "0 / 1"}</span>
+                    Reveal translation <span className="practice-shortcut-hint">0 / S · 1 / D</span>
                   </Button>
                 </div>
               ) : (
                 <div className="practice-decision-row hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                   <Button onClick={onReviewHard} disabled={busy} className="practice-decision-button practice-choice-secondary w-full sm:w-auto" variant="secondary">
-                    {reviewSecondaryLabel} <span className="practice-shortcut-hint">{isFavoritesSession ? "0 / S" : "0"}</span>
+                    {reviewSecondaryLabel} <span className="practice-shortcut-hint">0 / S</span>
                   </Button>
                   <Button onClick={onReviewEasy} disabled={busy} className="practice-decision-button practice-choice-primary w-full sm:w-auto">
-                    {reviewPrimaryLabel} <span className="practice-shortcut-hint">{isFavoritesSession ? "1 / D" : "1"}</span>
+                    {reviewPrimaryLabel} <span className="practice-shortcut-hint">1 / D</span>
                   </Button>
                 </div>
               )}
@@ -715,39 +715,15 @@ export default function PracticeScreen(props: Props) {
               {isReview ? (
                 !revealed ? (
                   <div className="preview-shortcuts__item">
-                    {isFavoritesSession ? (
-                      <>
-                        <b>0 / S</b> — Reveal translation
-                      </>
-                    ) : (
-                      <>
-                        <b>0</b> / <b>1</b> — Reveal translation
-                      </>
-                    )}
+                    <b>0 / S</b> or <b>1 / D</b> — Reveal translation
                   </div>
                 ) : (
                   <>
                     <div className="preview-shortcuts__item">
-                      {isFavoritesSession ? (
-                        <>
-                          <b>0 / S</b> — {reviewSecondaryLabel}
-                        </>
-                      ) : (
-                        <>
-                          <b>0</b> — {reviewSecondaryLabel}
-                        </>
-                      )}
+                      <b>0 / S</b> — {reviewSecondaryLabel}
                     </div>
                     <div className="preview-shortcuts__item">
-                      {isFavoritesSession ? (
-                        <>
-                          <b>1 / D</b> — {reviewPrimaryLabel}
-                        </>
-                      ) : (
-                        <>
-                          <b>1</b> — {reviewPrimaryLabel}
-                        </>
-                      )}
+                      <b>1 / D</b> — {reviewPrimaryLabel}
                     </div>
                   </>
                 )

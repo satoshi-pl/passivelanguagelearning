@@ -105,8 +105,8 @@ export function createKeyHandler(args: KeyboardArgs) {
 
     // ===== REVIEW MODE =====
     if (args.isReview && args.viewMode === "practice") {
-      const isReviewSecondary = is0 || (args.isFavoritesSession && k === "s");
-      const isReviewPrimary = is1 || (args.isFavoritesSession && k === "d");
+      const isReviewSecondary = is0 || k === "s";
+      const isReviewPrimary = is1 || k === "d";
 
       if (isReviewSecondary) {
         e.preventDefault();
