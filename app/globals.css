@@ -1417,6 +1417,72 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     display: none !important;
   }
 
+  html:not([data-theme="dark"]) .practice-action-reveal {
+    border-color: #e4d9c9 !important;
+    background: #f3eee6 !important;
+    color: #5a4630 !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-action-reveal:hover {
+    border-color: #dbcfbe !important;
+    background: #ede6db !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-secondary {
+    border-color: #d5dee8 !important;
+    background: #e9eef4 !important;
+    color: #22364d !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-secondary:hover {
+    border-color: #c8d3df !important;
+    background: #e3e9f0 !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-primary {
+    border-color: #c2d3e4 !important;
+    background: #dce7f2 !important;
+    color: #183153 !important;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-primary:hover {
+    border-color: #b5c8dc !important;
+    background: #d4e0ed !important;
+  }
+
+  html[data-theme="dark"] .practice-action-reveal {
+    border-color: #5a5041 !important;
+    background: #3a332a !important;
+    color: #e4d6c4 !important;
+  }
+
+  html[data-theme="dark"] .practice-action-reveal:hover {
+    border-color: #665b4b !important;
+    background: #443c32 !important;
+  }
+
+  html[data-theme="dark"] .practice-choice-secondary {
+    border-color: #45576d !important;
+    background: #313f50 !important;
+    color: #d4deea !important;
+  }
+
+  html[data-theme="dark"] .practice-choice-secondary:hover {
+    border-color: #51647b !important;
+    background: #39485a !important;
+  }
+
+  html[data-theme="dark"] .practice-choice-primary {
+    border-color: #48607b !important;
+    background: #34465d !important;
+    color: #d6e3f3 !important;
+  }
+
+  html[data-theme="dark"] .practice-choice-primary:hover {
+    border-color: #55708d !important;
+    background: #3b4e67 !important;
+  }
+
   .practice-decision-button .practice-shortcut-hint {
     font-size: 0.78em;
     font-weight: 750;
@@ -1428,13 +1494,38 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     color: #586f89;
   }
 
+  html:not([data-theme="dark"]) .practice-action-reveal .practice-shortcut-hint {
+    color: #8a7359;
+    opacity: 0.92;
+  }
+
+  html:not([data-theme="dark"]) .practice-choice-secondary .practice-shortcut-hint {
+    color: #5a7088;
+    opacity: 0.92;
+  }
+
   html:not([data-theme="dark"]) .practice-choice-primary .practice-shortcut-hint {
-    color: #3c5877;
-    opacity: 0.9;
+    color: #4a6483;
+    opacity: 0.92;
   }
 
   html[data-theme="dark"] .practice-decision-button .practice-shortcut-hint {
     color: #a4b5ca;
+  }
+
+  html[data-theme="dark"] .practice-action-reveal .practice-shortcut-hint {
+    color: #b89e80;
+    opacity: 0.92;
+  }
+
+  html[data-theme="dark"] .practice-choice-secondary .practice-shortcut-hint {
+    color: #9fb0c5;
+    opacity: 0.92;
+  }
+
+  html[data-theme="dark"] .practice-choice-primary .practice-shortcut-hint {
+    color: #9fb3d1;
+    opacity: 0.92;
   }
 }
 
