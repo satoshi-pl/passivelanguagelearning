@@ -643,6 +643,13 @@ html[data-theme="dark"] .preview-control-shortcut--on-dark {
   letter-spacing: 0.01em;
 }
 
+.practice-icon-control__speed-shortcut {
+  font-size: 0.7rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 html[data-theme="dark"] .practice-inline-control {
   border-color: var(--border-strong);
   background: color-mix(in srgb, var(--surface-soft) 68%, var(--surface-muted) 32%);
@@ -661,6 +668,10 @@ html[data-theme="dark"] .practice-inline-control:focus-visible {
 }
 
 html[data-theme="dark"] .practice-inline-control__shortcut {
+  color: #9fb0c5;
+}
+
+html[data-theme="dark"] .practice-icon-control__speed-shortcut {
   color: #9fb0c5;
 }
 
@@ -1316,6 +1327,10 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     letter-spacing: 0.01em;
     color: #253246;
     font-variant-numeric: tabular-nums;
+  }
+
+  html:not([data-theme="dark"]) .practice-icon-control__speed-shortcut {
+    color: #66778d;
   }
 
   html:not([data-theme="dark"]) .practice-icon-control--report {

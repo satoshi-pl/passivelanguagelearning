@@ -301,9 +301,7 @@ export default function PracticeScreen(props: Props) {
               <span aria-hidden="true" className="practice-icon-control__speed-content">
                 <span className="practice-icon-control__glyph">▶</span>
                 <span className="practice-icon-control__speed-text">{playbackRateLabel}</span>
-              </span>
-              <span className="practice-icon-control__shortcut" aria-hidden="true">
-                V
+                <span className="practice-icon-control__speed-shortcut">· V</span>
               </span>
             </button>
 
