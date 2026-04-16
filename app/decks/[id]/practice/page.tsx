@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { normalizeCategoryParam } from "./lib/categories";
+import { buildTemplateAudioPath } from "./lib/fallbackAudioPath";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
@@ -39,6 +40,7 @@ type PairRow = {
 
 type PairAudioRow = {
   id: string;
+  pair_template_id: string | null;
   word_target_audio_url: string | null;
   sentence_target_audio_url: string | null;
 };
@@ -84,7 +86,8 @@ function modeShortLabel(mode: LearnMode) {
 
 async function hydrateMissingAudioForPairs(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
-  pairs: PairRow[]
+  pairs: PairRow[],
+  targetLang: string
 ) {
   if (!pairs.length) return pairs;
 
@@ -98,7 +101,7 @@ async function hydrateMissingAudioForPairs(
 
   const { data, error } = await supabase
     .from("pairs")
-    .select("id, word_target_audio_url, sentence_target_audio_url")
+    .select("id, pair_template_id, word_target_audio_url, sentence_target_audio_url")
     .in("id", ids);
 
   if (error || !data?.length) return pairs;
@@ -112,10 +115,17 @@ async function hydrateMissingAudioForPairs(
     if (p.word_target_audio_url || p.sentence_target_audio_url) return p;
     const audio = audioByPairId.get(p.id);
     if (!audio) return p;
+    const wordAudio =
+      audio.word_target_audio_url ??
+      buildTemplateAudioPath(targetLang, "word", audio.pair_template_id);
+    const sentenceAudio =
+      audio.sentence_target_audio_url ??
+      buildTemplateAudioPath(targetLang, "sentence", audio.pair_template_id);
+    if (!wordAudio && !sentenceAudio) return p;
     return {
       ...p,
-      word_target_audio_url: audio.word_target_audio_url,
-      sentence_target_audio_url: audio.sentence_target_audio_url,
+      word_target_audio_url: wordAudio,
+      sentence_target_audio_url: sentenceAudio,
     };
   });
 }
@@ -356,7 +366,8 @@ export default async function DeckPracticePage({
 
   const pairs = await hydrateMissingAudioForPairs(
     supabase,
-    (sessionPairs || []) as PairRow[]
+    (sessionPairs || []) as PairRow[],
+    deck.target_lang
   );
 
   const progressMap: Record<string, { word_mastered: boolean; sentence_mastered: boolean }> = {};
