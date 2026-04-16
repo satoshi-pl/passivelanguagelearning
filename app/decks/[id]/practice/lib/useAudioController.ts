@@ -47,6 +47,12 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
   const playbackRateRef = useRef(playbackRate);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const pendingGestureRetryRef = useRef<{
+    kind: "single" | "playAll";
+    raw: string | null;
+    seq: number;
+  } | null>(null);
+  const gestureRetryArmedRef = useRef(false);
 
   // Sequence guards:
   // - playSeqRef: cancels/invalidates in-flight play() / playAndWaitEnded()
@@ -136,6 +142,32 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
 
   const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+  const armRetryOnNextGesture = (kind: "single" | "playAll", raw: string | null, seq: number) => {
+    pendingGestureRetryRef.current = { kind, raw, seq };
+    if (gestureRetryArmedRef.current) return;
+    gestureRetryArmedRef.current = true;
+
+    const run = () => {
+      const pending = pendingGestureRetryRef.current;
+      pendingGestureRetryRef.current = null;
+      gestureRetryArmedRef.current = false;
+      window.removeEventListener("pointerdown", run);
+      window.removeEventListener("keydown", run);
+
+      if (!pending) return;
+      // If a newer play attempt happened since we armed this, do nothing.
+      if (pending.seq !== playSeqRef.current) return;
+
+      dlog("retrying play() after user gesture", { kind: pending.kind });
+      // Fire-and-forget: if it still fails, keep normal error handling.
+      if (pending.kind === "single") void play(pending.raw);
+      else void playAndWaitEnded(pending.raw);
+    };
+
+    window.addEventListener("pointerdown", run, { once: true });
+    window.addEventListener("keydown", run, { once: true });
+  };
+
   /**
    * Plays audio (fire-and-forget: resolves when playback starts or fails).
    * This is ideal for "play current prompt" UX (you don't want to block UI until it ends).
@@ -209,7 +241,14 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
         name: err instanceof Error ? err.name : String(name ?? "UnknownError"),
         message: err instanceof Error ? err.message : String(err),
       });
-      if (name === "AbortError" || name === "NotAllowedError") return;
+      if (name === "AbortError") return;
+      if (name === "NotAllowedError") {
+        // Desktop browsers can increasingly treat effect-triggered playback as "autoplay" and block it.
+        // Arm a one-time retry that will succeed as soon as the user interacts again.
+        dlog("play() blocked (NotAllowedError) — arming retry on next gesture");
+        armRetryOnNextGesture("single", raw ?? null, mySeq);
+        return;
+      }
       console.error("[AUDIO] play() failed:", err);
     }
   };
@@ -302,7 +341,12 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
         name: err instanceof Error ? err.name : String(name ?? "UnknownError"),
         message: err instanceof Error ? err.message : String(err),
       });
-      if (name === "AbortError" || name === "NotAllowedError") return;
+      if (name === "AbortError") return;
+      if (name === "NotAllowedError") {
+        dlog("playAndWaitEnded() blocked (NotAllowedError) — arming retry on next gesture");
+        armRetryOnNextGesture("playAll", raw ?? null, mySeq);
+        return;
+      }
       console.error("[AUDIO] playAndWaitEnded() failed:", err);
     }
   };
