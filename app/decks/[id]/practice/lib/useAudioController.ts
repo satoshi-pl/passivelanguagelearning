@@ -152,6 +152,8 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
       pendingGestureRetryRef.current = null;
       gestureRetryArmedRef.current = false;
       window.removeEventListener("pointerdown", run);
+      window.removeEventListener("touchstart", run);
+      window.removeEventListener("mousedown", run);
       window.removeEventListener("keydown", run);
 
       if (!pending) return;
@@ -165,6 +167,10 @@ export function useAudioController(resolveAudioUrl: ResolveAudioUrl, debugAudio 
     };
 
     window.addEventListener("pointerdown", run, { once: true });
+    // iOS Safari can miss pointer events depending on settings; ensure touch gestures trigger retry.
+    window.addEventListener("touchstart", run, { once: true, passive: true });
+    // Older browsers / some WebViews may only dispatch mouse events.
+    window.addEventListener("mousedown", run, { once: true });
     window.addEventListener("keydown", run, { once: true });
   };
 
