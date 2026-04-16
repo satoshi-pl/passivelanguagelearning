@@ -162,7 +162,7 @@ export default function ReviewDeckControls({
 
   return (
     <div className="entry-controls-shell">
-      <div className="entry-helper-text entry-helper-note" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
+      <div className="entry-helper-text entry-helper-note hidden sm:flex" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
         <span className="entry-helper-note__icon" aria-hidden="true">
           i
         </span>
@@ -248,7 +248,7 @@ export default function ReviewDeckControls({
             ))}
           </div>
 
-          <div style={{ marginTop: 10, fontSize: 12, color: "var(--foreground-muted)" }}>
+          <div className="hidden sm:block" style={{ marginTop: 10, fontSize: 12, color: "var(--foreground-muted)" }}>
             Starts immediately. Reveal → rate (Hard/Easy).
           </div>
         </div>
