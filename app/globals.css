@@ -1414,6 +1414,11 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     color: #4f637c;
   }
 
+  html:not([data-theme="dark"]) .practice-choice-primary .practice-shortcut-hint {
+    color: #c2d2e6;
+    opacity: 0.97;
+  }
+
   html[data-theme="dark"] .practice-decision-button .practice-shortcut-hint {
     color: #a4b5ca;
   }
