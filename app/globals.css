@@ -1451,14 +1451,14 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html[data-theme="dark"] .practice-action-reveal {
-    border-color: #5a5041 !important;
-    background: #3a332a !important;
-    color: #e4d6c4 !important;
+    border-color: #4c5a6b !important;
+    background: #303a46 !important;
+    color: #d3deec !important;
   }
 
   html[data-theme="dark"] .practice-action-reveal:hover {
-    border-color: #665b4b !important;
-    background: #443c32 !important;
+    border-color: #59687b !important;
+    background: #384453 !important;
   }
 
   html[data-theme="dark"] .practice-choice-secondary {
@@ -1514,7 +1514,7 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html[data-theme="dark"] .practice-action-reveal .practice-shortcut-hint {
-    color: #b89e80;
+    color: #96a8bf;
     opacity: 0.92;
   }
 
