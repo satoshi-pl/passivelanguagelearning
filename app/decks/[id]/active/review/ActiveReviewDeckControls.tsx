@@ -34,7 +34,12 @@ export default function ActiveReviewDeckControls({
   const currentCategoryOptions = useMemo(() => categoryOptionsByMode[mode] ?? [], [categoryOptionsByMode, mode]);
   const currentModeTotal = reviewTotalsByMode[mode] ?? 0;
 
-  const sizes = [5, 10, 15, 20];
+  const reviewSizes = [
+    { value: 5, label: "Review 5" },
+    { value: 10, label: "Review 10" },
+    { value: 15, label: "Review 15" },
+    { value: 0, label: "No limit" },
+  ];
 
   const buildReviewPageHref = useCallback((nextMode: Mode, nextCategory: string | null) => {
     const qs = new URLSearchParams();
@@ -154,7 +159,7 @@ export default function ActiveReviewDeckControls({
       modeWordsHref,
       modeWsHref,
       modeSentencesHref,
-      ...[5, 10, 15, 20].map((n) => buildPracticeHref(n)),
+      ...[5, 10, 15, 0].map((n) => buildPracticeHref(n)),
     ],
     [modeWordsHref, modeWsHref, modeSentencesHref, buildPracticeHref]
   );
@@ -236,14 +241,14 @@ export default function ActiveReviewDeckControls({
       {currentModeTotal > 0 ? (
         <div style={{ marginTop: 18 }}>
           <div className="deck-action-row deck-review-size-row">
-            {sizes.map((n) => (
+            {reviewSizes.map((size) => (
               <ResponsiveNavLink
-                key={n}
-                href={buildPracticeHref(n)}
+                key={size.label}
+                href={buildPracticeHref(size.value)}
                 style={reviewAmountLinkStyle}
                 className="deck-review-size-link deck-action-button deck-action-button--primary"
               >
-                Review {n}
+                {size.label}
               </ResponsiveNavLink>
             ))}
           </div>
