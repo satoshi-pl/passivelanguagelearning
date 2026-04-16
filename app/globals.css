@@ -1626,6 +1626,27 @@ html[data-theme="dark"] .preview-shortcuts__item b {
     gap: 0.625rem !important;
   }
 
+  .deck-mode-button,
+  .deck-action-button,
+  .deck-review-size-row .deck-review-size-link,
+  .deck-learn-row .deck-learn-button {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  .deck-action-button .entry-action-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    line-height: inherit;
+  }
+
   .deck-mode-button {
     flex: 1 1 9.75rem;
     max-width: 11.25rem !important;
