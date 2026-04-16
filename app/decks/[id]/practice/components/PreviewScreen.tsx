@@ -189,13 +189,13 @@ export default function PreviewScreen(props: Props) {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-stretch gap-2 lg:justify-end">
+            <div className="flex flex-wrap items-stretch gap-2 max-sm:grid max-sm:grid-cols-2 max-sm:gap-2 lg:justify-end">
               {showWordsTable && (
                 <>
                   <button
                     type="button"
                     onClick={() => setShowTranslations(!showTranslations)}
-                    className="preview-control-button preview-control-button--text min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                    className="preview-control-button preview-control-button--text min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 max-sm:col-span-1 max-sm:w-full max-sm:justify-center"
                     title={
                       showTranslations
                         ? "Hide translation (H)"
@@ -212,7 +212,7 @@ export default function PreviewScreen(props: Props) {
                   <button
                     type="button"
                     onClick={onTogglePlaybackRate}
-                    className="preview-control-button preview-control-button--speed min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                    className="preview-control-button preview-control-button--speed min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 max-sm:col-span-1 max-sm:w-full max-sm:justify-center"
                     title="Change speed (V)"
                   >
                     <span className="md:hidden">{playbackRateLabel}</span>
@@ -228,11 +228,11 @@ export default function PreviewScreen(props: Props) {
                       playAllPreviewWords(previewWords);
                     }}
                     disabled={playAllBusy || previewWords.length === 0}
-                    className="preview-control-button preview-control-button--playall min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50"
+                    className="preview-control-button preview-control-button--playall min-h-11 rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50 max-sm:col-span-2 max-sm:w-full max-sm:justify-center"
                     title="Play all (A)"
                   >
                     <span className="md:hidden">{playAllBusy ? "Playing..." : "Play all"}</span>
-                    <span className="preview-control-inline hidden md:inline">
+                    <span className="hidden items-center gap-1.5 md:inline-flex">
                       <span aria-hidden="true" className="preview-control-inline__icon">▶</span>
                       <span>{playAllBusy ? "Playing..." : "Play all"}</span>
                       <span className="preview-control-shortcut"> • A</span>
@@ -244,7 +244,7 @@ export default function PreviewScreen(props: Props) {
               <button
                 type="button"
                 onClick={startPractice}
-                className="min-h-11 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/90"
+                className="min-h-11 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/90 max-sm:col-span-2 max-sm:w-full max-sm:justify-center"
                 title="Start practice (Enter)"
               >
                 <span className="md:hidden">Start practice</span>
