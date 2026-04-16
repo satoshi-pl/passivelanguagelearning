@@ -167,13 +167,6 @@ export default function ReviewDeckControls({
 
   return (
     <div className="entry-controls-shell">
-      <div className="entry-helper-text entry-helper-note !hidden sm:!flex" style={{ marginTop: 6, fontSize: 13, color: "var(--foreground-muted)" }}>
-        <span className="entry-helper-note__icon" aria-hidden="true">
-          i
-        </span>
-        <span>Passive Learning review uses items already mastered in Passive Learning. No preview. No mastery changes.</span>
-      </div>
-
       <div style={{ marginTop: 20 }}>
         <div className="deck-mode-row flex flex-wrap gap-[10px] lg:flex-nowrap" style={{ display: "flex", gap: 10 }}>
           <ResponsiveNavLink
@@ -251,10 +244,6 @@ export default function ReviewDeckControls({
                 {size.label}
               </ResponsiveNavLink>
             ))}
-          </div>
-
-          <div className="hidden sm:block" style={{ marginTop: 10, fontSize: 12, color: "var(--foreground-muted)" }}>
-            Starts immediately. Reveal → rate (Hard/Easy).
           </div>
         </div>
       ) : (

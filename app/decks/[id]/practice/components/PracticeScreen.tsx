@@ -74,7 +74,6 @@ export default function PracticeScreen(props: Props) {
     revealed,
     busy,
     sessionPlanLabel,
-    reviewRemaining,
     hasAudio,
     playbackRate,
     onTogglePlaybackRate,
@@ -203,7 +202,7 @@ export default function PracticeScreen(props: Props) {
         <div className="hidden text-sm text-neutral-500 sm:block lg:hidden">
           {isReview ? (
             <>
-              Remaining: <b>{reviewRemaining}</b> • Mode: <b>{modeLabel}</b>
+              Mode: <b>{modeLabel}</b>
               {!isFavoritesSession ? (
                 <>
                   {" "}
@@ -242,9 +241,6 @@ export default function PracticeScreen(props: Props) {
           <div className="practice-status-strip">
             {isReview ? (
               <>
-                <span className="practice-status-chip">
-                  Remaining <b>{reviewRemaining}</b>
-                </span>
                 <span className="practice-status-chip">
                   Mode <b>{modeLabel}</b>
                 </span>
