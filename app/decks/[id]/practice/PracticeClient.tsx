@@ -509,6 +509,7 @@ export default function PracticeClient({
   usePracticeKeyboard({
     viewMode: flow.viewMode,
     isReview,
+    isFavoritesSession,
     revealed: flow.revealed,
     reportOpen: report.reportOpen,
     mode,

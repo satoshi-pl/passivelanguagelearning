@@ -7,6 +7,7 @@ import type { LearnMode } from "./types";
 type Args = {
   viewMode: "preview" | "practice";
   isReview: boolean;
+  isFavoritesSession: boolean;
   revealed: boolean;
   reportOpen: boolean;
 
@@ -52,6 +53,7 @@ export function usePracticeKeyboard(args: Args) {
   const {
     viewMode,
     isReview,
+    isFavoritesSession,
     revealed,
     reportOpen,
     canPlayAllPreview,
@@ -89,6 +91,7 @@ export function usePracticeKeyboard(args: Args) {
     const onKey = createKeyHandler({
       viewMode,
       isReview,
+      isFavoritesSession,
       revealed,
       reportOpen,
       canPlayAllPreview,
@@ -122,6 +125,7 @@ export function usePracticeKeyboard(args: Args) {
   }, [
     viewMode,
     isReview,
+    isFavoritesSession,
     revealed,
     reportOpen,
     canPlayAllPreview,

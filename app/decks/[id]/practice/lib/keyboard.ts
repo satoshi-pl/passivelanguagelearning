@@ -10,6 +10,7 @@ function isTypingTarget(el: EventTarget | null) {
 type KeyboardArgs = {
   viewMode: ViewMode;
   isReview: boolean;
+  isFavoritesSession: boolean;
   revealed: boolean;
   reportOpen: boolean;
 
@@ -104,13 +105,16 @@ export function createKeyHandler(args: KeyboardArgs) {
 
     // ===== REVIEW MODE =====
     if (args.isReview && args.viewMode === "practice") {
-      if (is0) {
+      const isReviewSecondary = is0 || (args.isFavoritesSession && k === "s");
+      const isReviewPrimary = is1 || (args.isFavoritesSession && k === "d");
+
+      if (isReviewSecondary) {
         e.preventDefault();
         if (!args.revealed) args.onReveal();
         else args.onReviewHard();
         return;
       }
-      if (is1) {
+      if (isReviewPrimary) {
         e.preventDefault();
         if (!args.revealed) args.onReveal();
         else args.onReviewEasy();
