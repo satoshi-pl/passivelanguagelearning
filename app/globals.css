@@ -1358,33 +1358,34 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-decision-button {
-    min-height: 3.1rem;
-    min-width: 11rem;
-    padding-inline: 1.25rem;
-    font-weight: 700;
-    border-radius: 0.78rem;
+    min-height: 2.95rem;
+    min-width: 10.25rem;
+    padding-inline: 1.05rem;
+    font-weight: 650;
+    letter-spacing: 0.003em;
+    border-radius: 0.74rem;
   }
 
   html:not([data-theme="dark"]) .practice-choice-secondary {
-    border-color: #c5d3e3 !important;
-    background: #e9eff6 !important;
-    color: #1f2f45 !important;
+    border-color: #d2dbe6 !important;
+    background: #edf2f8 !important;
+    color: #2a3c52 !important;
   }
 
   html:not([data-theme="dark"]) .practice-choice-secondary:hover {
-    background: #dde7f2 !important;
-    border-color: #b5c7dd !important;
+    background: #e7edf5 !important;
+    border-color: #c5d0df !important;
   }
 
   html:not([data-theme="dark"]) .practice-choice-primary {
-    background: #dce7f5 !important;
-    border-color: #b9cbe3 !important;
-    color: #183153 !important;
+    background: #e4ebf4 !important;
+    border-color: #c5d2e2 !important;
+    color: #1f3752 !important;
   }
 
   html:not([data-theme="dark"]) .practice-choice-primary:hover {
-    background: #d3e0f1 !important;
-    border-color: #adc1dc !important;
+    background: #dce5f1 !important;
+    border-color: #b9c8da !important;
   }
 
   html:not([data-theme="dark"]) .practice-translation-field {
@@ -1395,6 +1396,19 @@ html[data-theme="dark"] .preview-shortcuts__item b {
 }
 
 @media (min-width: 1024px) {
+  .practice-decision-row {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .practice-decision-button {
+    min-height: 2.95rem;
+    min-width: 10.25rem;
+    padding-inline: 1.05rem;
+    border-radius: 0.74rem;
+    font-size: 0.94rem;
+  }
+
   .practice-desktop-icon-controls {
     display: flex !important;
   }
@@ -1411,12 +1425,12 @@ html[data-theme="dark"] .preview-shortcuts__item b {
   }
 
   html:not([data-theme="dark"]) .practice-decision-button .practice-shortcut-hint {
-    color: #4f637c;
+    color: #586f89;
   }
 
   html:not([data-theme="dark"]) .practice-choice-primary .practice-shortcut-hint {
-    color: #35506f;
-    opacity: 0.92;
+    color: #3c5877;
+    opacity: 0.9;
   }
 
   html[data-theme="dark"] .practice-decision-button .practice-shortcut-hint {

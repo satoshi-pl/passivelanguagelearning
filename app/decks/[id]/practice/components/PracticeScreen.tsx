@@ -602,13 +602,13 @@ export default function PracticeScreen(props: Props) {
             <>
               {/* Review actions: in-flow on sm+ (no Back — use header / browser to leave) */}
               {!revealed ? (
-                <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
+                <div className="practice-decision-row hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                   <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button practice-decision-button w-full sm:w-auto" variant="secondary">
                     Reveal translation <span className="practice-shortcut-hint">{isFavoritesSession ? "0 / S" : "0 / 1"}</span>
                   </Button>
                 </div>
               ) : (
-                <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
+                <div className="practice-decision-row hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                   <Button onClick={onReviewHard} disabled={busy} className="practice-decision-button practice-choice-secondary w-full sm:w-auto" variant="secondary">
                     {reviewSecondaryLabel} <span className="practice-shortcut-hint">{isFavoritesSession ? "0 / S" : "0"}</span>
                   </Button>
@@ -670,7 +670,7 @@ export default function PracticeScreen(props: Props) {
           ) : (
             <>
               {/* Learn actions: in-flow on sm+ (desktop / tablet unchanged) */}
-              <div className="hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
+              <div className="practice-decision-row hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                 <Button onClick={onRevealOrNext} disabled={busy} className="practice-reveal-button practice-decision-button practice-choice-secondary w-full sm:w-auto" variant="secondary">
                   {revealed ? "Still learning" : "Reveal translation"} <span className="practice-shortcut-hint">0 / S</span>
                 </Button>
