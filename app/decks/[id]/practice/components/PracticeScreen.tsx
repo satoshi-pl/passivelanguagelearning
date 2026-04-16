@@ -573,7 +573,7 @@ export default function PracticeScreen(props: Props) {
               {!revealed ? (
                 <div className="practice-decision-row hidden gap-2 sm:flex sm:flex-row sm:flex-wrap">
                   <Button onClick={onRevealOrNext} disabled={busy} className="practice-action-reveal practice-decision-button w-full sm:w-auto" variant="secondary">
-                    Reveal translation <span className="practice-shortcut-hint">0 / S · 1 / D</span>
+                    Reveal translation <span className="practice-shortcut-hint">0 / S</span>
                   </Button>
                 </div>
               ) : (

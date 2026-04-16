@@ -79,9 +79,9 @@ export function usePracticeDerived({
 
   const modeLabel = useMemo(() => {
     return mode === "words"
-      ? "Words only"
+      ? "Words"
       : mode === "sentences"
-      ? "Sentences only"
+      ? "Sentences"
       : "Words + Sentences";
   }, [mode]);
 

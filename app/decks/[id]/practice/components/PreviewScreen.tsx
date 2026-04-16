@@ -168,7 +168,7 @@ export default function PreviewScreen(props: Props) {
     const n = previewWords?.length ?? 0;
 
     if (mode === "ws") {
-      if (n === 0) return "Planned: Sentences only";
+      if (n === 0) return "Planned: Sentences";
       return `Planned: Words: ${n} • Then sentences`;
     }
 

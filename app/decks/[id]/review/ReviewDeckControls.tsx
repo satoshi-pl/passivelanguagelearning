@@ -174,7 +174,7 @@ export default function ReviewDeckControls({
             href={modeWordsHref}
             style={modeButtonStyle(mode === "words")}
           >
-            Words only
+            Words
           </ResponsiveNavLink>
           <ResponsiveNavLink
             className="deck-mode-button"
@@ -188,7 +188,7 @@ export default function ReviewDeckControls({
             href={modeSentencesHref}
             style={modeButtonStyle(mode === "sentences")}
           >
-            Sentences only
+            Sentences
           </ResponsiveNavLink>
         </div>
       </div>
