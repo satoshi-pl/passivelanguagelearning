@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { PairRow } from "./types";
+import { pickAudioRaw } from "./audioRaw";
 
 // Type only what we actually need from your audio controller
 type AudioLike = {
@@ -33,7 +34,7 @@ export function usePreviewAudio(audio: AudioLike, debugAudio = false) {
   }, []);
 
   const getPreviewAudioRaw = useCallback((p: PairRow) => {
-    return p.word_target_audio_url ?? p.sentence_target_audio_url ?? null;
+    return pickAudioRaw(p.word_target_audio_url, p.sentence_target_audio_url);
   }, []);
 
   const onPreviewRowPlay = useCallback(

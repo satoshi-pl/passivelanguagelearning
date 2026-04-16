@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import type { PairRow, LearnMode, Stage, UiCategory } from "../lib/types";
 import ReportModal from "./ReportModal";
+import { pickAudioRaw } from "../lib/audioRaw";
 
 type ReportTarget = { pair: PairRow | null; stage: Stage };
 
@@ -117,7 +118,7 @@ function getWordNative(p: PreviewLikeRow) {
 }
 
 function getPreviewAudioRaw(p: PreviewLikeRow) {
-  return p.word_target_audio_url ?? p.sentence_target_audio_url ?? null;
+  return pickAudioRaw(p.word_target_audio_url, p.sentence_target_audio_url);
 }
 
 export default function PreviewScreen(props: Props) {
@@ -176,7 +177,6 @@ export default function PreviewScreen(props: Props) {
     return sessionPlanLabel || "";
   }, [mode, previewWords?.length, sessionPlanLabel]);
   const playbackRateLabel = `${playbackRate.toFixed(1)}x`;
-  const playAllArmedRef = React.useRef(false);
 
   return (
     <>
@@ -228,15 +228,7 @@ export default function PreviewScreen(props: Props) {
 
                   <button
                     type="button"
-                    onPointerDown={() => {
-                      playAllArmedRef.current = true;
-                      playAllPreviewWords(previewWords);
-                    }}
                     onClick={() => {
-                      if (playAllArmedRef.current) {
-                        playAllArmedRef.current = false;
-                        return;
-                      }
                       playAllPreviewWords(previewWords);
                     }}
                     disabled={playAllBusy || previewWords.length === 0}

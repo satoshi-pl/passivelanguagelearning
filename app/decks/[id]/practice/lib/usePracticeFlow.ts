@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAudioController } from "./useAudioController";
 import { usePracticeActions } from "./usePracticeActions";
 import { usePreviewAudio } from "./usePreviewAudio";
+import { pickAudioRaw } from "./audioRaw";
 
 import type {
   PairRow,
@@ -416,8 +417,8 @@ export function usePracticeFlow({
     audioRef.current.enable();
     const raw =
       currentStage === "word"
-        ? currentPair.word_target_audio_url ?? currentPair.sentence_target_audio_url
-        : currentPair.sentence_target_audio_url ?? currentPair.word_target_audio_url;
+        ? pickAudioRaw(currentPair.word_target_audio_url, currentPair.sentence_target_audio_url)
+        : pickAudioRaw(currentPair.sentence_target_audio_url, currentPair.word_target_audio_url);
     void audioRef.current.play(raw);
   }, [currentPair?.id, currentStage]);
 

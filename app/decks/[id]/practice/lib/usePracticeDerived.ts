@@ -3,6 +3,7 @@
 
 import { useMemo } from "react";
 import type { PairRow, Stage, LearnMode } from "./types";
+import { pickAudioRaw } from "./audioRaw";
 
 type Args = {
   mode: LearnMode;
@@ -88,10 +89,10 @@ export function usePracticeDerived({
     if (!currentPair || !currentStage) return null;
     if (currentStage === "word") {
       // Some datasets only have sentence audio; keep play enabled in that case.
-      return currentPair.word_target_audio_url ?? currentPair.sentence_target_audio_url ?? null;
+      return pickAudioRaw(currentPair.word_target_audio_url, currentPair.sentence_target_audio_url);
     }
     // Some datasets only have word audio; keep play enabled in that case.
-    return currentPair.sentence_target_audio_url ?? currentPair.word_target_audio_url ?? null;
+    return pickAudioRaw(currentPair.sentence_target_audio_url, currentPair.word_target_audio_url);
   }, [currentPair, currentStage]);
 
   const hasAudio = useMemo(() => {
