@@ -112,6 +112,7 @@ export default function PracticeScreen(props: Props) {
   const [favFlash, setFavFlash] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
   const helpWrapRef = useRef<HTMLDivElement | null>(null);
+  const desktopPlayMouseArmedRef = useRef(false);
   const playbackRateLabel = `${playbackRate.toFixed(1)}x`;
 
   useEffect(() => {
@@ -303,7 +304,17 @@ export default function PracticeScreen(props: Props) {
 
             <button
               type="button"
-              onClick={onPlayAudio}
+              onMouseDown={() => {
+                desktopPlayMouseArmedRef.current = true;
+                onPlayAudio();
+              }}
+              onClick={() => {
+                if (desktopPlayMouseArmedRef.current) {
+                  desktopPlayMouseArmedRef.current = false;
+                  return;
+                }
+                onPlayAudio();
+              }}
               className="practice-icon-control practice-icon-control--play"
               title="Play audio · A"
               aria-label="Play audio (A)"
@@ -502,7 +513,17 @@ export default function PracticeScreen(props: Props) {
 
           <button
             type="button"
-            onClick={onPlayAudio}
+            onMouseDown={() => {
+              desktopPlayMouseArmedRef.current = true;
+              onPlayAudio();
+            }}
+            onClick={() => {
+              if (desktopPlayMouseArmedRef.current) {
+                desktopPlayMouseArmedRef.current = false;
+                return;
+              }
+              onPlayAudio();
+            }}
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs hover:bg-neutral-50"
             title={!hasAudio ? "Try play audio (A)" : "Play audio (A)"}
           >

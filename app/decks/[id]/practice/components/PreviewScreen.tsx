@@ -177,6 +177,7 @@ export default function PreviewScreen(props: Props) {
     return sessionPlanLabel || "";
   }, [mode, previewWords?.length, sessionPlanLabel]);
   const playbackRateLabel = `${playbackRate.toFixed(1)}x`;
+  const desktopPlayAllMouseArmedRef = React.useRef(false);
 
   return (
     <>
@@ -224,7 +225,15 @@ export default function PreviewScreen(props: Props) {
 
                   <button
                     type="button"
+                    onMouseDown={() => {
+                      desktopPlayAllMouseArmedRef.current = true;
+                      playAllPreviewWords(previewWords);
+                    }}
                     onClick={() => {
+                      if (desktopPlayAllMouseArmedRef.current) {
+                        desktopPlayAllMouseArmedRef.current = false;
+                        return;
+                      }
                       playAllPreviewWords(previewWords);
                     }}
                     disabled={playAllBusy || previewWords.length === 0}
@@ -348,6 +357,8 @@ function WordsPreviewTable({
   onSelect: (p: PairRow) => void;
   onPlay: (p: PairRow) => void;
 }) {
+  const desktopRowPlayMouseArmedRef = React.useRef<string | null>(null);
+
   return (
     <>
       <div className="preview-mobile-list space-y-3 md:hidden">
@@ -450,8 +461,17 @@ function WordsPreviewTable({
                   <td className="px-4 py-3 text-right">
                     <button
                       type="button"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        desktopRowPlayMouseArmedRef.current = p.id;
+                        onPlay(p);
+                      }}
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (desktopRowPlayMouseArmedRef.current === p.id) {
+                          desktopRowPlayMouseArmedRef.current = null;
+                          return;
+                        }
                         onPlay(p);
                       }}
                       disabled={!hasAudio}
