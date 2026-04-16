@@ -1,5 +1,5 @@
 import RouteLoadingCard from "@/app/components/RouteLoadingCard";
 
 export default function Loading() {
-  return <RouteLoadingCard label="Loading decks..." />;
+  return <RouteLoadingCard />;
 }

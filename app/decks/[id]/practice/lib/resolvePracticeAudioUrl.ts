@@ -23,6 +23,19 @@ export function resolvePracticeAudioUrl(
     return `${base}/${path}`;
   }
 
+  // Some exports / older backfills store `object/public/...` without the `storage/v1/` prefix.
+  if (path.startsWith("object/")) {
+    return `${base}/storage/v1/${path}`;
+  }
+
+  // If we can spot a `tts/` segment anywhere, treat everything after it as the object key.
+  // This makes audio resilient to variants like `public/tts/...` or `object/public/tts/...`.
+  const ttsIdx = path.indexOf("tts/");
+  if (ttsIdx >= 0) {
+    const key = path.slice(ttsIdx + "tts/".length);
+    if (key) return `${base}/storage/v1/object/public/tts/${key}`;
+  }
+
   const cleanTtsKey = path.replace(/^tts\//, "");
   if (!cleanTtsKey) return "";
 

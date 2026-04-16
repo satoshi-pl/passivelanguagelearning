@@ -1,5 +1,5 @@
 import RouteLoadingCard from "@/app/components/RouteLoadingCard";
 
 export default function Loading() {
-  return <RouteLoadingCard label="Loading Active review..." />;
+  return <RouteLoadingCard />;
 }

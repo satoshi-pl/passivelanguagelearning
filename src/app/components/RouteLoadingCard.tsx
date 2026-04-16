@@ -1,4 +1,4 @@
-export default function RouteLoadingCard({ label = "Loading..." }: { label?: string }) {
+export default function RouteLoadingCard() {
   return (
     <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
       <div
@@ -19,12 +19,20 @@ export default function RouteLoadingCard({ label = "Loading..." }: { label?: str
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--foreground-muted)",
-              fontSize: 14,
-              fontWeight: 600,
             }}
           >
-            {label}
+            <div
+              aria-hidden="true"
+              style={{
+                width: "min(460px, 70%)",
+                height: 10,
+                borderRadius: 999,
+                background:
+                  "linear-gradient(90deg, rgba(148,163,184,0.14) 0%, rgba(148,163,184,0.22) 40%, rgba(148,163,184,0.14) 80%)",
+                backgroundSize: "200% 100%",
+                animation: "pll-sheen 900ms ease-in-out infinite",
+              }}
+            />
           </div>
         </div>
       </div>

@@ -649,7 +649,7 @@ export default function PracticeClient({
     return (
       <>
         {audioEl}
-        <PracticeStatusCard text="Preparing your session…" />
+        <PracticeStatusCard />
       </>
     );
   }
