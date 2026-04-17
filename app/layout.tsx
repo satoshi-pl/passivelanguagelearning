@@ -1,10 +1,19 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import type { Metadata } from "next";
 import { NavBar } from "./components/NavBar";
 
-export const metadata = {
+const SITE_URL = "https://passivelanguagelearning.io";
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+
+export const metadata: Metadata = {
   title: "Passive Language Learning",
   description: "Words first, then sentences. Fast 0/1 practice.",
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default async function RootLayout({
@@ -41,6 +50,8 @@ export default async function RootLayout({
         <main className="pt-2 pb-8 sm:pt-3 sm:pb-10 md:py-12">
           {children}
         </main>
+
+        {GA_ID ? <GoogleAnalytics gaId={GA_ID} /> : null}
 
         <Analytics />
       </body>
