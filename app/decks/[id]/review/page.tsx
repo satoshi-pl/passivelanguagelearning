@@ -77,7 +77,7 @@ export default async function DeckReviewPage({
 
   const { data: deck, error: deckErr } = await supabase
     .from("decks")
-    .select("id, name, target_lang, native_lang")
+    .select("id, name, target_lang, native_lang, level")
     .eq("id", deckId)
     .single();
 
@@ -307,6 +307,10 @@ export default async function DeckReviewPage({
 
             <ReviewDeckControls
               deckId={deckId}
+              deckName={deck.name}
+              targetLang={String(deck.target_lang).toLowerCase()}
+              supportLang={String(deck.native_lang).toLowerCase()}
+              level={String(deck.level || "").trim().toUpperCase() || "other"}
               mode={mode}
               backToDeckHref={deckDetailHref}
               initialSelectedCategory={initialSelectedCategory}

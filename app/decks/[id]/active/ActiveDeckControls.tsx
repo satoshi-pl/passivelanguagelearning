@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
+import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -24,6 +25,10 @@ type CategoryProgressEntry = {
 
 type Props = {
   deckId: string;
+  deckName: string;
+  targetLang: string;
+  supportLang: string;
+  level: string;
   mode: Mode;
   backToDecksHref: string;
   initialSelectedCategory: string | null;
@@ -52,6 +57,10 @@ function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
 
 export default function ActiveDeckControls({
   deckId,
+  deckName,
+  targetLang,
+  supportLang,
+  level,
   mode,
   backToDecksHref,
   initialSelectedCategory,
@@ -277,6 +286,16 @@ export default function ActiveDeckControls({
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
               setSelectedCategory(nextValue);
+              trackGaEvent("category_select", {
+                flow: "active_learning",
+                deck_id: deckId,
+                deck_name: deckName,
+                mode,
+                category: nextValue ?? "all",
+                target_lang: targetLang,
+                support_lang: supportLang,
+                level,
+              });
 
               if (typeof window !== "undefined") {
                 const nextUrl = buildActivePageHref(mode, nextValue);
@@ -320,6 +339,20 @@ export default function ActiveDeckControls({
               <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
+                onClick={() =>
+                  trackGaEvent("session_option_select", {
+                    flow: "active_learning",
+                    option_type: "active",
+                    option_value: normalizeSessionOptionValue(size.value),
+                    deck_id: deckId,
+                    deck_name: deckName,
+                    mode,
+                    category: selectedCategory ?? "all",
+                    target_lang: targetLang,
+                    support_lang: supportLang,
+                    level,
+                  })
+                }
                 style={learnButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >
@@ -340,6 +373,18 @@ export default function ActiveDeckControls({
         <div className="deck-optional-section" style={{ marginTop: 18 }}>
           <ResponsiveNavLink
             href={activeReviewHref}
+            onClick={() =>
+              trackGaEvent("learning_path_select", {
+                path: "active_review",
+                deck_id: deckId,
+                deck_name: deckName,
+                mode,
+                category: selectedCategory ?? "all",
+                target_lang: targetLang,
+                support_lang: supportLang,
+                level,
+              })
+            }
             style={secondaryActionStyle}
             className="deck-action-button deck-action-button--secondary"
           >

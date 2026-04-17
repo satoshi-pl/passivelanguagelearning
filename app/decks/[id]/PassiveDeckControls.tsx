@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
+import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -24,6 +25,10 @@ type CategoryProgressEntry = {
 
 type Props = {
   deckId: string;
+  deckName: string;
+  targetLang: string;
+  supportLang: string;
+  level: string;
   mode: Mode;
   backToDecksHref: string;
   initialSelectedCategory: string | null;
@@ -51,6 +56,10 @@ function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
 
 export default function PassiveDeckControls({
   deckId,
+  deckName,
+  targetLang,
+  supportLang,
+  level,
   mode,
   backToDecksHref,
   initialSelectedCategory,
@@ -267,6 +276,16 @@ export default function PassiveDeckControls({
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
               setSelectedCategory(nextValue);
+              trackGaEvent("category_select", {
+                flow: "passive_learning",
+                deck_id: deckId,
+                deck_name: deckName,
+                mode,
+                category: nextValue ?? "all",
+                target_lang: targetLang,
+                support_lang: supportLang,
+                level,
+              });
 
               const nextUrl = buildDeckPageHref(mode, nextValue);
               window.history.replaceState(window.history.state, "", nextUrl);
@@ -306,6 +325,20 @@ export default function PassiveDeckControls({
             <ResponsiveNavLink
               key={size.label}
               href={buildPracticeHref(size.value)}
+              onClick={() =>
+                trackGaEvent("session_option_select", {
+                  flow: "passive_learning",
+                  option_type: "learn",
+                  option_value: normalizeSessionOptionValue(size.value),
+                  deck_id: deckId,
+                  deck_name: deckName,
+                  mode,
+                  category: selectedCategory ?? "all",
+                  target_lang: targetLang,
+                  support_lang: supportLang,
+                  level,
+                })
+              }
               style={learnButtonStyle}
               className="deck-action-button deck-action-button--primary deck-learn-button"
             >
@@ -320,6 +353,18 @@ export default function PassiveDeckControls({
           <div className="deck-action-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <ResponsiveNavLink
               href={passiveReviewHref}
+              onClick={() =>
+                trackGaEvent("learning_path_select", {
+                  path: "passive_review",
+                  deck_id: deckId,
+                  deck_name: deckName,
+                  mode,
+                  category: selectedCategory ?? "all",
+                  target_lang: targetLang,
+                  support_lang: supportLang,
+                  level,
+                })
+              }
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
             >
@@ -337,6 +382,18 @@ export default function PassiveDeckControls({
 
             <ResponsiveNavLink
               href={activeHref}
+              onClick={() =>
+                trackGaEvent("learning_path_select", {
+                  path: "active_learning",
+                  deck_id: deckId,
+                  deck_name: deckName,
+                  mode,
+                  category: selectedCategory ?? "all",
+                  target_lang: targetLang,
+                  support_lang: supportLang,
+                  level,
+                })
+              }
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
             >

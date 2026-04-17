@@ -79,10 +79,13 @@ export async function NavBar() {
             <div className="hidden min-h-14 items-center justify-between gap-4 py-2 md:flex">
               <div className="min-w-0 shrink-0">
                 <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white">
+                  <span
+                    data-top-nav-target="logo"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white"
+                  >
                     PLL
                   </span>
-                  <span className="text-[19px] font-semibold">
+                  <span data-top-nav-target="brand" className="text-[19px] font-semibold">
                     Passive Language Learning
                   </span>
                 </LogoHomeLink>
@@ -104,10 +107,13 @@ export async function NavBar() {
           <div className="flex min-h-14 items-center justify-between gap-3 py-2">
             <div className="min-w-0 shrink-0">
               <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white">
+                <span
+                  data-top-nav-target="logo"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white"
+                >
                   PLL
                 </span>
-                <span className="hidden text-[19px] font-semibold md:inline">
+                <span data-top-nav-target="brand" className="hidden text-[19px] font-semibold md:inline">
                   Passive Language Learning
                 </span>
               </LogoHomeLink>

@@ -4,6 +4,7 @@ export const revalidate = 0;
 import RememberDecksHref from "./RememberDecksHref";
 import { redirect } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import AutoSubmitSupportSelect from "./AutoSubmitSupportSelect";
 
@@ -235,22 +236,6 @@ function FilterButton({
   );
 }
 
-function DeckLink({
-  href,
-  children,
-  style,
-}: {
-  href: string;
-  children: React.ReactNode;
-  style: React.CSSProperties;
-}) {
-  return (
-    <ResponsiveNavLink href={href} style={style}>
-      {children}
-    </ResponsiveNavLink>
-  );
-}
-
 export default async function DecksPage({
   searchParams,
 }: {
@@ -382,8 +367,10 @@ export default async function DecksPage({
           My decks
         </h1>
 
-        <DeckLink
+        <TrackedResponsiveNavLink
           href="/decks/add-pair"
+          eventName="add_language_pair_click"
+          eventParams={{ location: "decks_page" }}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -401,7 +388,7 @@ export default async function DecksPage({
           }}
         >
           Add language pair
-        </DeckLink>
+        </TrackedResponsiveNavLink>
       </div>
 
       <div
@@ -606,8 +593,14 @@ export default async function DecksPage({
             {langName(selectedTarget)}
           </div>
 
-          <DeckLink
+          <TrackedResponsiveNavLink
             href={favoritesHref}
+            eventName="favorites_open"
+            eventParams={{
+              target_lang: selectedTarget,
+              support_lang: selectedSupport,
+              mode: "ws",
+            }}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -626,7 +619,7 @@ export default async function DecksPage({
           >
             <span style={{ fontSize: 16, lineHeight: 1, color: "#C89B1D" }}>★</span>
             <span>Favourites{favoritesTotal > 0 ? ` (${favoritesTotal})` : ""}</span>
-          </DeckLink>
+          </TrackedResponsiveNavLink>
         </div>
 
         <div style={{ marginTop: 18, display: "grid", gap: 12 }}>
@@ -666,8 +659,16 @@ export default async function DecksPage({
                   <ProgressBar label="Sentences" pr={pr.sentences} />
                 </div>
 
-                <DeckLink
+                <TrackedResponsiveNavLink
                   href={`/decks/${String(deck.id)}?back=${encodeURIComponent(currentDecksHref)}`}
+                  eventName="start_practice_click"
+                  eventParams={{
+                    deck_id: deck.id,
+                    deck_name: deck.name,
+                    target_lang: deck.target_lang,
+                    support_lang: deck.native_lang,
+                    level: deck.level ?? "other",
+                  }}
                   style={{
                     whiteSpace: "nowrap",
                     padding: "10px 14px",
@@ -679,7 +680,7 @@ export default async function DecksPage({
                   }}
                 >
                   Start practice
-                </DeckLink>
+                </TrackedResponsiveNavLink>
               </div>
             );
           })}

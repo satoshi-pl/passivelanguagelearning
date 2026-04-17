@@ -2,6 +2,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
+import GaAuthEventBridge from "./components/GaAuthEventBridge";
 import { NavBar } from "./components/NavBar";
 
 const SITE_URL = "https://passivelanguagelearning.io";
@@ -52,6 +53,7 @@ export default async function RootLayout({
         </main>
 
         {GA_ID ? <GoogleAnalytics gaId={GA_ID} /> : null}
+        <GaAuthEventBridge />
 
         <Analytics />
       </body>

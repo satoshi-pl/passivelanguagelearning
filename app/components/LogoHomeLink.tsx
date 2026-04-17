@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { trackGaEvent } from "@/lib/analytics/ga";
 
 function getCookie(name: string) {
   if (typeof document === "undefined") return "";
@@ -44,7 +45,19 @@ export default function LogoHomeLink({
   }, [pathname, searchParams]);
 
   return (
-    <Link href={href} prefetch={false} className={className}>
+    <Link
+      href={href}
+      prefetch={false}
+      className={className}
+      onClick={(event) => {
+        const target = event.target as HTMLElement | null;
+        const targetValue = target?.closest("[data-top-nav-target]")?.getAttribute("data-top-nav-target");
+        trackGaEvent("top_nav_click", {
+          target: targetValue === "logo" ? "logo" : "brand",
+          location: "top_nav",
+        });
+      }}
+    >
       {children}
     </Link>
   );

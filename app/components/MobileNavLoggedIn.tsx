@@ -36,7 +36,10 @@ export default function MobileNavLoggedIn({ accountLabel, email, langs }: Props)
         <div className="flex min-h-11 items-center justify-between gap-2 py-1">
           <div className="min-w-0 shrink-0">
             <LogoHomeLink className="flex items-center gap-2 font-semibold tracking-tight">
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white">
+              <span
+                data-top-nav-target="logo"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white"
+              >
                 PLL
               </span>
             </LogoHomeLink>
@@ -78,10 +81,13 @@ export default function MobileNavLoggedIn({ accountLabel, email, langs }: Props)
       <div className="flex min-w-0 items-center justify-between gap-3 sm:gap-4">
         <div className="min-w-0 shrink-0">
           <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white">
+            <span
+              data-top-nav-target="logo"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white"
+            >
               PLL
             </span>
-            <span className="hidden text-[19px] font-semibold md:inline">
+            <span data-top-nav-target="brand" className="hidden text-[19px] font-semibold md:inline">
               Passive Language Learning
             </span>
           </LogoHomeLink>

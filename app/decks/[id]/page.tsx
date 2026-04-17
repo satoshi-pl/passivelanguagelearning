@@ -263,6 +263,10 @@ export default async function DeckDetailPage({
 
             <PassiveDeckControls
               deckId={deckId}
+              deckName={deck.name}
+              targetLang={String(deck.target_lang).toLowerCase()}
+              supportLang={String(deck.native_lang).toLowerCase()}
+              level={levelLabel || "other"}
               mode={mode}
               backToDecksHref={backToDecksHref}
               initialSelectedCategory={initialSelectedCategory}

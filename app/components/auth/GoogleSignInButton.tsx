@@ -1,5 +1,7 @@
 "use client";
 
+import { trackGaEvent } from "@/lib/analytics/ga";
+
 const GOOGLE_SIGN_IN_HREF = "/auth/sign-in/google?next=/setup";
 
 function GoogleLogo() {
@@ -25,10 +27,16 @@ function GoogleLogo() {
   );
 }
 
-export default function GoogleSignInButton() {
+export default function GoogleSignInButton({ location }: { location: string }) {
   return (
     <a
       href={GOOGLE_SIGN_IN_HREF}
+      onClick={() =>
+        trackGaEvent("continue_with_google_click", {
+          provider: "google",
+          location,
+        })
+      }
       className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-neutral-300 bg-white px-4 text-sm font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition hover:border-neutral-400 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2"
     >
       <GoogleLogo />

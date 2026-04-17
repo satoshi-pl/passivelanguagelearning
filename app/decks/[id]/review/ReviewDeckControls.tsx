@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
+import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -13,6 +14,10 @@ type CategoryOption = {
 
 type Props = {
   deckId: string;
+  deckName: string;
+  targetLang: string;
+  supportLang: string;
+  level: string;
   mode: Mode;
   backToDeckHref: string;
   initialSelectedCategory: string | null;
@@ -22,6 +27,10 @@ type Props = {
 
 export default function ReviewDeckControls({
   deckId,
+  deckName,
+  targetLang,
+  supportLang,
+  level,
   mode,
   backToDeckHref,
   initialSelectedCategory,
@@ -203,6 +212,16 @@ export default function ReviewDeckControls({
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
               setSelectedCategory(nextValue);
+              trackGaEvent("category_select", {
+                flow: "passive_learning",
+                deck_id: deckId,
+                deck_name: deckName,
+                mode,
+                category: nextValue ?? "all",
+                target_lang: targetLang,
+                support_lang: supportLang,
+                level,
+              });
 
               if (typeof window !== "undefined") {
                 const nextUrl = buildReviewPageHref(mode, nextValue);
@@ -238,6 +257,20 @@ export default function ReviewDeckControls({
               <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
+                onClick={() =>
+                  trackGaEvent("session_option_select", {
+                    flow: "passive_learning",
+                    option_type: "review",
+                    option_value: normalizeSessionOptionValue(size.value),
+                    deck_id: deckId,
+                    deck_name: deckName,
+                    mode,
+                    category: selectedCategory ?? "all",
+                    target_lang: targetLang,
+                    support_lang: supportLang,
+                    level,
+                  })
+                }
                 style={reviewAmountLinkStyle}
                 className="deck-review-size-link deck-action-button deck-action-button--primary"
               >

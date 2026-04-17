@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
+import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -210,6 +211,13 @@ export default function FavoritesDeckControls({
             onChange={(e) => {
               const nextValue = e.currentTarget.value.trim() || null;
               setSelectedCategory(nextValue);
+              trackGaEvent("category_select", {
+                flow: "favorites_review",
+                mode,
+                category: nextValue ?? "all",
+                target_lang: targetLang,
+                support_lang: supportLang,
+              });
 
               if (typeof window !== "undefined") {
                 const nextUrl = buildPageHref(mode, nextValue);
@@ -245,6 +253,17 @@ export default function FavoritesDeckControls({
               <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
+                onClick={() =>
+                  trackGaEvent("session_option_select", {
+                    flow: "favorites_review",
+                    option_type: "review",
+                    option_value: normalizeSessionOptionValue(size.value),
+                    mode,
+                    category: selectedCategory ?? "all",
+                    target_lang: targetLang,
+                    support_lang: supportLang,
+                  })
+                }
                 style={reviewButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >

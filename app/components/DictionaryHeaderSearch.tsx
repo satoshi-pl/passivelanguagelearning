@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { trackGaEvent } from "@/lib/analytics/ga";
 
 type Result = {
   pair_id: string;
@@ -65,6 +66,7 @@ export default function DictionaryHeaderSearch({
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastTrackedSearchRef = useRef("");
 
   const playAudio = async (url: string | null) => {
     if (!url) return;
@@ -131,6 +133,14 @@ export default function DictionaryHeaderSearch({
 
       try {
         const effectiveLang = cleanLang(lang) || defaultLang;
+        const searchKey = `${effectiveLang}:${query}`;
+        if (lastTrackedSearchRef.current !== searchKey) {
+          trackGaEvent("search", {
+            search_term: query,
+            search_context: "dictionary",
+          });
+          lastTrackedSearchRef.current = searchKey;
+        }
         const url = `/api/dictionary-search?lang=${encodeURIComponent(
           effectiveLang
         )}&q=${encodeURIComponent(query)}`;

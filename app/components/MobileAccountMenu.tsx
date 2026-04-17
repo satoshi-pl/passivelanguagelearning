@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { trackGaEvent } from "@/lib/analytics/ga";
 
 type Props = {
   accountLabel: string;
@@ -33,7 +34,10 @@ export default function MobileAccountMenu({ accountLabel, email }: Props) {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          trackGaEvent("account_click", { location: "top_nav" });
+          setOpen((v) => !v);
+        }}
         className="
           flex h-10 w-10 items-center justify-center
           rounded-full border border-neutral-200 bg-white text-neutral-700

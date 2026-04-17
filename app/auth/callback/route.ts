@@ -36,7 +36,23 @@ function summarizeOAuthCookies(request: NextRequest) {
 }
 
 function getSafeAppOrigin(appOriginRaw: string | null, fallbackOrigin: string) {
-  if (!appOriginRaw) return fallbackOrigin;
+  const normalizeAllowedOrigin = (origin: string) => {
+    const out = new URL(origin);
+    if (out.hostname.toLowerCase() === "www.passivelanguagelearning.io") {
+      out.hostname = "passivelanguagelearning.io";
+    }
+    return out.toString().replace(/\/$/, "");
+  };
+
+  const safeFallback = (() => {
+    try {
+      return normalizeAllowedOrigin(fallbackOrigin);
+    } catch {
+      return fallbackOrigin;
+    }
+  })();
+
+  if (!appOriginRaw) return safeFallback;
   try {
     const appOriginUrl = new URL(appOriginRaw);
     const fallbackUrl = new URL(fallbackOrigin);
@@ -49,11 +65,22 @@ function getSafeAppOrigin(appOriginRaw: string | null, fallbackOrigin: string) {
       host.endsWith(".vercel.app") ||
       host === "localhost" ||
       host === "127.0.0.1";
-    if (!allowed) return fallbackOrigin;
-    return `${appOriginUrl.protocol}//${appOriginUrl.host}`;
+    if (!allowed) return safeFallback;
+    return normalizeAllowedOrigin(`${appOriginUrl.protocol}//${appOriginUrl.host}`);
   } catch {
-    return fallbackOrigin;
+    return safeFallback;
   }
+}
+
+function getGoogleAuthEventType(createdAt: string | null | undefined, lastSignInAt: string | null | undefined) {
+  if (!createdAt || !lastSignInAt) return "login";
+
+  const createdMs = Date.parse(createdAt);
+  const lastSignInMs = Date.parse(lastSignInAt);
+  if (!Number.isFinite(createdMs) || !Number.isFinite(lastSignInMs)) return "login";
+
+  // Newly created Supabase users typically have both timestamps nearly identical.
+  return Math.abs(lastSignInMs - createdMs) <= 120000 ? "sign_up" : "login";
 }
 
 export async function GET(request: NextRequest) {
@@ -176,6 +203,17 @@ export async function GET(request: NextRequest) {
     userId: data.user?.id ?? null,
     nextPath,
   });
+
+  if (flow === "google") {
+    const authEvent = getGoogleAuthEventType(data.user?.created_at, data.user?.last_sign_in_at);
+    response.cookies.set("pll_ga_auth", authEvent, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 5,
+      secure: requestUrl.protocol === "https:",
+      httpOnly: false,
+    });
+  }
 
   return response;
 }

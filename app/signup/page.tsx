@@ -121,7 +121,7 @@ function SignupPageInner() {
             )}
 
             <div className="mb-4">
-              <GoogleSignInButton />
+              <GoogleSignInButton location="signup_page" />
             </div>
 
             <form onSubmit={onSubmit} className="grid gap-3">

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { trackGaEvent } from "@/lib/analytics/ga";
 
 type DictionaryResult = {
   pair_id: string;
@@ -36,6 +37,7 @@ export default function DictionaryClient({ initialQuery }: { initialQuery: strin
   const [results, setResults] = useState<DictionaryResult[]>([]);
   const [total, setTotal] = useState(0);
   const [openId, setOpenId] = useState<string | null>(null);
+  const lastTrackedSearchRef = useRef("");
 
   // Debounce input
   useEffect(() => {
@@ -60,6 +62,14 @@ export default function DictionaryClient({ initialQuery }: { initialQuery: strin
       setOpenId(null);
 
       try {
+        const searchKey = `${lang}:${query}`;
+        if (lastTrackedSearchRef.current !== searchKey) {
+          trackGaEvent("search", {
+            search_term: query,
+            search_context: "dictionary",
+          });
+          lastTrackedSearchRef.current = searchKey;
+        }
         // Always request up to 10, then *we* decide to show 1 or 3.
         const url = `/api/dictionary-search?lang=${encodeURIComponent(lang)}&q=${encodeURIComponent(query)}&limit=10`;
 
