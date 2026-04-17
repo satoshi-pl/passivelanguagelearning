@@ -128,7 +128,7 @@ function deckCardTitle(deck: DeckRow) {
 
 function ProgressBar({ label, pr }: { label: string; pr: Progress }) {
   return (
-    <div className="entry-progress-row deck-progress-bar">
+    <div className="entry-progress-row deck-progress-bar pll-deck-list-card__progress">
       <span className="entry-progress-row__label">{label}</span>
       <div className="entry-progress-row__track-wrap">
         <div className="entry-progress-row__track deck-progress-bar__track">
@@ -632,18 +632,15 @@ export default async function DecksPage({
             return (
               <div
                 key={deck.id}
+                className="pll-deck-list-card flex flex-col md:flex-row md:items-center md:justify-between md:gap-[14px]"
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 14,
                   border: "1px solid var(--border)",
                   borderRadius: 14,
                   padding: "16px 16px",
                   background: "var(--surface-solid)",
                 }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="w-full min-w-0 md:flex-1">
                   <div
                     style={{
                       fontWeight: 800,
@@ -655,8 +652,10 @@ export default async function DecksPage({
                     {deckCardTitle(deck)}
                   </div>
 
-                  <ProgressBar label="Words" pr={pr.words} />
-                  <ProgressBar label="Sentences" pr={pr.sentences} />
+                  <div className="mt-3 flex w-full flex-col gap-3 md:mt-0 md:block md:gap-0">
+                    <ProgressBar label="Words" pr={pr.words} />
+                    <ProgressBar label="Sentences" pr={pr.sentences} />
+                  </div>
                 </div>
 
                 <TrackedResponsiveNavLink
@@ -669,14 +668,15 @@ export default async function DecksPage({
                     support_lang: deck.native_lang,
                     level: deck.level ?? "other",
                   }}
+                  className="mt-5 flex w-full shrink-0 items-center justify-center text-center md:mt-0 md:inline-flex md:w-auto"
                   style={{
-                    whiteSpace: "nowrap",
                     padding: "10px 14px",
                     borderRadius: 12,
                     background: "var(--foreground)",
                     color: "var(--surface-solid)",
                     fontWeight: 700,
                     textDecoration: "none",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   Start practice

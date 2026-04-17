@@ -373,6 +373,44 @@ html[data-theme="dark"] .learning-support-text {
   background: linear-gradient(90deg, var(--foreground) 0%, var(--foreground-muted) 100%);
 }
 
+/* My decks list cards: mobile — full-width progress, tighter label→bar rhythm (desktop unchanged) */
+@media (max-width: 767.98px) {
+  .pll-deck-list-card .pll-deck-list-card__progress.entry-progress-row,
+  .pll-deck-list-card .pll-deck-list-card__progress.deck-progress-bar {
+    margin-top: 0;
+  }
+
+  .pll-deck-list-card .deck-progress-bar {
+    max-width: none;
+    width: 100%;
+  }
+
+  .pll-deck-list-card .entry-progress-row {
+    max-width: none;
+    width: 100%;
+    row-gap: 0.5rem;
+  }
+
+  .pll-deck-list-card .entry-progress-row__track-wrap {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .pll-deck-list-card .entry-progress-row__track {
+    height: 10px;
+    min-height: 10px;
+    border-color: var(--border-strong);
+  }
+
+  html[data-theme="dark"] .pll-deck-list-card .entry-progress-row__track {
+    background: color-mix(in srgb, var(--surface-muted) 70%, var(--foreground) 6%);
+  }
+
+  html:not([data-theme="dark"]) .pll-deck-list-card .entry-progress-row__track {
+    background: color-mix(in srgb, #e9f0f8 88%, #94a3b8 12%);
+  }
+}
+
 .entry-progress-row {
   margin-top: 0.75rem;
   width: 100%;
