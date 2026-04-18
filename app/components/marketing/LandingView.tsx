@@ -92,16 +92,16 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                 </p>
               </div>
               <div
-                className="mt-7 flex w-full max-w-3xl flex-col items-center gap-3 pl-0 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6 sm:pl-4 md:pl-8 lg:gap-8 lg:pl-12"
+                className="mt-7 flex w-full max-w-3xl flex-col items-center gap-4 pl-0 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6 sm:pl-4 md:pl-8 lg:gap-8 lg:pl-12"
                 role="group"
                 aria-label="Signature and primary action"
               >
-                <span className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)]/50 px-4 py-2 text-sm font-semibold tracking-[0.09em] text-[var(--foreground)] shadow-sm sm:px-6 sm:py-3 sm:text-base sm:tracking-[0.08em]">
+                <span className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)]/55 px-4 py-2 text-sm font-semibold tracking-[0.09em] text-[var(--foreground)] shadow-sm max-sm:mx-auto max-sm:min-h-[2.75rem] max-sm:w-[min(20.5rem,calc(100vw-2rem))] max-sm:px-5 max-sm:py-2.5 max-sm:text-[0.9375rem] max-sm:tracking-[0.085em] max-sm:shadow-[0_2px_10px_rgba(0,0,0,0.06)] sm:px-6 sm:py-3 sm:text-base sm:tracking-[0.08em]">
                   Enjoy the progress!
                 </span>
                 <Link
                   href={primaryHref}
-                  className={`${heroBtnPrimary} max-sm:mx-auto max-sm:h-11 max-sm:min-h-0 max-sm:w-auto max-sm:max-w-[min(100%,17.5rem)] max-sm:px-6 max-sm:text-sm max-sm:font-medium`}
+                  className={`${heroBtnPrimary} max-sm:mx-auto max-sm:h-12 max-sm:min-h-0 max-sm:w-[min(20.5rem,calc(100vw-2rem))] max-sm:px-7 max-sm:text-[0.9375rem] max-sm:font-medium`}
                 >
                   {primaryLabel}
                 </Link>
