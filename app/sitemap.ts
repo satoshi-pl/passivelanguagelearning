@@ -25,6 +25,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.35,
     },
     {
+      url: `${SITE_URL}/confirm-reset-password`,
+      changeFrequency: "weekly",
+      priority: 0.35,
+    },
+    {
       url: `${SITE_URL}/faq`,
       changeFrequency: "weekly",
       priority: 0.85,

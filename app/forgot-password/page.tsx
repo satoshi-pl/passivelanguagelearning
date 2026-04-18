@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
 import { Container } from "../components/Container";
@@ -29,6 +29,17 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [recoveryVerifyFailed, setRecoveryVerifyFailed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("recovery_error") !== "1") return;
+    setRecoveryVerifyFailed(true);
+    url.searchParams.delete("recovery_error");
+    const qs = url.searchParams.toString();
+    window.history.replaceState(window.history.state, "", `${url.pathname}${qs ? `?${qs}` : ""}`);
+  }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -68,6 +79,13 @@ export default function ForgotPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {recoveryVerifyFailed && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                That reset link could not be verified or has expired. Request a new reset email below, or try
+                logging in if you remember your password.
+              </div>
+            )}
+
             {sentTo && (
               <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
                 Password reset email sent to <span className="font-medium">{sentTo}</span>. Check

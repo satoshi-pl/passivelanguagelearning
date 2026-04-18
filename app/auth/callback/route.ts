@@ -102,9 +102,12 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
   const tokenHash = requestUrl.searchParams.get("token_hash");
   const otpType = normalizeOtpType(requestUrl.searchParams.get("type"));
-  const nextRaw = requestUrl.searchParams.get("next") || "/setup";
   const retryAttempt = requestUrl.searchParams.get("retry");
   const flow = requestUrl.searchParams.get("flow") ?? "unknown";
+  const defaultNext =
+    !code && tokenHash && otpType === "recovery" ? "/reset-password" : "/setup";
+  const nextParam = requestUrl.searchParams.get("next");
+  const nextRaw = nextParam || defaultNext;
   /** OAuth 2.0 error from the provider (e.g. access_denied) when there is no `code`. */
   const oauthError = requestUrl.searchParams.get("error");
   const oauthErrorDescription = requestUrl.searchParams.get("error_description");
@@ -121,6 +124,7 @@ export async function GET(request: NextRequest) {
     hasRetry1: retryAttempt === "1",
     flow,
     next: nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "(sanitized)",
+    defaultNext,
     oauthError: oauthError ?? null,
     oauthErrorDescription: truncateForLog(oauthErrorDescription),
     secFetchSite: request.headers.get("sec-fetch-site"),
@@ -129,7 +133,7 @@ export async function GET(request: NextRequest) {
   });
 
   const nextPath =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : defaultNext;
   const successRedirectTarget = new URL(nextPath, appOrigin);
   const response = redirectNoStore(successRedirectTarget);
   const supabase = createSupabaseOAuthCallbackClient(request, response);
@@ -159,11 +163,16 @@ export async function GET(request: NextRequest) {
         status: (error as { status?: number }).status,
         code: (error as { code?: string }).code ?? null,
       });
-      const verifyFailLogin = new URL("/login", requestUrl.origin);
+      const verifyFailUrl = new URL(
+        flow === "password_recovery" ? "/forgot-password" : "/login",
+        requestUrl.origin,
+      );
       if (flow === "email_verify") {
-        verifyFailLogin.searchParams.set("verified", "error");
+        verifyFailUrl.searchParams.set("verified", "error");
+      } else if (flow === "password_recovery") {
+        verifyFailUrl.searchParams.set("recovery_error", "1");
       }
-      return redirectNoStore(`${verifyFailLogin.pathname}${verifyFailLogin.search}`, appOrigin);
+      return redirectNoStore(`${verifyFailUrl.pathname}${verifyFailUrl.search}`, appOrigin);
     }
 
     const loginUrl = new URL("/login", requestUrl.origin);
