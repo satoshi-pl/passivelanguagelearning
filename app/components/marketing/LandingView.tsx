@@ -158,19 +158,28 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                     <span className="shrink-0 font-normal text-[var(--foreground-muted)]/80" aria-hidden>
                       •
                     </span>
-                    <span>No streak pressure → you learn at your own rhythm</span>
+                    <span>
+                      <span className="font-semibold text-[var(--foreground)]">No streak pressure</span>
+                      {" → you learn at your own rhythm"}
+                    </span>
                   </li>
                   <li className="flex gap-2.5">
                     <span className="shrink-0 font-normal text-[var(--foreground-muted)]/80" aria-hidden>
                       •
                     </span>
-                    <span>No levels or gamification → focus stays on the language</span>
+                    <span>
+                      <span className="font-semibold text-[var(--foreground)]">No levels or gamification</span>
+                      {" → focus stays on the language"}
+                    </span>
                   </li>
                   <li className="flex gap-2.5">
                     <span className="shrink-0 font-normal text-[var(--foreground-muted)]/80" aria-hidden>
                       •
                     </span>
-                    <span>No noise → just repetition, clarity, and progress</span>
+                    <span>
+                      <span className="font-semibold text-[var(--foreground)]">No noise</span>
+                      {" → just repetition, clarity, and progress"}
+                    </span>
                   </li>
                 </ul>
                 <p className="text-sm leading-relaxed pll-landing__body">
