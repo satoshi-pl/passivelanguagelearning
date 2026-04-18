@@ -92,11 +92,11 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                 </p>
               </div>
               <div
-                className="mt-7 flex max-w-3xl flex-row flex-wrap items-center gap-4 pl-2 sm:mt-8 sm:gap-6 sm:pl-4 md:pl-8 lg:gap-8 lg:pl-12"
+                className="mt-7 flex w-full max-w-3xl flex-col-reverse items-center gap-2.5 pl-0 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6 sm:pl-4 md:pl-8 lg:gap-8 lg:pl-12"
                 role="group"
                 aria-label="Signature and primary action"
               >
-                <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)]/55 px-5 py-2.5 text-sm font-semibold tracking-[0.1em] text-[var(--foreground)] shadow-sm sm:px-6 sm:py-3 sm:text-base sm:tracking-[0.08em]">
+                <span className="inline-flex items-center justify-center rounded-full border border-[var(--border)]/70 bg-transparent px-3 py-1.5 text-xs font-medium tracking-wide text-[var(--foreground-muted)] sm:border-[var(--border)] sm:bg-[var(--surface-muted)]/55 sm:px-6 sm:py-3 sm:text-base sm:font-semibold sm:tracking-[0.08em] sm:text-[var(--foreground)] sm:shadow-sm">
                   Enjoy the progress!
                 </span>
                 <Link href={primaryHref} className={heroBtnPrimary}>
