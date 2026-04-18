@@ -62,7 +62,7 @@ const heroBtnPrimary =
 
 export default function LandingView({ isLoggedIn }: LandingViewProps) {
   const primaryHref = isLoggedIn ? "/decks" : "/signup";
-  const primaryLabel = isLoggedIn ? "Go to my decks" : "Create free account";
+  const primaryLabel = isLoggedIn ? "Go to my decks" : "Create account";
 
   return (
     <div className="pll-landing text-[var(--foreground)]">

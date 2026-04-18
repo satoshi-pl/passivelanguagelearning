@@ -23,7 +23,10 @@ export async function NavBar() {
   noStore();
 
   const pathname = (await headers()).get("x-pll-pathname") ?? "";
-  const hideLoginNavLink = pathname === "/login";
+  /** Contextual guest ribbon: `/` → Login+Sign up; `/login` → Home+Sign up; `/signup` → Home+Login; else → all three. */
+  const showHomeNavLink = pathname !== "/";
+  const showLoginNavLink = pathname !== "/login";
+  const showSignupNavLink = pathname !== "/signup";
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -137,14 +140,16 @@ export async function NavBar() {
               aria-label="Site and account"
             >
               <ThemeToggle />
-              <Link
-                href="/"
-                prefetch={false}
-                className="rounded-xl px-2.5 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-100 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
-              >
-                Home
-              </Link>
-              {!hideLoginNavLink ? (
+              {showHomeNavLink ? (
+                <Link
+                  href="/"
+                  prefetch={false}
+                  className="rounded-xl px-2.5 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-100 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                >
+                  Home
+                </Link>
+              ) : null}
+              {showLoginNavLink ? (
                 <Link
                   href="/login"
                   prefetch={false}
@@ -153,13 +158,15 @@ export async function NavBar() {
                   Login
                 </Link>
               ) : null}
-              <Link
-                href="/signup"
-                prefetch={false}
-                className="rounded-xl bg-black px-2.5 py-2 text-sm font-semibold text-white hover:bg-neutral-800 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
-              >
-                Sign up
-              </Link>
+              {showSignupNavLink ? (
+                <Link
+                  href="/signup"
+                  prefetch={false}
+                  className="rounded-xl bg-black px-2.5 py-2 text-sm font-semibold text-white hover:bg-neutral-800 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                >
+                  Sign up
+                </Link>
+              ) : null}
             </nav>
           </div>
         )}

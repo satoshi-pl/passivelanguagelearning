@@ -20,20 +20,31 @@ export async function FooterMeta() {
   } = await supabase.auth.getUser();
   if (user) return null;
 
+  const isLanding = pathname === "/";
+
+  const footerShellClass = isLanding
+    ? "mt-0 border-t border-[var(--border)] bg-[var(--surface-muted)]/45 pb-14 pt-12 md:pb-16 md:pt-16"
+    : "mt-16 border-t border-[var(--border)] pb-10 pt-8 md:mt-24 md:pb-12 md:pt-10 lg:mt-28";
+
+  const navClass = isLanding
+    ? "flex flex-wrap items-center justify-center gap-x-8 gap-y-2.5 text-center text-xs text-[var(--foreground-muted)] tracking-wide sm:gap-x-10 sm:text-[0.8125rem]"
+    : "flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-center text-[11px] text-neutral-500 sm:gap-x-8 sm:text-xs";
+
+  const linkClass = isLanding
+    ? "transition-colors hover:text-[var(--foreground)]"
+    : "transition-colors hover:text-neutral-700";
+
   return (
-    <footer className="mt-16 border-t border-[var(--border)] pb-10 pt-8 md:mt-24 md:pb-12 md:pt-10 lg:mt-28">
+    <footer className={footerShellClass}>
       <Container>
-        <nav
-          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-center text-[11px] text-neutral-500 sm:gap-x-8 sm:text-xs"
-          aria-label="Help and legal"
-        >
-          <Link href="/faq" prefetch={false} className="transition-colors hover:text-neutral-700">
+        <nav className={navClass} aria-label="Help and legal">
+          <Link href="/faq" prefetch={false} className={linkClass}>
             Q&amp;A
           </Link>
-          <Link href="/privacy" prefetch={false} className="transition-colors hover:text-neutral-700">
+          <Link href="/privacy" prefetch={false} className={linkClass}>
             Privacy Policy
           </Link>
-          <Link href="/terms" prefetch={false} className="transition-colors hover:text-neutral-700">
+          <Link href="/terms" prefetch={false} className={linkClass}>
             Terms of Service
           </Link>
         </nav>
