@@ -65,7 +65,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-[var(--border)] pb-14 pt-6 sm:pb-16 sm:pt-10">
         <Container>
-          <div className="relative mx-auto max-w-3xl lg:max-w-4xl">
+          <div className="relative mx-auto max-w-3xl lg:max-w-5xl">
             <div
               aria-hidden
               className="pointer-events-none absolute -right-24 -top-16 h-72 w-72 rounded-full opacity-[0.14]"
@@ -78,18 +78,15 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] pll-landing__muted">
                 Passive Language Learning
               </p>
-              <h1 className="mt-3 text-[1.75rem] font-semibold leading-[1.12] tracking-[-0.03em] text-[var(--foreground)] sm:text-4xl lg:text-[2.65rem]">
-                Calm, structured English and Spanish learning —{" "}
-                <span className="pll-k">understanding first</span>,{" "}
-                <span className="pll-k">recall</span> when you are ready.
+              <h1 className="mt-3 text-[1.65rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--foreground)] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.45rem] xl:text-[2.6rem]">
+                Understand first. Learn with less friction. Enjoy more.
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-relaxed sm:text-lg pll-landing__body">
-                A focused, deck-based space for{" "}
-                <span className="pll-k">words</span> and <span className="pll-k">sentences</span>. You
-                begin in <span className="pll-k">Passive Learning</span> (see the{" "}
-                <span className="pll-k">target language</span> first), then unlock{" "}
-                <span className="pll-k">Active Learning</span> when an item is mastered — with
-                open-ended <span className="pll-k">Review</span> whenever you want.
+              <p className="mt-5 max-w-2xl text-base leading-relaxed sm:max-w-3xl sm:text-lg pll-landing__body">
+                A focused, deck-based space for <span className="pll-k">words</span> and{" "}
+                <span className="pll-k">sentences</span>. Start with{" "}
+                <span className="pll-k">Passive Learning</span>, unlock{" "}
+                <span className="pll-k">Active Learning</span> after mastery, and use{" "}
+                <span className="pll-k">Review</span> whenever you want extra reinforcement.
               </p>
               <p className="mt-6 text-lg font-medium tracking-tight text-[var(--foreground)] sm:text-xl">
                 Enjoy the progress!
