@@ -9,6 +9,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 
+function getResetRedirectOrigin() {
+  const origin = new URL(window.location.origin);
+  const host = origin.hostname.toLowerCase();
+
+  // Production canonical host for reset links.
+  if (host === "passivelanguagelearning.io" || host === "www.passivelanguagelearning.io") {
+    origin.protocol = "https:";
+    origin.hostname = "passivelanguagelearning.io";
+    origin.port = "";
+  }
+
+  return origin.toString().replace(/\/$/, "");
+}
+
 export default function ForgotPasswordPage() {
   const supabase = createSupabaseBrowserClient();
   const [email, setEmail] = useState("");
@@ -29,7 +43,7 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    const redirectTo = `${window.location.origin}/reset-password`;
+    const redirectTo = `${getResetRedirectOrigin()}/reset-password`;
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo,
     });
