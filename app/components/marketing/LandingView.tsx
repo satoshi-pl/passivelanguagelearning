@@ -56,6 +56,10 @@ const btnPrimary =
 const btnSecondary =
   "inline-flex h-11 w-full items-center justify-center rounded-xl bg-neutral-100 px-6 text-base font-medium text-neutral-900 transition hover:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 sm:w-auto";
 
+/** Secondary text CTA — same height as primary, intentional but quieter */
+const heroCtaGhost =
+  "inline-flex h-11 w-full shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-solid)]/40 px-5 text-sm font-medium text-[var(--foreground)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 sm:w-auto sm:min-w-[9.5rem]";
+
 export default function LandingView({ isLoggedIn }: LandingViewProps) {
   const primaryHref = isLoggedIn ? "/decks" : "/signup";
   const primaryLabel = isLoggedIn ? "Go to my decks" : "Create free account";
@@ -81,7 +85,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
               <h1 className="mt-2 text-[1.65rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--foreground)] sm:mt-3 sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.45rem] xl:text-[2.6rem] lg:whitespace-nowrap">
                 Understand first. Learn with less friction. Enjoy more.
               </h1>
-              <div className="mt-4 max-w-3xl space-y-4 sm:mt-5">
+              <div className="mt-4 max-w-3xl sm:mt-5">
                 <p className="text-base leading-relaxed sm:text-lg pll-landing__body">
                   A focused, deck-based space for <span className="pll-k">words</span> and{" "}
                   <span className="pll-k">sentences</span>. Start with{" "}
@@ -89,27 +93,30 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                   <span className="pll-k">Active Learning</span> after mastery, and use{" "}
                   <span className="pll-k">Review</span> whenever you want extra reinforcement.
                 </p>
-                <p className="text-[var(--foreground)]">
-                  <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-muted)]/80 px-4 py-2 text-sm font-semibold tracking-[0.08em] text-[var(--foreground)] shadow-sm sm:px-5 sm:py-2.5 sm:text-base">
-                    Enjoy the progress!
-                  </span>
-                </p>
               </div>
-              <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-3">
-                <Link href={primaryHref} className={`${btnPrimary}`}>
-                  {primaryLabel}
-                </Link>
-                {!isLoggedIn ? (
-                  <Link href="/login" className={`${btnSecondary}`}>
-                    Log in
+              <p className="mt-5 max-w-3xl sm:mt-6">
+                <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)]/45 px-3.5 py-1.5 text-xs font-medium tracking-[0.14em] text-[var(--foreground-muted)] sm:px-4 sm:py-2 sm:text-sm sm:font-medium sm:tracking-[0.06em] sm:text-[var(--foreground)]">
+                  Enjoy the progress!
+                </span>
+              </p>
+              <div
+                className="mt-8 max-w-3xl border-t border-[var(--border)] pt-7 sm:mt-9 sm:pt-8"
+                role="group"
+                aria-label="Get started"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  <Link href={primaryHref} className={`${btnPrimary}`}>
+                    {primaryLabel}
                   </Link>
-                ) : null}
-                <Link
-                  href="/faq"
-                  className="text-center text-sm font-medium pll-landing__muted underline-offset-4 hover:text-[var(--foreground)] hover:underline sm:ml-2"
-                >
-                  Read Q&amp;A
-                </Link>
+                  {!isLoggedIn ? (
+                    <Link href="/login" className={`${btnSecondary}`}>
+                      Log in
+                    </Link>
+                  ) : null}
+                  <Link href="/faq" className={heroCtaGhost}>
+                    Read Q&amp;A
+                  </Link>
+                </div>
               </div>
             </div>
 
