@@ -6,6 +6,18 @@ import { useSearchParams } from "next/navigation";
 import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
+import {
+  AuthCardColumn,
+  authCardContentClassName,
+  authCardDescriptionClassName,
+  authCardHeaderClassName,
+  authCardSurfaceClassName,
+  authCardTitleClassName,
+  authFieldLabelClassName,
+  authFormGapClassName,
+  authInputClassName,
+  authPrimaryButtonClassName,
+} from "../components/auth/AuthCardColumn";
 import { Container } from "../components/Container";
 import {
   Card,
@@ -105,16 +117,16 @@ function SignupPageInner() {
 
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create account</CardTitle>
-            <CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Create account</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>
               Sign up to practice the creator&apos;s decks and track your progress.
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className={authCardContentClassName}>
             {!msg && authError && (
               <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {authError}
@@ -125,9 +137,12 @@ function SignupPageInner() {
               <GoogleSignInButton location="signup_page" />
             </div>
 
-            <form onSubmit={onSubmit} className="grid gap-3">
+            <form onSubmit={onSubmit} className={authFormGapClassName}>
               <div className="grid gap-1">
-                <label className="text-sm text-neutral-700" htmlFor="signup-email">
+                <label
+                  className={`text-sm text-neutral-700 ${authFieldLabelClassName}`}
+                  htmlFor="signup-email"
+                >
                   Email
                 </label>
                 <Input
@@ -142,11 +157,15 @@ function SignupPageInner() {
                   autoCorrect="off"
                   spellCheck={false}
                   inputMode="email"
+                  className={authInputClassName}
                 />
               </div>
 
               <div className="grid gap-1">
-                <label className="text-sm text-neutral-700" htmlFor="signup-password">
+                <label
+                  className={`text-sm text-neutral-700 ${authFieldLabelClassName}`}
+                  htmlFor="signup-password"
+                >
                   Password
                 </label>
                 <PasswordInput
@@ -156,10 +175,11 @@ function SignupPageInner() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="new-password"
+                  className={authInputClassName}
                 />
               </div>
 
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} className={authPrimaryButtonClassName}>
                 {loading ? "Creating..." : "Create account"}
               </Button>
             </form>
@@ -184,7 +204,7 @@ function SignupPageInner() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }
@@ -192,19 +212,19 @@ function SignupPageInner() {
 function SignupPageFallback() {
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create account</CardTitle>
-            <CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Create account</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>
               Sign up to practice the creator&apos;s decks and track your progress.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className={authCardContentClassName}>
             <p className="text-sm text-neutral-500">Loading…</p>
           </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }

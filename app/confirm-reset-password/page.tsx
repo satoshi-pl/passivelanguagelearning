@@ -3,6 +3,15 @@
 import Link from "next/link";
 import { Suspense, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  AuthCardColumn,
+  authCardContentClassName,
+  authCardDescriptionClassName,
+  authCardHeaderClassName,
+  authCardSurfaceClassName,
+  authCardTitleClassName,
+  authPrimaryButtonClassName,
+} from "../components/auth/AuthCardColumn";
 import { Container } from "../components/Container";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
@@ -61,16 +70,16 @@ function ConfirmResetPasswordInner() {
 
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Continue to reset your password</CardTitle>
-            <CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Continue to reset your password</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>
               Some email providers open links automatically. We only open the password reset step when you
               press the button below.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className={`${authCardContentClassName} space-y-4`}>
             {missingParams ? (
               <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 This reset link is incomplete or has expired. Request a new reset email, or try logging in if
@@ -82,7 +91,12 @@ function ConfirmResetPasswordInner() {
               </p>
             )}
 
-            <Button type="button" disabled={missingParams || busy} onClick={onContinue} className="w-full">
+            <Button
+              type="button"
+              disabled={missingParams || busy}
+              onClick={onContinue}
+              className={`w-full ${authPrimaryButtonClassName}`}
+            >
               {busy ? "Continuing…" : "Continue to reset password"}
             </Button>
 
@@ -97,7 +111,7 @@ function ConfirmResetPasswordInner() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }
@@ -105,14 +119,17 @@ function ConfirmResetPasswordInner() {
 function ConfirmResetPasswordFallback() {
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Reset your password</CardTitle>
-            <CardDescription>Loading…</CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Reset your password</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>One moment…</CardDescription>
           </CardHeader>
+          <CardContent className={authCardContentClassName}>
+            <p className="text-sm text-neutral-500">Preparing this page.</p>
+          </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }

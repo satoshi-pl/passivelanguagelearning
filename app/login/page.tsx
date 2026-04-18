@@ -6,6 +6,18 @@ import { useSearchParams } from "next/navigation";
 import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
+import {
+  AuthCardColumn,
+  authCardContentClassName,
+  authCardDescriptionClassName,
+  authCardHeaderClassName,
+  authCardSurfaceClassName,
+  authCardTitleClassName,
+  authFieldLabelClassName,
+  authFormGapClassName,
+  authInputClassName,
+  authPrimaryButtonClassName,
+} from "../components/auth/AuthCardColumn";
 import { Container } from "../components/Container";
 import {
   Card,
@@ -98,14 +110,16 @@ function LoginPageInner() {
 
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Login</CardTitle>
-            <CardDescription>Sign in to continue to your decks.</CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Login</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>
+              Sign in to continue to your decks.
+            </CardDescription>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className={authCardContentClassName}>
             {resetStatus === "success" && (
               <div className="mb-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
                 Password updated. You can now log in with your new password.
@@ -132,9 +146,12 @@ function LoginPageInner() {
               <GoogleSignInButton location="login_page" />
             </div>
 
-            <form onSubmit={onSubmit} className="grid gap-3">
+            <form onSubmit={onSubmit} className={authFormGapClassName}>
               <div className="grid gap-1">
-                <label className="text-sm text-neutral-700" htmlFor="login-email">
+                <label
+                  className={`text-sm text-neutral-700 ${authFieldLabelClassName}`}
+                  htmlFor="login-email"
+                >
                   Email
                 </label>
                 <Input
@@ -149,12 +166,16 @@ function LoginPageInner() {
                   autoCorrect="off"
                   spellCheck={false}
                   inputMode="email"
+                  className={authInputClassName}
                 />
               </div>
 
               <div className="grid gap-1">
                 <div className="flex items-center justify-between gap-4">
-                  <label className="text-sm text-neutral-700" htmlFor="login-password">
+                  <label
+                    className={`text-sm text-neutral-700 ${authFieldLabelClassName}`}
+                    htmlFor="login-password"
+                  >
                     Password
                   </label>
                   <Link href="/forgot-password" className="text-xs font-medium text-black underline">
@@ -168,10 +189,11 @@ function LoginPageInner() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
+                  className={authInputClassName}
                 />
               </div>
 
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} className={authPrimaryButtonClassName}>
                 {loading ? "Logging in..." : "Login"}
               </Button>
             </form>
@@ -190,7 +212,7 @@ function LoginPageInner() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }
@@ -198,17 +220,19 @@ function LoginPageInner() {
 function LoginPageFallback() {
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Login</CardTitle>
-            <CardDescription>Sign in to continue to your decks.</CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Login</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>
+              Sign in to continue to your decks.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className={authCardContentClassName}>
             <p className="text-sm text-neutral-500">Loading…</p>
           </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }

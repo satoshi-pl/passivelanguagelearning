@@ -4,6 +4,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { normalizeEmailForAuth } from "@/lib/auth/normalizeEmailForAuth";
+import {
+  AuthCardColumn,
+  authCardContentClassName,
+  authCardDescriptionClassName,
+  authCardHeaderClassName,
+  authCardSurfaceClassName,
+  authCardTitleClassName,
+  authFieldLabelClassName,
+  authFormGapClassName,
+  authInputClassName,
+  authPrimaryButtonClassName,
+} from "../components/auth/AuthCardColumn";
 import { Container } from "../components/Container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -70,15 +82,15 @@ export default function ForgotPasswordPage() {
 
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Reset password</CardTitle>
-            <CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Reset password</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>
               Enter your email and we&apos;ll send you a link to set a new password.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className={`${authCardContentClassName} space-y-4`}>
             {recoveryVerifyFailed && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                 That reset link could not be verified or has expired. Request a new reset email below, or try
@@ -99,9 +111,12 @@ export default function ForgotPasswordPage() {
               </div>
             )}
 
-            <form onSubmit={onSubmit} className="grid gap-3">
+            <form onSubmit={onSubmit} className={authFormGapClassName}>
               <div className="grid gap-1">
-                <label className="text-sm text-neutral-700" htmlFor="forgot-email">
+                <label
+                  className={`text-sm text-neutral-700 ${authFieldLabelClassName}`}
+                  htmlFor="forgot-email"
+                >
                   Email
                 </label>
                 <Input
@@ -116,10 +131,11 @@ export default function ForgotPasswordPage() {
                   autoCorrect="off"
                   spellCheck={false}
                   inputMode="email"
+                  className={authInputClassName}
                 />
               </div>
 
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} className={authPrimaryButtonClassName}>
                 {loading ? "Sending..." : "Send reset link"}
               </Button>
             </form>
@@ -132,7 +148,7 @@ export default function ForgotPasswordPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }

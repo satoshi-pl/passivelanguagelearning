@@ -59,7 +59,7 @@ export default async function RootLayout({
 
         <NavBar />
 
-        <main className="pt-2 pb-6 sm:pt-3 sm:pb-8 md:py-12 md:pb-10">
+        <main className="pt-2 pb-4 sm:pt-3 sm:pb-6 md:py-12 md:pb-8">
           {children}
         </main>
 

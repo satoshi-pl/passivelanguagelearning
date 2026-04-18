@@ -16,7 +16,7 @@ export async function FooterMeta() {
   if (user) return null;
 
   return (
-    <footer className="border-t border-[var(--border)] pb-8 pt-6">
+    <footer className="mt-16 border-t border-[var(--border)] pb-10 pt-8 md:mt-24 md:pb-12 md:pt-10 lg:mt-28">
       <Container>
         <nav
           className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-center text-[11px] text-neutral-500 sm:gap-x-8 sm:text-xs"

@@ -4,6 +4,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  AuthCardColumn,
+  authCardContentClassName,
+  authCardDescriptionClassName,
+  authCardHeaderClassName,
+  authCardSurfaceClassName,
+  authCardTitleClassName,
+  authFieldLabelClassName,
+  authFormGapClassName,
+  authInputClassName,
+  authPrimaryButtonClassName,
+} from "../components/auth/AuthCardColumn";
 import { Container } from "../components/Container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
 import { PasswordInput } from "../components/ui/PasswordInput";
@@ -162,13 +174,15 @@ export default function ResetPasswordPage() {
 
   return (
     <Container>
-      <div className="mx-auto mt-10 max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Set a new password</CardTitle>
-            <CardDescription>Choose a new password for your account.</CardDescription>
+      <AuthCardColumn>
+        <Card className={authCardSurfaceClassName}>
+          <CardHeader className={authCardHeaderClassName}>
+            <CardTitle className={authCardTitleClassName}>Set a new password</CardTitle>
+            <CardDescription className={authCardDescriptionClassName}>
+              Choose a new password for your account.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className={`${authCardContentClassName} space-y-4`}>
             {msg && (
               <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
                 {msg}
@@ -186,9 +200,12 @@ export default function ResetPasswordPage() {
                 If your link is expired, request a new reset email.
               </p>
             ) : (
-              <form onSubmit={onSubmit} className="grid gap-3">
+              <form onSubmit={onSubmit} className={authFormGapClassName}>
                 <div className="grid gap-1">
-                  <label className="text-sm text-neutral-700" htmlFor="new-password">
+                  <label
+                    className={`text-sm text-neutral-700 ${authFieldLabelClassName}`}
+                    htmlFor="new-password"
+                  >
                     New password
                   </label>
                   <PasswordInput
@@ -197,10 +214,14 @@ export default function ResetPasswordPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
+                    className={authInputClassName}
                   />
                 </div>
                 <div className="grid gap-1">
-                  <label className="text-sm text-neutral-700" htmlFor="confirm-password">
+                  <label
+                    className={`text-sm text-neutral-700 ${authFieldLabelClassName}`}
+                    htmlFor="confirm-password"
+                  >
                     Confirm new password
                   </label>
                   <PasswordInput
@@ -209,9 +230,10 @@ export default function ResetPasswordPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
+                    className={authInputClassName}
                   />
                 </div>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading} className={authPrimaryButtonClassName}>
                   {loading ? "Saving..." : "Save new password"}
                 </Button>
               </form>
@@ -224,7 +246,7 @@ export default function ResetPasswordPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </AuthCardColumn>
     </Container>
   );
 }
