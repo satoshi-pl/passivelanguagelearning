@@ -59,8 +59,6 @@ const btnSecondary =
 export default function LandingView({ isLoggedIn }: LandingViewProps) {
   const primaryHref = isLoggedIn ? "/decks" : "/signup";
   const primaryLabel = isLoggedIn ? "Go to my decks" : "Create free account";
-  const secondaryHref = isLoggedIn ? "/account" : "/login";
-  const secondaryLabel = isLoggedIn ? "Account" : "Log in";
 
   return (
     <div className="text-[var(--foreground)]">
@@ -98,9 +96,11 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                 <Link href={primaryHref} className={`${btnPrimary}`}>
                   {primaryLabel}
                 </Link>
-                <Link href={secondaryHref} className={`${btnSecondary}`}>
-                  {secondaryLabel}
-                </Link>
+                {!isLoggedIn ? (
+                  <Link href="/login" className={`${btnSecondary}`}>
+                    Log in
+                  </Link>
+                ) : null}
                 <Link
                   href="/faq"
                   className="text-center text-sm font-medium text-[var(--foreground-muted)] underline-offset-4 hover:text-[var(--foreground)] hover:underline sm:ml-2"
