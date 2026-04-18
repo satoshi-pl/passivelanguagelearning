@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import GaAuthEventBridge from "./components/GaAuthEventBridge";
+import { FooterMeta } from "./components/FooterMeta";
 import { NavBar } from "./components/NavBar";
 
 const SITE_URL = "https://passivelanguagelearning.io";
@@ -58,9 +59,11 @@ export default async function RootLayout({
 
         <NavBar />
 
-        <main className="pt-2 pb-8 sm:pt-3 sm:pb-10 md:py-12">
+        <main className="pt-2 pb-6 sm:pt-3 sm:pb-8 md:py-12 md:pb-10">
           {children}
         </main>
+
+        <FooterMeta />
 
         {GA_ID ? <GoogleAnalytics gaId={GA_ID} /> : null}
         <GaAuthEventBridge />

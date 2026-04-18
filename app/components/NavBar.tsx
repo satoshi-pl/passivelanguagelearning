@@ -125,34 +125,31 @@ export async function NavBar() {
               </LogoHomeLink>
             </div>
 
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <Link
-                  href="/login"
-                  className="rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  className="rounded-xl bg-black px-3 py-2 text-sm text-white hover:bg-neutral-800"
-                >
-                  Sign up
-                </Link>
-              </div>
-              <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs text-neutral-500">
-                <Link href="/faq" className="hover:text-neutral-700 hover:underline">
-                  Q&amp;A
-                </Link>
-                <Link href="/privacy" className="hover:text-neutral-700 hover:underline">
-                  Privacy Policy
-                </Link>
-                <Link href="/terms" className="hover:text-neutral-700 hover:underline">
-                  Terms of Service
-                </Link>
-              </div>
-            </div>
+            <nav
+              className="flex flex-wrap items-center justify-end gap-x-1 gap-y-1 sm:gap-x-2"
+              aria-label="Site and account"
+            >
+              <ThemeToggle />
+              <Link
+                href="/"
+                prefetch={false}
+                className="rounded-xl px-2.5 py-2 text-sm text-neutral-700 hover:bg-neutral-100 sm:px-3"
+              >
+                Home
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-xl px-2.5 py-2 text-sm text-neutral-700 hover:bg-neutral-100 sm:px-3"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-xl bg-black px-2.5 py-2 text-sm text-white hover:bg-neutral-800 sm:px-3"
+              >
+                Sign up
+              </Link>
+            </nav>
           </div>
         )}
       </Container>
