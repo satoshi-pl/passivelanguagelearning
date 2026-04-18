@@ -83,11 +83,23 @@ function getGoogleAuthEventType(createdAt: string | null | undefined, lastSignIn
   return Math.abs(lastSignInMs - createdMs) <= 120000 ? "sign_up" : "login";
 }
 
+function normalizeOtpType(raw: string | null): "signup" | "recovery" | "invite" | "magiclink" | "email_change" | null {
+  const t = (raw ?? "").trim().toLowerCase();
+  if (t === "signup") return "signup";
+  if (t === "recovery") return "recovery";
+  if (t === "invite") return "invite";
+  if (t === "magiclink") return "magiclink";
+  if (t === "email_change") return "email_change";
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const appOriginRaw = requestUrl.searchParams.get("app_origin");
   const appOrigin = getSafeAppOrigin(appOriginRaw, requestUrl.origin);
   const code = requestUrl.searchParams.get("code");
+  const tokenHash = requestUrl.searchParams.get("token_hash");
+  const otpType = normalizeOtpType(requestUrl.searchParams.get("type"));
   const nextRaw = requestUrl.searchParams.get("next") || "/setup";
   const retryAttempt = requestUrl.searchParams.get("retry");
   const flow = requestUrl.searchParams.get("flow") ?? "unknown";
@@ -98,6 +110,8 @@ export async function GET(request: NextRequest) {
   console.info("[auth/callback] inbound", {
     hasCode: Boolean(code),
     codeLen: code?.length ?? 0,
+    hasTokenHash: Boolean(tokenHash),
+    otpType: otpType ?? null,
     appOriginRaw,
     appOriginEffective: appOrigin,
     crossOriginCallback: appOrigin !== requestUrl.origin,
@@ -112,7 +126,39 @@ export async function GET(request: NextRequest) {
     ...summarizeOAuthCookies(request),
   });
 
+  const nextPath =
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
+  const successRedirectTarget = new URL(nextPath, appOrigin);
+  const response = redirectNoStore(successRedirectTarget);
+  const supabase = createSupabaseOAuthCallbackClient(request, response);
+
   if (!code) {
+    if (tokenHash && otpType) {
+      console.info("[auth/callback] preparing success redirect response", {
+        nextPath,
+        successRedirectTarget: successRedirectTarget.toString(),
+        method: "otp_verify",
+      });
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: otpType,
+      });
+      if (!error) {
+        console.info("[auth/callback] session established", {
+          userId: data.user?.id ?? null,
+          nextPath,
+          method: "otp_verify",
+        });
+        return response;
+      }
+      console.error("[auth/callback] verifyOtp failed", {
+        message: error.message,
+        name: error.name,
+        status: (error as { status?: number }).status,
+        code: (error as { code?: string }).code ?? null,
+      });
+    }
+
     const loginUrl = new URL("/login", requestUrl.origin);
     // Benign: opened /auth/callback without starting OAuth, prefetch, or cancelled consent
     // (access_denied) — do not show a misleading "code was missing" error on /login.
@@ -133,16 +179,6 @@ export async function GET(request: NextRequest) {
     }
     return redirectNoStore(`${loginUrl.pathname}${loginUrl.search}`, appOrigin);
   }
-
-  const nextPath =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/setup";
-  const successRedirectTarget = new URL(nextPath, appOrigin);
-  console.info("[auth/callback] preparing success redirect response", {
-    nextPath,
-    successRedirectTarget: successRedirectTarget.toString(),
-  });
-  const response = redirectNoStore(successRedirectTarget);
-  const supabase = createSupabaseOAuthCallbackClient(request, response);
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
