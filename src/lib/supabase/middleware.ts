@@ -2,6 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { fetchNoStore } from "./fetchNoStore";
 
+function nextWithPathnameHeader(req: NextRequest) {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pll-pathname", req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export async function middlewareSupabase(req: NextRequest) {
   const url = req.nextUrl;
   const code = url.searchParams.get("code");
@@ -11,7 +17,7 @@ export async function middlewareSupabase(req: NextRequest) {
   // incoming request and attach the new session to its own redirect — mixing these has been
   // linked to intermittent first-attempt `exchangeCodeForSession` failures (preview / new users).
   if (url.pathname === "/auth/callback") {
-    return NextResponse.next();
+    return nextWithPathnameHeader(req);
   }
 
   // Some OAuth returns can land on the site root with ?code=...
@@ -22,7 +28,7 @@ export async function middlewareSupabase(req: NextRequest) {
     return NextResponse.redirect(callbackPath);
   }
 
-  const res = NextResponse.next();
+  const res = nextWithPathnameHeader(req);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

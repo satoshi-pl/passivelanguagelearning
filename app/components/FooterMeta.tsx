@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Container } from "./Container";
 
 /**
  * Subtle help + legal links for signed-out visitors. Shown below main content (e.g. under auth cards).
+ * Hidden on `/login` for a focused sign-in screen (pathname from middleware `x-pll-pathname`).
  */
 export async function FooterMeta() {
   noStore();
+
+  const pathname = (await headers()).get("x-pll-pathname") ?? "";
+  if (pathname === "/login") return null;
 
   const supabase = await createSupabaseServerClient();
   const {

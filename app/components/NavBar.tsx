@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Container } from "./Container";
 import DictionaryHeaderSearch from "./DictionaryHeaderSearch";
@@ -20,6 +21,9 @@ type ProfileRow = {
 
 export async function NavBar() {
   noStore();
+
+  const pathname = (await headers()).get("x-pll-pathname") ?? "";
+  const hideLoginNavLink = pathname === "/login";
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -140,13 +144,15 @@ export async function NavBar() {
               >
                 Home
               </Link>
-              <Link
-                href="/login"
-                prefetch={false}
-                className="rounded-xl px-2.5 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-100 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
-              >
-                Login
-              </Link>
+              {!hideLoginNavLink ? (
+                <Link
+                  href="/login"
+                  prefetch={false}
+                  className="rounded-xl px-2.5 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-100 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                >
+                  Login
+                </Link>
+              ) : null}
               <Link
                 href="/signup"
                 prefetch={false}
