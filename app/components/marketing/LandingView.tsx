@@ -63,7 +63,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
   return (
     <div className="pll-landing text-[var(--foreground)]">
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-[var(--border)] pb-14 pt-6 sm:pb-16 sm:pt-10">
+      <section className="relative overflow-hidden border-b border-[var(--border)] pb-12 pt-5 sm:pb-14 sm:pt-8 md:pt-10">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="relative mx-auto max-w-3xl lg:max-w-none">
             <div
@@ -75,23 +75,27 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
               }}
             />
             <div className="relative">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] pll-landing__muted">
+              <p className="max-w-3xl text-[11px] font-semibold uppercase tracking-[0.14em] pll-landing__muted">
                 Passive Language Learning
               </p>
-              <h1 className="mt-3 text-[1.65rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--foreground)] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.45rem] xl:text-[2.6rem] lg:whitespace-nowrap">
+              <h1 className="mt-2 text-[1.65rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--foreground)] sm:mt-3 sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.45rem] xl:text-[2.6rem] lg:whitespace-nowrap">
                 Understand first. Learn with less friction. Enjoy more.
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-relaxed sm:max-w-3xl sm:text-lg pll-landing__body">
-                A focused, deck-based space for <span className="pll-k">words</span> and{" "}
-                <span className="pll-k">sentences</span>. Start with{" "}
-                <span className="pll-k">Passive Learning</span>, unlock{" "}
-                <span className="pll-k">Active Learning</span> after mastery, and use{" "}
-                <span className="pll-k">Review</span> whenever you want extra reinforcement.
-              </p>
-              <p className="mt-6 text-lg font-medium tracking-tight text-[var(--foreground)] sm:text-xl">
-                Enjoy the progress!
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="mt-4 max-w-3xl space-y-4 sm:mt-5">
+                <p className="text-base leading-relaxed sm:text-lg pll-landing__body">
+                  A focused, deck-based space for <span className="pll-k">words</span> and{" "}
+                  <span className="pll-k">sentences</span>. Start with{" "}
+                  <span className="pll-k">Passive Learning</span>, unlock{" "}
+                  <span className="pll-k">Active Learning</span> after mastery, and use{" "}
+                  <span className="pll-k">Review</span> whenever you want extra reinforcement.
+                </p>
+                <p className="text-[var(--foreground)]">
+                  <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-muted)]/80 px-4 py-2 text-sm font-semibold tracking-[0.08em] text-[var(--foreground)] shadow-sm sm:px-5 sm:py-2.5 sm:text-base">
+                    Enjoy the progress!
+                  </span>
+                </p>
+              </div>
+              <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-3">
                 <Link href={primaryHref} className={`${btnPrimary}`}>
                   {primaryLabel}
                 </Link>
@@ -110,12 +114,12 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
             </div>
 
             {/* Product composition */}
-            <div className="relative mt-12 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-4 shadow-[var(--shadow)] sm:col-span-2 sm:p-6">
+            <div className="relative mt-9 grid grid-cols-1 gap-4 md:mt-10 md:grid-cols-2 md:items-stretch md:gap-5 lg:gap-6">
+              <div className="flex min-h-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-5 shadow-[var(--shadow)] md:p-6">
                 <p className="text-xs font-semibold uppercase tracking-wide pll-landing__muted">
                   Session flow
                 </p>
-                <ol className="mt-4 space-y-3 text-sm pll-landing__body">
+                <ol className="mt-3 flex-1 space-y-2.5 text-sm pll-landing__body sm:space-y-3">
                   <li className="flex gap-3">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-xs font-bold text-[var(--foreground)]">
                       1
@@ -153,7 +157,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                   </li>
                 </ol>
               </div>
-              <div className="flex flex-col justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-4 shadow-[var(--shadow)] sm:p-5">
+              <div className="flex min-h-0 flex-col justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-5 shadow-[var(--shadow)] md:p-6">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide pll-landing__muted">
                     Designed for focused learning
