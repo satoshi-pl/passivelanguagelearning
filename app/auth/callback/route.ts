@@ -85,6 +85,8 @@ function getGoogleAuthEventType(createdAt: string | null | undefined, lastSignIn
 
 function normalizeOtpType(raw: string | null): "signup" | "recovery" | "invite" | "magiclink" | "email_change" | null {
   const t = (raw ?? "").trim().toLowerCase();
+  // Friendly alias used by PLL confirm-signup interstitial links in email templates
+  if (t === "email") return "signup";
   if (t === "signup") return "signup";
   if (t === "recovery") return "recovery";
   if (t === "invite") return "invite";
@@ -157,6 +159,11 @@ export async function GET(request: NextRequest) {
         status: (error as { status?: number }).status,
         code: (error as { code?: string }).code ?? null,
       });
+      const verifyFailLogin = new URL("/login", requestUrl.origin);
+      if (flow === "email_verify") {
+        verifyFailLogin.searchParams.set("verified", "error");
+      }
+      return redirectNoStore(`${verifyFailLogin.pathname}${verifyFailLogin.search}`, appOrigin);
     }
 
     const loginUrl = new URL("/login", requestUrl.origin);
