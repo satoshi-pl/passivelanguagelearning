@@ -156,7 +156,7 @@ export async function NavBar() {
                   <Link
                     href="/login"
                     prefetch={false}
-                    className="rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-100/90 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-sm sm:text-neutral-800 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                    className="rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-100/90 max-sm:px-2.5 max-sm:py-2 max-sm:text-sm max-sm:font-semibold max-sm:text-neutral-800 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-sm sm:font-medium sm:text-neutral-800 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
                   >
                     Login
                   </Link>
@@ -165,7 +165,7 @@ export async function NavBar() {
                   <Link
                     href="/signup"
                     prefetch={false}
-                    className="rounded-xl bg-black px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-neutral-800 sm:px-3 sm:py-2 sm:text-sm md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                    className="hidden rounded-xl bg-black px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-neutral-800 sm:inline-flex sm:items-center sm:px-3 sm:py-2 sm:text-sm md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
                   >
                     Sign up
                   </Link>

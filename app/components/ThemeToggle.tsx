@@ -103,7 +103,10 @@ export default function ThemeToggle() {
       title={`Theme: ${theme}`}
     >
       <span className="theme-toggle__label">Dark</span>
-      <span className="flex shrink-0 sm:hidden" aria-hidden="true">
+      <span
+        className="flex shrink-0 sm:hidden max-sm:[&_svg]:h-[1.2rem] max-sm:[&_svg]:w-[1.2rem]"
+        aria-hidden="true"
+      >
         {isDark ? <SunIcon /> : <MoonIcon />}
       </span>
       <span className="theme-toggle__track hidden sm:block" aria-hidden="true">
