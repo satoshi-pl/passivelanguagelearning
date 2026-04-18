@@ -152,7 +152,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                     Designed for focus
                   </p>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-                    No streaks, levels, or noisy reward loops — just clear stages and room to think.
+                    No streaks, XP-style levelling, or noisy reward loops — just clear stages and room to think.
                   </p>
                 </div>
                 <p className="text-xs leading-relaxed text-[var(--foreground-muted)]">
@@ -275,7 +275,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
           <p>
             PLL is designed for learners who benefit from a calmer rhythm:{" "}
             <strong className="font-medium text-[var(--foreground)]">no streaks</strong>,{" "}
-            <strong className="font-medium text-[var(--foreground)]">no levels</strong>,{" "}
+            <strong className="font-medium text-[var(--foreground)]">no levelling-up systems</strong>,{" "}
             <strong className="font-medium text-[var(--foreground)]">no confetti</strong>, and no noisy
             reward mechanics. The reward is meant to be the work itself — clearer understanding, steadier
             recall, and a sense of real movement.{" "}

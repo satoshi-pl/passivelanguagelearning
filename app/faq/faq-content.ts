@@ -99,7 +99,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
         id: "no-levels",
         question: "Why are there no levels or gamified rewards?",
         answer:
-          "PLL avoids unnecessary noise like levels, confetti, and artificial rewards. The goal is not to simulate progress, but to help you genuinely feel it through understanding and recall.",
+          "PLL avoids unnecessary noise like gamified levelling, confetti, and artificial rewards. The goal is not to simulate progress, but to help you genuinely feel it through understanding and recall.",
       },
       {
         id: "enjoy-progress-meaning",
