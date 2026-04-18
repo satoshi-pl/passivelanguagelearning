@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Container } from "../components/Container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
 
-const CONTACT_EMAIL = "m.kaczmarek890@gmail.com";
+const CONTACT_EMAIL = "support@passivelanguagelearning.io";
 const LAST_UPDATED = "April 16, 2026";
 
 export const metadata: Metadata = {
