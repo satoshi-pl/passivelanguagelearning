@@ -64,8 +64,8 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
     <div className="pll-landing text-[var(--foreground)]">
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-[var(--border)] pb-14 pt-6 sm:pb-16 sm:pt-10">
-        <Container>
-          <div className="relative mx-auto max-w-3xl lg:max-w-5xl">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative mx-auto max-w-3xl lg:max-w-none">
             <div
               aria-hidden
               className="pointer-events-none absolute -right-24 -top-16 h-72 w-72 rounded-full opacity-[0.14]"
@@ -78,7 +78,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] pll-landing__muted">
                 Passive Language Learning
               </p>
-              <h1 className="mt-3 text-[1.65rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--foreground)] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.45rem] xl:text-[2.6rem]">
+              <h1 className="mt-3 text-[1.65rem] font-semibold leading-snug tracking-[-0.03em] text-[var(--foreground)] sm:text-[1.95rem] md:text-[2.15rem] lg:text-[2.45rem] xl:text-[2.6rem] lg:whitespace-nowrap">
                 Understand first. Learn with less friction. Enjoy more.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed sm:max-w-3xl sm:text-lg pll-landing__body">
@@ -142,6 +142,15 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                       <span className="pll-k">Review</span> — revisit material whenever you want.
                     </span>
                   </li>
+                  <li className="flex gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-xs font-bold text-[var(--foreground)]">
+                      4
+                    </span>
+                    <span>
+                      <span className="pll-k">Favourites</span> — keep important words and sentences close
+                      for learning and review.
+                    </span>
+                  </li>
                 </ol>
               </div>
               <div className="flex flex-col justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-4 shadow-[var(--shadow)] sm:p-5">
@@ -164,7 +173,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
               </div>
             </div>
           </div>
-        </Container>
+        </div>
       </section>
 
       {/* Value strip */}
