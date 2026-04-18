@@ -56,9 +56,9 @@ const btnPrimary =
 const btnSecondary =
   "inline-flex h-11 w-full items-center justify-center rounded-xl bg-neutral-100 px-6 text-base font-medium text-neutral-900 transition hover:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 sm:w-auto";
 
-/** Secondary text CTA — same height as primary, intentional but quieter */
-const heroCtaGhost =
-  "inline-flex h-11 w-full shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-solid)]/40 px-5 text-sm font-medium text-[var(--foreground)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 sm:w-auto sm:min-w-[9.5rem]";
+/** Hero primary only — larger than default `btnPrimary` */
+const heroBtnPrimary =
+  "inline-flex h-12 w-full min-h-12 shrink-0 items-center justify-center rounded-xl bg-black px-8 text-base font-semibold text-white transition hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 sm:w-auto sm:min-w-[12rem] sm:text-lg";
 
 export default function LandingView({ isLoggedIn }: LandingViewProps) {
   const primaryHref = isLoggedIn ? "/decks" : "/signup";
@@ -94,29 +94,17 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                   <span className="pll-k">Review</span> whenever you want extra reinforcement.
                 </p>
               </div>
-              <p className="mt-5 max-w-3xl sm:mt-6">
-                <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)]/45 px-3.5 py-1.5 text-xs font-medium tracking-[0.14em] text-[var(--foreground-muted)] sm:px-4 sm:py-2 sm:text-sm sm:font-medium sm:tracking-[0.06em] sm:text-[var(--foreground)]">
+              <div
+                className="mt-7 flex max-w-3xl flex-row flex-wrap items-center gap-4 sm:mt-8 sm:gap-6 lg:gap-8"
+                role="group"
+                aria-label="Signature and primary action"
+              >
+                <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)]/55 px-5 py-2.5 text-sm font-semibold tracking-[0.1em] text-[var(--foreground)] shadow-sm sm:px-6 sm:py-3 sm:text-base sm:tracking-[0.08em]">
                   Enjoy the progress!
                 </span>
-              </p>
-              <div
-                className="mt-8 max-w-3xl border-t border-[var(--border)] pt-7 sm:mt-9 sm:pt-8"
-                role="group"
-                aria-label="Get started"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  <Link href={primaryHref} className={`${btnPrimary}`}>
-                    {primaryLabel}
-                  </Link>
-                  {!isLoggedIn ? (
-                    <Link href="/login" className={`${btnSecondary}`}>
-                      Log in
-                    </Link>
-                  ) : null}
-                  <Link href="/faq" className={heroCtaGhost}>
-                    Read Q&amp;A
-                  </Link>
-                </div>
+                <Link href={primaryHref} className={heroBtnPrimary}>
+                  {primaryLabel}
+                </Link>
               </div>
             </div>
 
