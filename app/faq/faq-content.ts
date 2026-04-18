@@ -19,7 +19,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         id: "why-start-passive",
-        question: "Why does PLL start with Passive Learning?",
+        question: "Why does Passive Language Learning start with Passive Learning?",
         answer:
           "Because understanding usually comes before confident recall. Starting with recognition makes learning feel clearer and more rewarding early on. It reduces friction and helps you build a strong base before moving into active use of the language.",
       },
@@ -51,7 +51,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
   },
   {
     id: "how-it-works",
-    title: "How PLL works",
+    title: "How Passive Language Learning works",
     items: [
       {
         id: "learn-vs-review",
@@ -91,7 +91,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         id: "no-streaks",
-        question: "Why doesn’t PLL use streaks?",
+        question: "Why doesn’t Passive Language Learning use streaks?",
         answer:
           "Because learning should not feel like maintaining a number. Streaks can shift the focus from improving your language to simply staying active. PLL keeps the focus on actual learning and personal progress.",
       },
@@ -109,13 +109,13 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         id: "anti-gamification",
-        question: "Is PLL anti-gamification?",
+        question: "Is Passive Language Learning anti-gamification?",
         answer:
           "PLL simply takes a different approach. Instead of relying on external rewards, it focuses on structure, clarity, and meaningful repetition. The aim is to support a healthier and more sustainable learning experience.",
       },
       {
         id: "why-calmer",
-        question: "Why is PLL designed to feel calmer?",
+        question: "Why is Passive Language Learning designed to feel calmer?",
         answer:
           "Because many learners benefit from fewer distractions and less pressure. A calmer environment helps you concentrate better, stay consistent, and enjoy the process of improving.",
       },
@@ -138,19 +138,19 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         id: "beginners",
-        question: "Is PLL good for beginners?",
+        question: "Is Passive Language Learning good for beginners?",
         answer:
           "Yes. The passive-first structure makes it easier to get started. It reduces early difficulty and helps beginners build confidence step by step.",
       },
       {
         id: "vocabulary-only",
-        question: "Is PLL only for vocabulary?",
+        question: "Is Passive Language Learning only for vocabulary?",
         answer:
           "No. PLL includes both words and sentences, so you learn not just individual terms, but also how language works in context.",
       },
       {
         id: "audio",
-        question: "Does PLL include audio?",
+        question: "Does Passive Language Learning include audio?",
         answer:
           "Yes. Audio is included to support familiarity with pronunciation and help reinforce learning through listening.",
       },
@@ -158,11 +158,11 @@ export const FAQ_SECTIONS: FaqSection[] = [
   },
   {
     id: "who-for",
-    title: "Who PLL is for",
+    title: "Who Passive Language Learning is for",
     items: [
       {
         id: "who-designed",
-        question: "Who is PLL designed for?",
+        question: "Who is Passive Language Learning designed for?",
         answer:
           "PLL is for learners who want structured language practice, a calm and focused environment, real progress without gamified pressure, and a more thoughtful approach to learning. It’s especially suitable for people who want to enjoy improving, rather than feel pushed by an app.",
       },

@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Container } from "../components/Container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
 
-const CONTACT_EMAIL = "m.kaczmarek890@gmail.com";
+const CONTACT_EMAIL = "support@passivelanguagelearning.io";
 const LAST_UPDATED = "April 16, 2026";
 
 export const metadata: Metadata = {
   title: "Terms of Service | Passive Language Learning",
-  description: "Draft terms of service for Passive Language Learning.",
+  description: "Terms of service for Passive Language Learning.",
 };
 
 export default function TermsPage() {
@@ -17,9 +17,7 @@ export default function TermsPage() {
         <Card>
           <CardHeader className="space-y-2 pb-3">
             <CardTitle className="text-2xl sm:text-3xl">Terms of Service</CardTitle>
-            <CardDescription>
-              These are simple draft terms for using Passive Language Learning.
-            </CardDescription>
+            <CardDescription>These terms govern the use of Passive Language Learning.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5 text-sm leading-6 text-neutral-700 sm:text-[15px]">
             <section className="space-y-2">

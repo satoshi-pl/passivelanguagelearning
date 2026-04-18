@@ -8,7 +8,7 @@ const LAST_UPDATED = "April 16, 2026";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Passive Language Learning",
-  description: "Draft privacy policy for Passive Language Learning.",
+  description: "Privacy policy for Passive Language Learning.",
 };
 
 export default function PrivacyPage() {
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           <CardHeader className="space-y-2 pb-3">
             <CardTitle className="text-2xl sm:text-3xl">Privacy Policy</CardTitle>
             <CardDescription>
-              This is a simple draft privacy policy for Passive Language Learning.
+              This privacy policy explains how Passive Language Learning handles your information.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5 text-sm leading-6 text-neutral-700 sm:text-[15px]">

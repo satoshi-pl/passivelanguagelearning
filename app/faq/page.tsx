@@ -7,17 +7,17 @@ const SITE_URL = "https://passivelanguagelearning.io";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Questions & answers — Passive Language Learning (PLL)",
+    absolute: "Questions & answers — Passive Language Learning",
   },
   description:
-    "How PLL’s passive-first method works, when Active Learning unlocks, review without limits, Favourites, languages (English & Spanish), support languages, audio, and learning philosophy.",
+    "How Passive Language Learning’s passive-first method works, when Active Learning unlocks, review without limits, Favourites, languages (English & Spanish), support languages, audio, and learning philosophy.",
   alternates: {
     canonical: "/faq",
   },
   openGraph: {
     title: "Questions & answers — Passive Language Learning",
     description:
-      "Understand PLL’s passive-first method, active recall, review, Favourites, and which languages are available.",
+      "Understand Passive Language Learning’s passive-first method, active recall, review, Favourites, and which languages are available.",
     url: `${SITE_URL}/faq`,
     siteName: "Passive Language Learning",
     type: "website",
@@ -55,9 +55,9 @@ export default function FaqPage() {
                 Questions &amp; answers
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--foreground-muted)] sm:text-lg">
-                Clear explanations of how PLL works — the passive-first path, active recall, review,
-                Favourites, and the ideas behind a calmer, more structured way to learn English and
-                Spanish.
+                Clear explanations of how Passive Language Learning works — the passive-first path, active
+                recall, review, Favourites, and the ideas behind a calmer, more structured way to learn English
+                and Spanish.
               </p>
             </header>
 
