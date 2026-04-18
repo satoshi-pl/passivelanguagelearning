@@ -92,7 +92,7 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                 </p>
               </div>
               <div
-                className="mt-7 flex max-w-3xl flex-row flex-wrap items-center gap-4 sm:mt-8 sm:gap-6 lg:gap-8"
+                className="mt-7 flex max-w-3xl flex-row flex-wrap items-center gap-4 pl-2 sm:mt-8 sm:gap-6 sm:pl-4 md:pl-8 lg:gap-8 lg:pl-12"
                 role="group"
                 aria-label="Signature and primary action"
               >
