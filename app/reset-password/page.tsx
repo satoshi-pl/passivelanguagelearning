@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -9,8 +9,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 
+const RECOVERY_SEARCH_PARAMS = ["code", "type", "error", "error_code", "error_description"] as const;
+const RECOVERY_HASH_PARAMS = [
+  "type",
+  "access_token",
+  "refresh_token",
+  "token_type",
+  "expires_in",
+  "expires_at",
+  "error",
+  "error_code",
+  "error_description",
+] as const;
+
+function cleanupRecoveryUrl() {
+  if (typeof window === "undefined") return;
+
+  const url = new URL(window.location.href);
+  let changed = false;
+
+  for (const key of RECOVERY_SEARCH_PARAMS) {
+    if (url.searchParams.has(key)) {
+      url.searchParams.delete(key);
+      changed = true;
+    }
+  }
+
+  const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+  let hashChanged = false;
+  for (const key of RECOVERY_HASH_PARAMS) {
+    if (hashParams.has(key)) {
+      hashParams.delete(key);
+      hashChanged = true;
+    }
+  }
+  if (hashChanged) {
+    const nextHash = hashParams.toString();
+    url.hash = nextHash ? `#${nextHash}` : "";
+    changed = true;
+  }
+
+  if (!changed) return;
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
 export default function ResetPasswordPage() {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const initStartedRef = useRef(false);
+  const exchangedCodeRef = useRef<string | null>(null);
   const router = useRouter();
 
   const [password, setPassword] = useState("");
@@ -21,6 +67,9 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initStartedRef.current) return;
+    initStartedRef.current = true;
+
     let active = true;
 
     async function waitForSessionSettle(maxAttempts = 8, delayMs = 150) {
@@ -45,8 +94,10 @@ export default function ResetPasswordPage() {
         Boolean(searchParams.get("error_code")) ||
         Boolean(hashParams.get("error")) ||
         Boolean(hashParams.get("error_code"));
+      const hasRecoverySignal = Boolean(code) || type === "recovery" || hasAccessToken;
 
-      if (code) {
+      if (code && exchangedCodeRef.current !== code) {
+        exchangedCodeRef.current = code;
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError && process.env.NODE_ENV === "development") {
           console.warn("[reset-password] exchangeCodeForSession failed; waiting for settled session", {
@@ -55,18 +106,18 @@ export default function ResetPasswordPage() {
         }
       }
 
-      const session = await waitForSessionSettle();
+      const session = await waitForSessionSettle(hasRecoverySignal ? 20 : 8, 150);
       if (!active) return;
 
       const hasSession = Boolean(session);
-      if (hasSession || type === "recovery" || hasAccessToken) {
+      if (hasSession) {
+        cleanupRecoveryUrl();
         setReady(true);
         return;
       }
 
-      // Do not fail aggressively on first load if a recovery marker exists; the session may still
-      // settle after redirect/exchange in some browsers/environments.
-      if (hasRecoveryError) {
+      // Keep user in explicit retry/error state when recovery markers exist but no session settled.
+      if (hasRecoverySignal || hasRecoveryError) {
         setError("This reset link may have expired. Please try once more, or request a new email.");
         return;
       }
