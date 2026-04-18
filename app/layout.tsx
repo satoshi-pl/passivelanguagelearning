@@ -9,11 +9,21 @@ const SITE_URL = "https://passivelanguagelearning.io";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata: Metadata = {
-  title: "Passive Language Learning",
-  description: "Words first, then sentences. Fast 0/1 practice.",
   metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Passive Language Learning",
+    template: "%s | Passive Language Learning",
+  },
+  description:
+    "Calm English and Spanish learning: passive-first recognition, active recall after mastery, review without limits, words and sentences, categories, and audio.",
   alternates: {
     canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en",
+    siteName: "Passive Language Learning",
+    url: SITE_URL,
   },
 };
 

@@ -97,6 +97,12 @@ export async function NavBar() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 lg:gap-3">
+                  <Link
+                    href="/faq"
+                    className="hidden rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 xl:inline"
+                  >
+                    Q&amp;A
+                  </Link>
                   <ThemeToggle />
                   <MobileAccountMenu email={email} accountLabel={accountLabel ?? email} />
                 </div>
@@ -135,7 +141,10 @@ export async function NavBar() {
                   Sign up
                 </Link>
               </div>
-              <div className="flex items-center gap-3 text-xs text-neutral-500">
+              <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs text-neutral-500">
+                <Link href="/faq" className="hover:text-neutral-700 hover:underline">
+                  Q&amp;A
+                </Link>
                 <Link href="/privacy" className="hover:text-neutral-700 hover:underline">
                   Privacy Policy
                 </Link>

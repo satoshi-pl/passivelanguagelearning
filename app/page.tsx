@@ -1,101 +1,60 @@
-import Link from "next/link";
-import { Container } from "./components/Container";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./components/ui/Card";
-import { Button } from "./components/ui/Button";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import LandingView from "./components/marketing/LandingView";
+
+const SITE_URL = "https://passivelanguagelearning.io";
+
+export const metadata: Metadata = {
+  title: {
+    absolute:
+      "Passive Language Learning — calm English & Spanish practice (passive first, then active)",
+  },
+  description:
+    "PLL is a calm, structured way to learn English or Spanish: Passive Learning (target language first), then Active Learning after mastery, open-ended review, words and sentences, categories, audio, and Favourites. Enjoy the progress!",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Passive Language Learning — calm English & Spanish practice",
+    description:
+      "Passive-first understanding, then active recall. Review without limits. Words, sentences, categories, audio — no streaks or noisy gamification.",
+    url: SITE_URL,
+    siteName: "Passive Language Learning",
+    type: "website",
+    locale: "en",
+  },
+};
 
 export default async function HomePage() {
-  noStore(); // avoid any stale caching
+  noStore();
 
   const supabase = await createSupabaseServerClient();
   const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
+  const isLoggedIn = Boolean(userData.user);
 
-  // ✅ debug flag (OFF by default)
   const showDebug = process.env.PLL_DEBUG === "1";
-
-  // only query count if we will actually show it
   const count = showDebug
-    ? (
-        await supabase
-          .from("decks")
-          .select("*", { count: "exact", head: true })
-      ).count
+    ? (await supabase.from("decks").select("*", { count: "exact", head: true })).count
     : null;
 
   return (
-    <Container>
-      <div className="mx-auto max-w-2xl lg:max-w-4xl">
-        <Card className="homepage-hero-shell">
-          <CardHeader className="pb-4 lg:pb-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-              Passive Language Learning
-            </div>
-
-            <CardTitle className="mt-3 text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">
-              <span className="hero-slogan bg-gradient-to-r from-neutral-900 via-neutral-800 to-blue-700 bg-clip-text text-transparent">
-                Enjoy the progress.
+    <>
+      {showDebug ? (
+        <div className="mx-auto mb-4 max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700 dark:border-[var(--border)] dark:bg-[var(--surface-soft)] dark:text-[var(--foreground-muted)]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span>
+                Supabase: <b>connected</b>
               </span>
-            </CardTitle>
-
-            <CardDescription className="mt-4 text-base leading-relaxed">
-              Passive Language Learning that helps you build vocabulary naturally, step by step.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-5 lg:space-y-6">
-            {showDebug && (
-              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
-                <div className="flex items-center justify-between gap-3">
-                  <span>
-                    Supabase: <b>connected</b>
-                  </span>
-                  <span>
-                    Decks in DB: <b>{count ?? 0}</b>
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-2.5 sm:flex-row">
-              {user ? (
-                <>
-                  <Link href="/decks" className="w-full sm:w-auto">
-                    <Button className="w-full">Start learning</Button>
-                  </Link>
-                  <Link href="/api/logout" className="w-full sm:w-auto">
-                    <Button variant="secondary" className="w-full">
-                      Logout
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/login" className="w-full sm:w-auto">
-                    <Button className="w-full">Start learning</Button>
-                  </Link>
-                  <Link href="/signup" className="w-full sm:w-auto">
-                    <Button variant="secondary" className="w-full">
-                      Create account
-                    </Button>
-                  </Link>
-                </>
-              )}
+              <span>
+                Decks in DB: <b>{count ?? 0}</b>
+              </span>
             </div>
-
-            <div className="text-xs text-neutral-500">
-              Learn in short, focused sessions.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </Container>
+          </div>
+        </div>
+      ) : null}
+      <LandingView isLoggedIn={isLoggedIn} />
+    </>
   );
 }

@@ -74,9 +74,17 @@ export default function MobileAccountMenu({ accountLabel, email }: Props) {
           ) : null}
 
           <a
-            href="/account"
+            href="/faq"
             onClick={() => setOpen(false)}
             className="mt-3 block rounded-xl px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
+          >
+            Q&amp;A
+          </a>
+
+          <a
+            href="/account"
+            onClick={() => setOpen(false)}
+            className="mt-1 block rounded-xl px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
           >
             Account
           </a>
