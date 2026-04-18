@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Container } from "../components/Container";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
 
 const RECOVERY_SEARCH_PARAMS = ["code", "type", "error", "error_code", "error_description"] as const;
@@ -191,9 +191,8 @@ export default function ResetPasswordPage() {
                   <label className="text-sm text-neutral-700" htmlFor="new-password">
                     New password
                   </label>
-                  <Input
+                  <PasswordInput
                     id="new-password"
-                    type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -204,9 +203,8 @@ export default function ResetPasswordPage() {
                   <label className="text-sm text-neutral-700" htmlFor="confirm-password">
                     Confirm new password
                   </label>
-                  <Input
+                  <PasswordInput
                     id="confirm-password"
-                    type="password"
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}

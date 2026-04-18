@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -148,11 +149,10 @@ function SignupPageInner() {
                 <label className="text-sm text-neutral-700" htmlFor="signup-password">
                   Password
                 </label>
-                <Input
+                <PasswordInput
                   id="signup-password"
                   name="password"
                   placeholder="••••••••"
-                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="new-password"

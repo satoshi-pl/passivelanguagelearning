@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -160,11 +161,10 @@ function LoginPageInner() {
                     Forgot password?
                   </Link>
                 </div>
-                <Input
+                <PasswordInput
                   id="login-password"
                   name="password"
                   placeholder="••••••••"
-                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
