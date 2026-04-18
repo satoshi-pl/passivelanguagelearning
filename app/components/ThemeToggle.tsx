@@ -7,6 +7,43 @@ const THEME_EVENT = "pll-theme-change";
 
 type ThemeMode = "light" | "dark";
 
+function MoonIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[1.05rem] w-[1.05rem] shrink-0"
+      aria-hidden
+    >
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[1.05rem] w-[1.05rem] shrink-0"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </svg>
+  );
+}
+
 function applyTheme(theme: ThemeMode) {
   const root = document.documentElement;
   root.dataset.theme = theme;
@@ -66,7 +103,10 @@ export default function ThemeToggle() {
       title={`Theme: ${theme}`}
     >
       <span className="theme-toggle__label">Dark</span>
-      <span className="theme-toggle__track" aria-hidden="true">
+      <span className="flex shrink-0 sm:hidden" aria-hidden="true">
+        {isDark ? <SunIcon /> : <MoonIcon />}
+      </span>
+      <span className="theme-toggle__track hidden sm:block" aria-hidden="true">
         <span className="theme-toggle__thumb" />
       </span>
     </button>

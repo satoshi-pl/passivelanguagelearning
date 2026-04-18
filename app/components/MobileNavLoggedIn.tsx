@@ -83,7 +83,7 @@ export default function MobileNavLoggedIn({ accountLabel, email, langs }: Props)
           <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight">
             <span
               data-top-nav-target="logo"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white"
+              className="inline-flex h-7 w-7 max-sm:h-8 max-sm:w-8 max-sm:text-xs items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white"
             >
               PLL
             </span>
