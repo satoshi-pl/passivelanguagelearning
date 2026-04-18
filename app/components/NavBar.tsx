@@ -136,37 +136,41 @@ export async function NavBar() {
             </div>
 
             <nav
-              className="flex flex-wrap items-center justify-end gap-x-1 gap-y-1 sm:gap-x-2 md:gap-x-3"
+              className="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-x-1.5 sm:gap-x-2 md:gap-x-3"
               aria-label="Site and account"
             >
-              <ThemeToggle />
+              <div className="shrink-0">
+                <ThemeToggle />
+              </div>
               {showHomeNavLink ? (
                 <Link
                   href="/"
                   prefetch={false}
-                  className="rounded-xl px-2.5 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-100 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                  className="hidden shrink-0 rounded-xl px-2.5 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-100 sm:inline-flex sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
                 >
                   Home
                 </Link>
               ) : null}
-              {showLoginNavLink ? (
-                <Link
-                  href="/login"
-                  prefetch={false}
-                  className="rounded-xl px-2.5 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-100 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
-                >
-                  Login
-                </Link>
-              ) : null}
-              {showSignupNavLink ? (
-                <Link
-                  href="/signup"
-                  prefetch={false}
-                  className="rounded-xl bg-black px-2.5 py-2 text-sm font-semibold text-white hover:bg-neutral-800 sm:px-3 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
-                >
-                  Sign up
-                </Link>
-              ) : null}
+              <div className="flex shrink-0 flex-nowrap items-center gap-0.5 sm:gap-2">
+                {showLoginNavLink ? (
+                  <Link
+                    href="/login"
+                    prefetch={false}
+                    className="rounded-lg px-2 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-100/90 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-sm sm:text-neutral-800 md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                  >
+                    Login
+                  </Link>
+                ) : null}
+                {showSignupNavLink ? (
+                  <Link
+                    href="/signup"
+                    prefetch={false}
+                    className="rounded-xl bg-black px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-neutral-800 sm:px-3 sm:py-2 sm:text-sm md:px-4 md:py-2.5 md:text-[0.9375rem] md:tracking-tight"
+                  >
+                    Sign up
+                  </Link>
+                ) : null}
+              </div>
             </nav>
           </div>
         )}

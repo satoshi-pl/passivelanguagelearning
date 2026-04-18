@@ -120,6 +120,16 @@ body {
   font-weight: 600;
 }
 
+@media (max-width: 639px) {
+  .theme-toggle__label {
+    display: none;
+  }
+  .theme-toggle {
+    gap: 0;
+    padding: 0.28rem 0.38rem;
+  }
+}
+
 .theme-toggle__track {
   position: relative;
   width: 2.7rem;
