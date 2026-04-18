@@ -53,9 +53,6 @@ function ValueCard({ title, text }: { title: string; text: string }) {
 const btnPrimary =
   "inline-flex h-11 w-full items-center justify-center rounded-xl bg-black px-6 text-base font-medium text-white transition hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 sm:w-auto";
 
-const btnSecondary =
-  "inline-flex h-11 w-full items-center justify-center rounded-xl bg-neutral-100 px-6 text-base font-medium text-neutral-900 transition hover:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 sm:w-auto";
-
 /** Hero primary only — larger than default `btnPrimary` */
 const heroBtnPrimary =
   "inline-flex h-12 w-full min-h-12 shrink-0 items-center justify-center rounded-xl bg-black px-8 text-base font-semibold text-white transition hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 sm:w-auto sm:min-w-[12rem] sm:text-lg";
@@ -152,22 +149,32 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                   </li>
                 </ol>
               </div>
-              <div className="flex min-h-0 flex-col justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-5 shadow-[var(--shadow)] md:p-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide pll-landing__muted">
-                    Designed for focused learning
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed pll-landing__body">
-                    No streak pressure, no levels, no noisy rewards.
-                    <br />
-                    <span className="mt-2 block">
-                      Just a clear structure, meaningful repetition, and space to focus on the language
-                      itself.
+              <div className="flex min-h-0 flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-5 shadow-[var(--shadow)] md:p-6">
+                <p className="text-xs font-semibold uppercase tracking-wide pll-landing__muted">
+                  Designed for focused learning
+                </p>
+                <ul className="list-none space-y-2.5 text-[0.8125rem] leading-relaxed text-[var(--foreground-muted)] sm:text-sm">
+                  <li className="flex gap-2.5">
+                    <span className="shrink-0 font-normal text-[var(--foreground-muted)]/80" aria-hidden>
+                      •
                     </span>
-                  </p>
-                </div>
-                <p className="text-xs font-medium leading-relaxed tracking-wide pll-landing__muted">
-                  Words · Words + sentences · Sentences · Categories · Audio
+                    <span>No streak pressure → you learn at your own rhythm</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="shrink-0 font-normal text-[var(--foreground-muted)]/80" aria-hidden>
+                      •
+                    </span>
+                    <span>No levels or gamification → focus stays on the language</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="shrink-0 font-normal text-[var(--foreground-muted)]/80" aria-hidden>
+                      •
+                    </span>
+                    <span>No noise → just repetition, clarity, and progress</span>
+                  </li>
+                </ul>
+                <p className="text-sm leading-relaxed pll-landing__body">
+                  Just a clear structure, meaningful repetition, and space to focus on the language itself.
                 </p>
               </div>
             </div>
@@ -403,11 +410,14 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
               <span className="pll-k">recall</span> when the next stage unlocks. Practise and{" "}
               <span className="pll-k">review</span> on your own terms.
             </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-10">
               <Link href={primaryHref} className={`${btnPrimary} min-w-[200px]`}>
                 {primaryLabel}
               </Link>
-              <Link href="/faq" className={`${btnSecondary} min-w-[200px]`}>
+              <Link
+                href="/faq"
+                className="text-sm font-medium text-[var(--foreground-muted)] underline decoration-[var(--border-strong)] underline-offset-[5px] transition hover:text-[var(--foreground)] hover:decoration-[var(--foreground-muted)]"
+              >
                 Read Q&amp;A
               </Link>
             </div>
