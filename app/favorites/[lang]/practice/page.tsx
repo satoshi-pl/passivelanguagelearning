@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
-import { buildTemplateAudioPath } from "../../../decks/[id]/practice/lib/fallbackAudioPath";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hydrateCanonicalFirstAudioForPairs } from "@/lib/audio/hydrateCanonicalFirstAudio";
 import PracticeClient from "../../../decks/[id]/practice/PracticeClient";
 
 type LearnMode = "words" | "ws" | "sentences";
@@ -30,57 +30,12 @@ type PairRow = {
   fav_kind?: "word" | "sentence" | string | null;
 };
 
-type PairAudioRow = {
-  id: string;
-  pair_template_id: string | null;
-  word_target_audio_url: string | null;
-  sentence_target_audio_url: string | null;
-};
-
-async function hydrateMissingAudioForPairs(
+async function hydrateAudioForPairs(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   pairs: PairRow[],
   targetLang: string
 ) {
-  if (!pairs.length) return pairs;
-
-  const missingAudioRows = pairs.filter(
-    (p) => !p.word_target_audio_url && !p.sentence_target_audio_url
-  );
-  if (!missingAudioRows.length) return pairs;
-
-  const ids = Array.from(new Set(missingAudioRows.map((p) => p.id).filter(Boolean)));
-  if (!ids.length) return pairs;
-
-  const { data, error } = await supabase
-    .from("pairs")
-    .select("id, pair_template_id, word_target_audio_url, sentence_target_audio_url")
-    .in("id", ids);
-
-  if (error || !data?.length) return pairs;
-
-  const audioByPairId = new Map<string, PairAudioRow>();
-  for (const row of data as PairAudioRow[]) {
-    audioByPairId.set(row.id, row);
-  }
-
-  return pairs.map((p) => {
-    if (p.word_target_audio_url || p.sentence_target_audio_url) return p;
-    const audio = audioByPairId.get(p.id);
-    if (!audio) return p;
-    const wordAudio =
-      audio.word_target_audio_url ??
-      buildTemplateAudioPath(targetLang, "word", audio.pair_template_id);
-    const sentenceAudio =
-      audio.sentence_target_audio_url ??
-      buildTemplateAudioPath(targetLang, "sentence", audio.pair_template_id);
-    if (!wordAudio && !sentenceAudio) return p;
-    return {
-      ...p,
-      word_target_audio_url: wordAudio,
-      sentence_target_audio_url: sentenceAudio,
-    };
-  });
+  return hydrateCanonicalFirstAudioForPairs(supabase, pairs, targetLang);
 }
 
 function normalizeMode(raw: unknown): LearnMode {
@@ -295,7 +250,7 @@ export default async function FavoritesPracticePage({
     );
   }
 
-  const pairs = await hydrateMissingAudioForPairs(
+  const pairs = await hydrateAudioForPairs(
     supabase,
     (sessionPairs || []) as PairRow[],
     targetLang

@@ -1,6 +1,7 @@
 // app/api/dictionary-search/route.ts
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hydrateCanonicalFirstAudioForPairs } from "@/lib/audio/hydrateCanonicalFirstAudio";
 
 type DictionaryRow = {
   pair_id: string;
@@ -14,6 +15,9 @@ type DictionaryRow = {
   score: number | null;
   total_count?: number | null;
 };
+
+type DictionaryHydrationRow = DictionaryRow & { id: string };
+type DeckIdRow = { id: string };
 
 export async function GET(req: Request) {
   const supabase = await createSupabaseServerClient();
@@ -46,7 +50,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: decksErr.message }, { status: 500 });
   }
 
-  const deckIds = (decks || []).map((d: any) => d.id);
+  const deckIds = ((decks || []) as DeckIdRow[]).map((d) => d.id);
 
   if (deckIds.length === 0) {
     return NextResponse.json({ results: [], total: 0 }, { status: 200 });
@@ -64,9 +68,18 @@ export async function GET(req: Request) {
 
   const rows = (data || []) as DictionaryRow[];
   const total = rows?.[0]?.total_count ? Number(rows[0].total_count) : 0;
+  const hydrationRows: DictionaryHydrationRow[] = rows.map((row) => ({
+    ...row,
+    id: row.pair_id,
+  }));
+  const hydratedRows = await hydrateCanonicalFirstAudioForPairs(
+    supabase,
+    hydrationRows,
+    target
+  );
 
   return NextResponse.json({
-    results: rows.map((r: DictionaryRow) => ({
+    results: hydratedRows.map((r: DictionaryHydrationRow) => ({
       pair_id: r.pair_id,
       deck_id: r.deck_id,
       word_target: r.word_target,
