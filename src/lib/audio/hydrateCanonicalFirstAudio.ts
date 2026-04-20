@@ -24,10 +24,9 @@ type TemplateAudioAssetRow = {
   sentence_audio_key: string | null;
 };
 
-type QueryResult = Promise<{ data: unknown; error: unknown }>;
 type QueryBuilder = {
   select: (columns: string) => {
-    in: (column: string, values: string[]) => QueryResult;
+    in: (column: string, values: string[]) => unknown;
   };
 };
 type SupabaseLike = {
@@ -44,11 +43,12 @@ function firstNonEmpty(...vals: Array<string | null | undefined>) {
 }
 
 export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
-  supabase: SupabaseLike,
+  supabase: unknown,
   rows: T[],
   targetLang: string
 ): Promise<T[]> {
   if (!rows.length) return rows;
+  const client = supabase as SupabaseLike;
 
   const ids = Array.from(new Set(rows.map((r) => String(r.id || "").trim()).filter(Boolean)));
   if (!ids.length) return rows;
@@ -56,10 +56,13 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
   const pairTemplateById = new Map<string, string | null>();
   const pairAudioFallbackById = new Map<string, PairAudioFallbackRow>();
 
-  const { data: pairsMetaData, error: pairsMetaErr } = await supabase
+  const { data: pairsMetaData, error: pairsMetaErr } = (await (client
     .from("pairs")
     .select("id, pair_template_id")
-    .in("id", ids);
+    .in("id", ids) as Promise<{ data: unknown; error: unknown }>)) as {
+    data: unknown;
+    error: unknown;
+  };
 
   if (!pairsMetaErr && Array.isArray(pairsMetaData)) {
     for (const raw of pairsMetaData as PairMetaRow[]) {
@@ -80,10 +83,13 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
 
   const templateById = new Map<string, TemplateAudioAssetRow>();
   if (templateIds.length > 0) {
-    const { data: templateRows, error: templateErr } = await supabase
+    const { data: templateRows, error: templateErr } = (await (client
       .from("template_audio_assets")
       .select("pair_template_id, word_audio_key, sentence_audio_key")
-      .in("pair_template_id", templateIds);
+      .in("pair_template_id", templateIds) as Promise<{ data: unknown; error: unknown }>)) as {
+      data: unknown;
+      error: unknown;
+    };
 
     if (!templateErr && Array.isArray(templateRows)) {
       for (const raw of templateRows as TemplateAudioAssetRow[]) {
@@ -105,10 +111,13 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
     .filter((id): id is string => !!id);
 
   if (idsNeedingPairAudioLookup.length > 0) {
-    const { data: pairAudioData, error: pairAudioErr } = await supabase
+    const { data: pairAudioData, error: pairAudioErr } = (await (client
       .from("pairs")
       .select("id, word_target_audio_url, sentence_target_audio_url")
-      .in("id", idsNeedingPairAudioLookup);
+      .in("id", idsNeedingPairAudioLookup) as Promise<{ data: unknown; error: unknown }>)) as {
+      data: unknown;
+      error: unknown;
+    };
 
     if (!pairAudioErr && Array.isArray(pairAudioData)) {
       for (const raw of pairAudioData as PairAudioFallbackRow[]) {
