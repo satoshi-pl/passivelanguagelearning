@@ -9,8 +9,10 @@
 --   plus a large INSERT into pairs. Together this often exceeds
 --   statement_timeout (PostgreSQL 57014).
 --
--- Short-term (recommended here): pre-aggregate audio once into a small lookup
---   (materialized view), then the per-user function only joins by pair_template_id.
+-- Canonical-first provisioning:
+--   1) public.template_audio_assets keys (preferred)
+--   2) mv_pair_template_audio (legacy fallback aggregate)
+-- The MV remains useful as compatibility fallback during migration.
 --
 -- Apply in Supabase SQL Editor as a privileged role (postgres / dashboard).
 -- After deploy: REFRESH MATERIALIZED VIEW when bulk audio backfills change sources.
@@ -57,7 +59,7 @@ COMMENT ON MATERIALIZED VIEW public.mv_pair_template_audio IS
 -- REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_pair_template_audio;
 REFRESH MATERIALIZED VIEW public.mv_pair_template_audio;
 
--- 2) Replace per-user sync to join the MV instead of scanning all pairs inline
+-- 2) Replace per-user sync to prefer template_audio_assets, then fallback to MV
 CREATE OR REPLACE FUNCTION public.sync_default_content_for_user(p_user_id uuid)
 RETURNS void
 LANGUAGE plpgsql
@@ -104,8 +106,8 @@ BEGIN
     pt.word_native,
     pt.sentence_target,
     pt.sentence_native,
-    audio_src.word_target_audio_url,
-    audio_src.sentence_target_audio_url,
+    coalesce(taa.word_audio_key, audio_src.word_target_audio_url),
+    coalesce(taa.sentence_audio_key, audio_src.sentence_target_audio_url),
     pt.category
   FROM public.pair_templates pt
   JOIN public.decks d
@@ -114,6 +116,8 @@ BEGIN
   LEFT JOIN public.pairs p
     ON p.deck_id = d.id
    AND p.pair_template_id = pt.id
+  LEFT JOIN public.template_audio_assets taa
+    ON taa.pair_template_id = pt.id
   LEFT JOIN public.mv_pair_template_audio audio_src
     ON audio_src.pair_template_id = pt.id
   WHERE p.id IS NULL;

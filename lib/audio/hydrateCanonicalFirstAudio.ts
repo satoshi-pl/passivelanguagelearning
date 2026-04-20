@@ -10,6 +10,10 @@ type PairLike = {
 type PairMetaRow = {
   id: string;
   pair_template_id: string | null;
+};
+
+type PairAudioFallbackRow = {
+  id: string;
   word_target_audio_url: string | null;
   sentence_target_audio_url: string | null;
 };
@@ -49,16 +53,17 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
   const ids = Array.from(new Set(rows.map((r) => String(r.id || "").trim()).filter(Boolean)));
   if (!ids.length) return rows;
 
-  const pairMetaById = new Map<string, PairMetaRow>();
+  const pairTemplateById = new Map<string, string | null>();
+  const pairAudioFallbackById = new Map<string, PairAudioFallbackRow>();
 
-  const { data: pairsData, error: pairsErr } = await supabase
+  const { data: pairsMetaData, error: pairsMetaErr } = await supabase
     .from("pairs")
-    .select("id, pair_template_id, word_target_audio_url, sentence_target_audio_url")
+    .select("id, pair_template_id")
     .in("id", ids);
 
-  if (!pairsErr && Array.isArray(pairsData)) {
-    for (const raw of pairsData as PairMetaRow[]) {
-      pairMetaById.set(raw.id, raw);
+  if (!pairsMetaErr && Array.isArray(pairsMetaData)) {
+    for (const raw of pairsMetaData as PairMetaRow[]) {
+      pairTemplateById.set(raw.id, raw.pair_template_id);
     }
   }
 
@@ -66,7 +71,7 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
     new Set(
       rows
         .map((r) => {
-          const fromPair = pairMetaById.get(r.id)?.pair_template_id;
+          const fromPair = pairTemplateById.get(r.id);
           return (fromPair || r.pair_template_id || "").trim();
         })
         .filter(Boolean)
@@ -87,15 +92,40 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
     }
   }
 
+  const idsNeedingPairAudioLookup = rows
+    .map((row) => {
+      const pairTemplateId = (pairTemplateById.get(row.id) || row.pair_template_id || "").trim() || null;
+      const templateAudio = pairTemplateId ? templateById.get(pairTemplateId) : undefined;
+      const needsWordFromPairs =
+        !templateAudio?.word_audio_key && !firstNonEmpty(row.word_target_audio_url);
+      const needsSentenceFromPairs =
+        !templateAudio?.sentence_audio_key && !firstNonEmpty(row.sentence_target_audio_url);
+      return needsWordFromPairs || needsSentenceFromPairs ? row.id : null;
+    })
+    .filter((id): id is string => !!id);
+
+  if (idsNeedingPairAudioLookup.length > 0) {
+    const { data: pairAudioData, error: pairAudioErr } = await supabase
+      .from("pairs")
+      .select("id, word_target_audio_url, sentence_target_audio_url")
+      .in("id", idsNeedingPairAudioLookup);
+
+    if (!pairAudioErr && Array.isArray(pairAudioData)) {
+      for (const raw of pairAudioData as PairAudioFallbackRow[]) {
+        pairAudioFallbackById.set(raw.id, raw);
+      }
+    }
+  }
+
   return rows.map((row) => {
-    const pairMeta = pairMetaById.get(row.id);
-    const pairTemplateId = (pairMeta?.pair_template_id || row.pair_template_id || "").trim() || null;
+    const pairAudioFallback = pairAudioFallbackById.get(row.id);
+    const pairTemplateId = (pairTemplateById.get(row.id) || row.pair_template_id || "").trim() || null;
     const templateAudio = pairTemplateId ? templateById.get(pairTemplateId) : undefined;
 
-    const pairWordRaw = firstNonEmpty(row.word_target_audio_url, pairMeta?.word_target_audio_url);
+    const pairWordRaw = firstNonEmpty(row.word_target_audio_url, pairAudioFallback?.word_target_audio_url);
     const pairSentenceRaw = firstNonEmpty(
       row.sentence_target_audio_url,
-      pairMeta?.sentence_target_audio_url
+      pairAudioFallback?.sentence_target_audio_url
     );
 
     const wordRaw = resolvePreferredAudioRaw({
