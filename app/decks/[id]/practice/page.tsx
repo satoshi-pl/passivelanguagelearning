@@ -398,7 +398,7 @@ export default async function DeckPracticePage({
             mode,
             dir,
             source: source === "review" ? "review" : "learn",
-            category: selectedCategory,
+            category: selectedCategory ?? undefined,
           }}
         />
       </div>

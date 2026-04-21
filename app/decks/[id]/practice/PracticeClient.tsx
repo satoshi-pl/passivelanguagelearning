@@ -62,7 +62,7 @@ type Props = {
     mode: LearnMode;
     dir: "passive" | "active";
     source: "learn" | "review";
-    category: string;
+    category?: string;
   };
 };
 
