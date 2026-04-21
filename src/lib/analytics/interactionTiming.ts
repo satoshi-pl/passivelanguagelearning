@@ -59,6 +59,16 @@ export function startRouteInteractionTiming(
   }
 }
 
+function normalizePathAndSearch(href: string, origin: string) {
+  const url = new URL(href, origin);
+  const params = Array.from(url.searchParams.entries()).sort(([aKey, aVal], [bKey, bVal]) => {
+    if (aKey === bKey) return aVal.localeCompare(bVal);
+    return aKey.localeCompare(bKey);
+  });
+  const search = params.length > 0 ? `?${new URLSearchParams(params).toString()}` : "";
+  return `${url.pathname}${search}`;
+}
+
 export function consumeRouteInteractionTiming() {
   if (typeof window === "undefined") return;
 
@@ -81,8 +91,9 @@ export function consumeRouteInteractionTiming() {
       return;
     }
 
-    const targetPath = new URL(href, window.location.origin).pathname;
-    if (targetPath !== window.location.pathname) return;
+    const targetPathWithQuery = normalizePathAndSearch(href, window.location.origin);
+    const currentPathWithQuery = normalizePathAndSearch(window.location.href, window.location.origin);
+    if (targetPathWithQuery !== currentPathWithQuery) return;
 
     const firstVisualMs = Date.now() - startedAtEpochMs;
     emitPhase(interaction, "first_visual", firstVisualMs, parsed.params);

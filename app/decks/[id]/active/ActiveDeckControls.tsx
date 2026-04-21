@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
@@ -75,6 +76,8 @@ export default function ActiveDeckControls({
   categoryProgressByValue,
   pendingTotalsByMode,
 }: Props) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const storageKey = `pll:deck:${deckId}:active-category`;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialSelectedCategory);
 
@@ -129,7 +132,7 @@ export default function ActiveDeckControls({
 
   useEffect(() => {
     consumeRouteInteractionTiming();
-  }, []);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
