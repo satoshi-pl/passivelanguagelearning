@@ -36,6 +36,13 @@ type UserPairRow = {
   sentence_mastered_at: string | null;
 };
 
+type PassiveAggregateRow = {
+  category: string | null;
+  total_pairs: number | null;
+  words_mastered: number | null;
+  sentences_mastered: number | null;
+};
+
 function normalizeMode(raw: unknown): Mode {
   const v = (typeof raw === "string" ? raw : "").toLowerCase().trim();
   if (v === "words" || v === "ws" || v === "sentences") return v;
@@ -123,77 +130,109 @@ export default async function DeckDetailPage({
     );
   }
 
-  const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
-    await Promise.all([
-      supabase.from("pairs").select("id, category").eq("deck_id", deckId),
-      supabase
-        .from("user_pairs")
-        .select("pair_id, word_mastered_at, sentence_mastered_at")
-        .eq("user_id", user.id)
-        .eq("deck_id", deckId),
-    ]);
-
-  const pairs = (pairsErr ? [] : pairRows ?? []) as PairRow[];
-  const userPairs = (userPairsErr ? [] : userPairRows ?? []) as UserPairRow[];
-
-  const progressByPairId = new Map<string, UserPairRow>();
-  for (const row of userPairs) {
-    progressByPairId.set(row.pair_id, row);
-  }
-
   let overallTotal = 0;
   let overallWordsMastered = 0;
   let overallSentencesMastered = 0;
+  let categoryOptions: CategoryOption[] = [];
+  let categoryProgressByValue: Record<string, CategoryProgressEntry> = {};
 
-  const categoryTotals = new Map<string, number>();
-  const categoryWordsMastered = new Map<string, number>();
-  const categorySentencesMastered = new Map<string, number>();
+  const { data: aggregateRows, error: aggregateErr } = await supabase.rpc(
+    "get_passive_dashboard_aggregates",
+    { p_user_id: user.id, p_deck_id: deckId }
+  );
 
-  for (const pair of pairs) {
-    overallTotal += 1;
+  if (!aggregateErr && (aggregateRows ?? []).length > 0) {
+    const rows = (aggregateRows ?? []) as PassiveAggregateRow[];
+    const overallRow = rows.find((r) => !String(r.category ?? "").trim());
 
-    const progress = progressByPairId.get(pair.id);
-    if (progress?.word_mastered_at) overallWordsMastered += 1;
-    if (progress?.sentence_mastered_at) overallSentencesMastered += 1;
+    overallTotal = Number(overallRow?.total_pairs ?? 0);
+    overallWordsMastered = Number(overallRow?.words_mastered ?? 0);
+    overallSentencesMastered = Number(overallRow?.sentences_mastered ?? 0);
 
-    const category = (pair.category || "").trim();
-    if (!category) continue;
+    const categoryRows = rows
+      .map((r) => ({
+        category: String(r.category ?? "").trim(),
+        total: Number(r.total_pairs ?? 0),
+        wordsMastered: Number(r.words_mastered ?? 0),
+        sentencesMastered: Number(r.sentences_mastered ?? 0),
+      }))
+      .filter((r) => r.category && r.total > 0)
+      .sort((a, b) => a.category.localeCompare(b.category));
 
-    categoryTotals.set(category, (categoryTotals.get(category) ?? 0) + 1);
-
-    if (progress?.word_mastered_at) {
-      categoryWordsMastered.set(category, (categoryWordsMastered.get(category) ?? 0) + 1);
-    }
-
-    if (progress?.sentence_mastered_at) {
-      categorySentencesMastered.set(category, (categorySentencesMastered.get(category) ?? 0) + 1);
-    }
-  }
-
-  const categoryOptions: CategoryOption[] = Array.from(categoryTotals.entries())
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([value, count]) => ({
-      value,
-      label: `${value} (${count})`,
+    categoryOptions = categoryRows.map((r) => ({
+      value: r.category,
+      label: `${r.category} (${r.total})`,
     }));
 
-  const categoryProgressByValue: Record<string, CategoryProgressEntry> = {};
-  for (const [category, total] of categoryTotals.entries()) {
-    const wordsMastered = categoryWordsMastered.get(category) ?? 0;
-    const sentencesMastered = categorySentencesMastered.get(category) ?? 0;
+    categoryProgressByValue = {};
+    for (const row of categoryRows) {
+      categoryProgressByValue[row.category] = {
+        words: {
+          total: row.total,
+          mastered: row.wordsMastered,
+          pct: toPct(row.wordsMastered, row.total),
+        },
+        sentences: {
+          total: row.total,
+          mastered: row.sentencesMastered,
+          pct: toPct(row.sentencesMastered, row.total),
+        },
+      };
+    }
+  } else {
+    const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
+      await Promise.all([
+        supabase.from("pairs").select("id, category").eq("deck_id", deckId),
+        supabase
+          .from("user_pairs")
+          .select("pair_id, word_mastered_at, sentence_mastered_at")
+          .eq("user_id", user.id)
+          .eq("deck_id", deckId),
+      ]);
 
-    categoryProgressByValue[category] = {
-      words: {
-        total,
-        mastered: wordsMastered,
-        pct: toPct(wordsMastered, total),
-      },
-      sentences: {
-        total,
-        mastered: sentencesMastered,
-        pct: toPct(sentencesMastered, total),
-      },
-    };
+    const pairs = (pairsErr ? [] : pairRows ?? []) as PairRow[];
+    const userPairs = (userPairsErr ? [] : userPairRows ?? []) as UserPairRow[];
+    const progressByPairId = new Map<string, UserPairRow>();
+    for (const row of userPairs) progressByPairId.set(row.pair_id, row);
+
+    const categoryTotals = new Map<string, number>();
+    const categoryWordsMastered = new Map<string, number>();
+    const categorySentencesMastered = new Map<string, number>();
+
+    for (const pair of pairs) {
+      overallTotal += 1;
+      const progress = progressByPairId.get(pair.id);
+      if (progress?.word_mastered_at) overallWordsMastered += 1;
+      if (progress?.sentence_mastered_at) overallSentencesMastered += 1;
+
+      const category = (pair.category || "").trim();
+      if (!category) continue;
+
+      categoryTotals.set(category, (categoryTotals.get(category) ?? 0) + 1);
+      if (progress?.word_mastered_at) {
+        categoryWordsMastered.set(category, (categoryWordsMastered.get(category) ?? 0) + 1);
+      }
+      if (progress?.sentence_mastered_at) {
+        categorySentencesMastered.set(category, (categorySentencesMastered.get(category) ?? 0) + 1);
+      }
+    }
+
+    categoryOptions = Array.from(categoryTotals.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({
+        value,
+        label: `${value} (${count})`,
+      }));
+
+    categoryProgressByValue = {};
+    for (const [category, total] of categoryTotals.entries()) {
+      const wordsMastered = categoryWordsMastered.get(category) ?? 0;
+      const sentencesMastered = categorySentencesMastered.get(category) ?? 0;
+      categoryProgressByValue[category] = {
+        words: { total, mastered: wordsMastered, pct: toPct(wordsMastered, total) },
+        sentences: { total, mastered: sentencesMastered, pct: toPct(sentencesMastered, total) },
+      };
+    }
   }
 
   const initialSelectedCategory =

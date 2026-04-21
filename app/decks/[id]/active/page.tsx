@@ -40,6 +40,18 @@ type UserPairRow = {
   sentence_active_mastered_at: string | null;
 };
 
+type ActiveAggregateRow = {
+  category: string | null;
+  words_total: number | null;
+  words_done: number | null;
+  words_pending: number | null;
+  sentences_total: number | null;
+  sentences_done: number | null;
+  sentences_pending: number | null;
+  ws_total_pairs: number | null;
+  ws_pending_pairs: number | null;
+};
+
 function normalizeMode(raw: unknown): Mode {
   const v = (typeof raw === "string" ? raw : "").toLowerCase().trim();
   if (v === "words" || v === "ws" || v === "sentences") return v;
@@ -128,29 +140,6 @@ export default async function DeckActivePage({
     );
   }
 
-  const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
-    await Promise.all([
-      supabase
-        .from("pairs")
-        .select("id, category, sentence_target, sentence_native")
-        .eq("deck_id", deckId),
-      supabase
-        .from("user_pairs")
-        .select(
-          "pair_id, word_mastered_at, sentence_mastered_at, word_active_mastered_at, sentence_active_mastered_at"
-        )
-        .eq("user_id", user.id)
-        .eq("deck_id", deckId),
-    ]);
-
-  const pairs = (pairsErr ? [] : pairRows ?? []) as PairRow[];
-  const userPairs = (userPairsErr ? [] : userPairRows ?? []) as UserPairRow[];
-
-  const progressByPairId = new Map<string, UserPairRow>();
-  for (const row of userPairs) {
-    progressByPairId.set(row.pair_id, row);
-  }
-
   let overallWordsTotal = 0;
   let overallWordsDone = 0;
   let overallWordsPending = 0;
@@ -161,109 +150,173 @@ export default async function DeckActivePage({
 
   let overallWsPendingPairs = 0;
 
-  const categoryWordsTotal = new Map<string, number>();
-  const categoryWordsDone = new Map<string, number>();
-  const categoryWordsPending = new Map<string, number>();
+  let categoryProgressByValue: Record<string, CategoryProgressEntry> = {};
+  let categoryOptionsByMode: Record<Mode, CategoryOption[]> = {
+    words: [],
+    sentences: [],
+    ws: [],
+  };
 
-  const categorySentencesTotal = new Map<string, number>();
-  const categorySentencesDone = new Map<string, number>();
-  const categorySentencesPending = new Map<string, number>();
+  const { data: aggregateRows, error: aggregateErr } = await supabase.rpc(
+    "get_active_dashboard_aggregates",
+    { p_user_id: user.id, p_deck_id: deckId }
+  );
 
-  const categoryWsTotalPairs = new Map<string, number>();
-  const categoryWsPendingPairs = new Map<string, number>();
+  if (!aggregateErr && (aggregateRows ?? []).length > 0) {
+    const rows = (aggregateRows ?? []) as ActiveAggregateRow[];
+    const overallRow = rows.find((r) => !String(r.category ?? "").trim());
+    overallWordsTotal = Number(overallRow?.words_total ?? 0);
+    overallWordsDone = Number(overallRow?.words_done ?? 0);
+    overallWordsPending = Number(overallRow?.words_pending ?? 0);
+    overallSentencesTotal = Number(overallRow?.sentences_total ?? 0);
+    overallSentencesDone = Number(overallRow?.sentences_done ?? 0);
+    overallSentencesPending = Number(overallRow?.sentences_pending ?? 0);
+    overallWsPendingPairs = Number(overallRow?.ws_pending_pairs ?? 0);
 
-  for (const pair of pairs) {
-    const progress = progressByPairId.get(pair.id);
-    const category = (pair.category || "").trim();
-    const sentenceExists = hasSentence(pair);
+    const categoryRows = rows
+      .map((r) => ({
+        category: String(r.category ?? "").trim(),
+        wordsTotal: Number(r.words_total ?? 0),
+        wordsDone: Number(r.words_done ?? 0),
+        wordsPending: Number(r.words_pending ?? 0),
+        sentencesTotal: Number(r.sentences_total ?? 0),
+        sentencesDone: Number(r.sentences_done ?? 0),
+        sentencesPending: Number(r.sentences_pending ?? 0),
+        wsTotalPairs: Number(r.ws_total_pairs ?? 0),
+        wsPendingPairs: Number(r.ws_pending_pairs ?? 0),
+      }))
+      .filter((r) => r.category)
+      .sort((a, b) => a.category.localeCompare(b.category));
 
-    const wordUnlocked = !!progress?.word_mastered_at;
-    const wordDone = wordUnlocked && !!progress?.word_active_mastered_at;
-    const wordPending = wordUnlocked && !progress?.word_active_mastered_at;
+    categoryProgressByValue = {};
+    for (const row of categoryRows) {
+      categoryProgressByValue[row.category] = {
+        words: {
+          total: row.wordsTotal,
+          mastered: row.wordsDone,
+          pct: toPct(row.wordsDone, row.wordsTotal),
+        },
+        sentences: {
+          total: row.sentencesTotal,
+          mastered: row.sentencesDone,
+          pct: toPct(row.sentencesDone, row.sentencesTotal),
+        },
+      };
+    }
 
-    const sentenceUnlocked = !!progress?.sentence_mastered_at;
-    const sentenceDone = sentenceUnlocked && !!progress?.sentence_active_mastered_at;
-    const sentencePending = sentenceExists && sentenceUnlocked && !progress?.sentence_active_mastered_at;
+    categoryOptionsByMode = {
+      words: categoryRows
+        .filter((r) => r.wordsPending > 0)
+        .map((r) => ({ value: r.category, label: `${r.category} (${r.wordsTotal})` })),
+      sentences: categoryRows
+        .filter((r) => r.sentencesPending > 0)
+        .map((r) => ({ value: r.category, label: `${r.category} (${r.sentencesTotal})` })),
+      ws: categoryRows
+        .filter((r) => r.wsPendingPairs > 0)
+        .map((r) => ({ value: r.category, label: `${r.category} (${r.wsTotalPairs})` })),
+    };
+  } else {
+    const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
+      await Promise.all([
+        supabase
+          .from("pairs")
+          .select("id, category, sentence_target, sentence_native")
+          .eq("deck_id", deckId),
+        supabase
+          .from("user_pairs")
+          .select(
+            "pair_id, word_mastered_at, sentence_mastered_at, word_active_mastered_at, sentence_active_mastered_at"
+          )
+          .eq("user_id", user.id)
+          .eq("deck_id", deckId),
+      ]);
 
-    const wsUnlocked = wordUnlocked || (sentenceExists && sentenceUnlocked);
-    const wsPending = wordPending || sentencePending;
+    const pairs = (pairsErr ? [] : pairRows ?? []) as PairRow[];
+    const userPairs = (userPairsErr ? [] : userPairRows ?? []) as UserPairRow[];
+    const progressByPairId = new Map<string, UserPairRow>();
+    for (const row of userPairs) progressByPairId.set(row.pair_id, row);
 
-    if (wordUnlocked) overallWordsTotal += 1;
-    if (wordDone) overallWordsDone += 1;
-    if (wordPending) overallWordsPending += 1;
+    const categoryWordsTotal = new Map<string, number>();
+    const categoryWordsDone = new Map<string, number>();
+    const categoryWordsPending = new Map<string, number>();
+    const categorySentencesTotal = new Map<string, number>();
+    const categorySentencesDone = new Map<string, number>();
+    const categorySentencesPending = new Map<string, number>();
+    const categoryWsTotalPairs = new Map<string, number>();
+    const categoryWsPendingPairs = new Map<string, number>();
 
-    if (sentenceUnlocked) overallSentencesTotal += 1;
-    if (sentenceDone) overallSentencesDone += 1;
-    if (sentencePending) overallSentencesPending += 1;
+    for (const pair of pairs) {
+      const progress = progressByPairId.get(pair.id);
+      const category = (pair.category || "").trim();
+      const sentenceExists = hasSentence(pair);
+      const wordUnlocked = !!progress?.word_mastered_at;
+      const wordDone = wordUnlocked && !!progress?.word_active_mastered_at;
+      const wordPending = wordUnlocked && !progress?.word_active_mastered_at;
+      const sentenceUnlocked = !!progress?.sentence_mastered_at;
+      const sentenceDone = sentenceUnlocked && !!progress?.sentence_active_mastered_at;
+      const sentencePending = sentenceExists && sentenceUnlocked && !progress?.sentence_active_mastered_at;
+      const wsUnlocked = wordUnlocked || (sentenceExists && sentenceUnlocked);
+      const wsPending = wordPending || sentencePending;
 
-    if (wsPending) overallWsPendingPairs += 1;
+      if (wordUnlocked) overallWordsTotal += 1;
+      if (wordDone) overallWordsDone += 1;
+      if (wordPending) overallWordsPending += 1;
+      if (sentenceUnlocked) overallSentencesTotal += 1;
+      if (sentenceDone) overallSentencesDone += 1;
+      if (sentencePending) overallSentencesPending += 1;
+      if (wsPending) overallWsPendingPairs += 1;
+      if (!category) continue;
+      if (wordUnlocked) inc(categoryWordsTotal, category);
+      if (wordDone) inc(categoryWordsDone, category);
+      if (wordPending) inc(categoryWordsPending, category);
+      if (sentenceUnlocked) inc(categorySentencesTotal, category);
+      if (sentenceDone) inc(categorySentencesDone, category);
+      if (sentencePending) inc(categorySentencesPending, category);
+      if (wsUnlocked) inc(categoryWsTotalPairs, category);
+      if (wsPending) inc(categoryWsPendingPairs, category);
+    }
 
-    if (!category) continue;
+    const allCategories = Array.from(
+      new Set([
+        ...categoryWordsTotal.keys(),
+        ...categorySentencesTotal.keys(),
+        ...categoryWsTotalPairs.keys(),
+      ])
+    ).sort((a, b) => a.localeCompare(b));
 
-    if (wordUnlocked) inc(categoryWordsTotal, category);
-    if (wordDone) inc(categoryWordsDone, category);
-    if (wordPending) inc(categoryWordsPending, category);
+    categoryProgressByValue = {};
+    for (const category of allCategories) {
+      const wordsTotal = categoryWordsTotal.get(category) ?? 0;
+      const wordsDone = categoryWordsDone.get(category) ?? 0;
+      const sentencesTotal = categorySentencesTotal.get(category) ?? 0;
+      const sentencesDone = categorySentencesDone.get(category) ?? 0;
+      categoryProgressByValue[category] = {
+        words: { total: wordsTotal, mastered: wordsDone, pct: toPct(wordsDone, wordsTotal) },
+        sentences: { total: sentencesTotal, mastered: sentencesDone, pct: toPct(sentencesDone, sentencesTotal) },
+      };
+    }
 
-    if (sentenceUnlocked) inc(categorySentencesTotal, category);
-    if (sentenceDone) inc(categorySentencesDone, category);
-    if (sentencePending) inc(categorySentencesPending, category);
-
-    if (wsUnlocked) inc(categoryWsTotalPairs, category);
-    if (wsPending) inc(categoryWsPendingPairs, category);
-  }
-
-  const allCategories = Array.from(
-    new Set([
-      ...categoryWordsTotal.keys(),
-      ...categorySentencesTotal.keys(),
-      ...categoryWsTotalPairs.keys(),
-    ])
-  ).sort((a, b) => a.localeCompare(b));
-
-  const categoryProgressByValue: Record<string, CategoryProgressEntry> = {};
-  for (const category of allCategories) {
-    const wordsTotal = categoryWordsTotal.get(category) ?? 0;
-    const wordsDone = categoryWordsDone.get(category) ?? 0;
-
-    const sentencesTotal = categorySentencesTotal.get(category) ?? 0;
-    const sentencesDone = categorySentencesDone.get(category) ?? 0;
-
-    categoryProgressByValue[category] = {
-      words: {
-        total: wordsTotal,
-        mastered: wordsDone,
-        pct: toPct(wordsDone, wordsTotal),
-      },
-      sentences: {
-        total: sentencesTotal,
-        mastered: sentencesDone,
-        pct: toPct(sentencesDone, sentencesTotal),
-      },
+    categoryOptionsByMode = {
+      words: allCategories
+        .filter((category) => (categoryWordsPending.get(category) ?? 0) > 0)
+        .map((category) => ({
+          value: category,
+          label: `${category} (${categoryWordsTotal.get(category) ?? 0})`,
+        })),
+      sentences: allCategories
+        .filter((category) => (categorySentencesPending.get(category) ?? 0) > 0)
+        .map((category) => ({
+          value: category,
+          label: `${category} (${categorySentencesTotal.get(category) ?? 0})`,
+        })),
+      ws: allCategories
+        .filter((category) => (categoryWsPendingPairs.get(category) ?? 0) > 0)
+        .map((category) => ({
+          value: category,
+          label: `${category} (${categoryWsTotalPairs.get(category) ?? 0})`,
+        })),
     };
   }
-
-  const categoryOptionsByMode: Record<Mode, CategoryOption[]> = {
-    words: allCategories
-      .filter((category) => (categoryWordsPending.get(category) ?? 0) > 0)
-      .map((category) => ({
-        value: category,
-        label: `${category} (${categoryWordsTotal.get(category) ?? 0})`,
-      })),
-
-    sentences: allCategories
-      .filter((category) => (categorySentencesPending.get(category) ?? 0) > 0)
-      .map((category) => ({
-        value: category,
-        label: `${category} (${categorySentencesTotal.get(category) ?? 0})`,
-      })),
-
-    ws: allCategories
-      .filter((category) => (categoryWsPendingPairs.get(category) ?? 0) > 0)
-      .map((category) => ({
-        value: category,
-        label: `${category} (${categoryWsTotalPairs.get(category) ?? 0})`,
-      })),
-  };
 
   const currentOptions = categoryOptionsByMode[mode] ?? [];
   const initialSelectedCategory =

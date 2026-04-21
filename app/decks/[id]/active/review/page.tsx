@@ -26,6 +26,13 @@ type UserPairRow = {
   sentence_active_mastered_at: string | null;
 };
 
+type ReviewAggregateRow = {
+  category: string | null;
+  words_reviewable: number | null;
+  sentences_reviewable: number | null;
+  ws_reviewable: number | null;
+};
+
 type ActiveReviewSearchParams = {
   mode?: string | string[];
   back?: string | string[];
@@ -98,85 +105,116 @@ export default async function DeckActiveReviewPage({
       ? backParam
       : `/decks/${deckId}/active?mode=${mode}`;
 
-  const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
-    await Promise.all([
-      supabase
-        .from("pairs")
-        .select("id, category, sentence_target, sentence_native")
-        .eq("deck_id", deckId),
-      supabase
-        .from("user_pairs")
-        .select("pair_id, word_active_mastered_at, sentence_active_mastered_at")
-        .eq("user_id", user.id)
-        .eq("deck_id", deckId),
-    ]);
-
-  const pairs = (pairsErr ? [] : pairRows ?? []) as PairRow[];
-  const userPairs = (userPairsErr ? [] : userPairRows ?? []) as UserPairRow[];
-
-  const progressByPairId = new Map<string, UserPairRow>();
-  for (const row of userPairs) {
-    progressByPairId.set(row.pair_id, row);
-  }
-
   let overallWordsReviewable = 0;
   let overallSentencesReviewable = 0;
   let overallWsReviewable = 0;
-
-  const categoryWordsReviewable = new Map<string, number>();
-  const categorySentencesReviewable = new Map<string, number>();
-  const categoryWsReviewable = new Map<string, number>();
-
-  for (const pair of pairs) {
-    const progress = progressByPairId.get(pair.id);
-    const category = (pair.category || "").trim();
-    const sentenceExists = hasSentence(pair);
-
-    const hasWord = !!progress?.word_active_mastered_at;
-    const hasSentenceReview = sentenceExists && !!progress?.sentence_active_mastered_at;
-    const hasWs = hasWord || hasSentenceReview;
-
-    if (hasWord) overallWordsReviewable += 1;
-    if (hasSentenceReview) overallSentencesReviewable += 1;
-    if (hasWs) overallWsReviewable += 1;
-
-    if (!category) continue;
-
-    if (hasWord) inc(categoryWordsReviewable, category);
-    if (hasSentenceReview) inc(categorySentencesReviewable, category);
-    if (hasWs) inc(categoryWsReviewable, category);
-  }
-
-  const allCategories = Array.from(
-    new Set([
-      ...categoryWordsReviewable.keys(),
-      ...categorySentencesReviewable.keys(),
-      ...categoryWsReviewable.keys(),
-    ])
-  ).sort((a, b) => a.localeCompare(b));
-
-  const categoryOptionsByMode: Record<Mode, CategoryOption[]> = {
-    words: allCategories
-      .filter((category) => (categoryWordsReviewable.get(category) ?? 0) > 0)
-      .map((category) => ({
-        value: category,
-        label: `${category} (${categoryWordsReviewable.get(category) ?? 0})`,
-      })),
-
-    sentences: allCategories
-      .filter((category) => (categorySentencesReviewable.get(category) ?? 0) > 0)
-      .map((category) => ({
-        value: category,
-        label: `${category} (${categorySentencesReviewable.get(category) ?? 0})`,
-      })),
-
-    ws: allCategories
-      .filter((category) => (categoryWsReviewable.get(category) ?? 0) > 0)
-      .map((category) => ({
-        value: category,
-        label: `${category} (${categoryWsReviewable.get(category) ?? 0})`,
-      })),
+  let categoryOptionsByMode: Record<Mode, CategoryOption[]> = {
+    words: [],
+    sentences: [],
+    ws: [],
   };
+
+  const { data: aggregateRows, error: aggregateErr } = await supabase.rpc(
+    "get_active_review_aggregates",
+    { p_user_id: user.id, p_deck_id: deckId }
+  );
+
+  if (!aggregateErr && (aggregateRows ?? []).length > 0) {
+    const rows = (aggregateRows ?? []) as ReviewAggregateRow[];
+    const overallRow = rows.find((r) => !String(r.category ?? "").trim());
+    overallWordsReviewable = Number(overallRow?.words_reviewable ?? 0);
+    overallSentencesReviewable = Number(overallRow?.sentences_reviewable ?? 0);
+    overallWsReviewable = Number(overallRow?.ws_reviewable ?? 0);
+
+    const categoryRows = rows
+      .map((r) => ({
+        category: String(r.category ?? "").trim(),
+        words: Number(r.words_reviewable ?? 0),
+        sentences: Number(r.sentences_reviewable ?? 0),
+        ws: Number(r.ws_reviewable ?? 0),
+      }))
+      .filter((r) => r.category)
+      .sort((a, b) => a.category.localeCompare(b.category));
+
+    categoryOptionsByMode = {
+      words: categoryRows
+        .filter((r) => r.words > 0)
+        .map((r) => ({ value: r.category, label: `${r.category} (${r.words})` })),
+      sentences: categoryRows
+        .filter((r) => r.sentences > 0)
+        .map((r) => ({ value: r.category, label: `${r.category} (${r.sentences})` })),
+      ws: categoryRows
+        .filter((r) => r.ws > 0)
+        .map((r) => ({ value: r.category, label: `${r.category} (${r.ws})` })),
+    };
+  } else {
+    const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
+      await Promise.all([
+        supabase
+          .from("pairs")
+          .select("id, category, sentence_target, sentence_native")
+          .eq("deck_id", deckId),
+        supabase
+          .from("user_pairs")
+          .select("pair_id, word_active_mastered_at, sentence_active_mastered_at")
+          .eq("user_id", user.id)
+          .eq("deck_id", deckId),
+      ]);
+
+    const pairs = (pairsErr ? [] : pairRows ?? []) as PairRow[];
+    const userPairs = (userPairsErr ? [] : userPairRows ?? []) as UserPairRow[];
+    const progressByPairId = new Map<string, UserPairRow>();
+    for (const row of userPairs) progressByPairId.set(row.pair_id, row);
+
+    const categoryWordsReviewable = new Map<string, number>();
+    const categorySentencesReviewable = new Map<string, number>();
+    const categoryWsReviewable = new Map<string, number>();
+
+    for (const pair of pairs) {
+      const progress = progressByPairId.get(pair.id);
+      const category = (pair.category || "").trim();
+      const sentenceExists = hasSentence(pair);
+      const hasWord = !!progress?.word_active_mastered_at;
+      const hasSentenceReview = sentenceExists && !!progress?.sentence_active_mastered_at;
+      const hasWs = hasWord || hasSentenceReview;
+      if (hasWord) overallWordsReviewable += 1;
+      if (hasSentenceReview) overallSentencesReviewable += 1;
+      if (hasWs) overallWsReviewable += 1;
+      if (!category) continue;
+      if (hasWord) inc(categoryWordsReviewable, category);
+      if (hasSentenceReview) inc(categorySentencesReviewable, category);
+      if (hasWs) inc(categoryWsReviewable, category);
+    }
+
+    const allCategories = Array.from(
+      new Set([
+        ...categoryWordsReviewable.keys(),
+        ...categorySentencesReviewable.keys(),
+        ...categoryWsReviewable.keys(),
+      ])
+    ).sort((a, b) => a.localeCompare(b));
+
+    categoryOptionsByMode = {
+      words: allCategories
+        .filter((category) => (categoryWordsReviewable.get(category) ?? 0) > 0)
+        .map((category) => ({
+          value: category,
+          label: `${category} (${categoryWordsReviewable.get(category) ?? 0})`,
+        })),
+      sentences: allCategories
+        .filter((category) => (categorySentencesReviewable.get(category) ?? 0) > 0)
+        .map((category) => ({
+          value: category,
+          label: `${category} (${categorySentencesReviewable.get(category) ?? 0})`,
+        })),
+      ws: allCategories
+        .filter((category) => (categoryWsReviewable.get(category) ?? 0) > 0)
+        .map((category) => ({
+          value: category,
+          label: `${category} (${categoryWsReviewable.get(category) ?? 0})`,
+        })),
+    };
+  }
 
   const currentOptions = categoryOptionsByMode[mode] ?? [];
   const initialSelectedCategory =
