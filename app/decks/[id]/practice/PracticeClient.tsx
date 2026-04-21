@@ -64,6 +64,7 @@ type Props = {
     enabled: boolean;
     initialOffset: number;
     chunkSize: number;
+    maxPairs?: number;
     mode: LearnMode;
     dir: "passive" | "active";
     source: "learn" | "review";
@@ -236,6 +237,20 @@ export default function PracticeClient({
     if (!chunkHasMore) return;
     if (!safeDeckId) return;
 
+    const loadedFromBase = nextChunkOffset - (chunkLoadConfig.initialOffset ?? 0);
+    if (chunkLoadConfig.maxPairs && loadedFromBase >= chunkLoadConfig.maxPairs) {
+      setChunkHasMore(false);
+      return;
+    }
+
+    const nextLimit = chunkLoadConfig.maxPairs
+      ? Math.max(0, Math.min(chunkLoadConfig.chunkSize, chunkLoadConfig.maxPairs - loadedFromBase))
+      : chunkLoadConfig.chunkSize;
+    if (nextLimit <= 0) {
+      setChunkHasMore(false);
+      return;
+    }
+
     setChunkBusy(true);
     try {
       const res = await fetch("/api/practice/session-chunk", {
@@ -248,7 +263,7 @@ export default function PracticeClient({
           source: chunkLoadConfig.source,
           category: chunkLoadConfig.category,
           offset: nextChunkOffset,
-          limit: chunkLoadConfig.chunkSize,
+          limit: nextLimit,
         }),
       });
 
@@ -270,7 +285,9 @@ export default function PracticeClient({
         setNextChunkOffset((prev) => prev + items.length);
       }
 
-      setChunkHasMore(hasMore && items.length > 0);
+      const loadedAfter = loadedFromBase + items.length;
+      const reachedMaxPairs = !!chunkLoadConfig.maxPairs && loadedAfter >= chunkLoadConfig.maxPairs;
+      setChunkHasMore(hasMore && items.length > 0 && !reachedMaxPairs);
     } catch {
       setChunkHasMore(false);
     } finally {
