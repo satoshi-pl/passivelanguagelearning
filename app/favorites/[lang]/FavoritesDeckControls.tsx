@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
+import {
+  consumeRouteInteractionTiming,
+  emitCategorySwitchTiming,
+  startRouteInteractionTiming,
+} from "@/lib/analytics/interactionTiming";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -71,6 +76,10 @@ export default function FavoritesDeckControls({
 
     return `/favorites/${targetLang}/practice?${qs.toString()}`;
   }, [supportLang, mode, buildPageHref, selectedCategory, targetLang]);
+
+  useEffect(() => {
+    consumeRouteInteractionTiming();
+  }, []);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -179,6 +188,13 @@ export default function FavoritesDeckControls({
             className="deck-mode-button"
             href={modeWordsHref}
             style={modeButtonStyle(mode === "words")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeWordsHref, {
+                flow: "favorites",
+                from_mode: mode,
+                to_mode: "words",
+              })
+            }
           >
             Words
           </ResponsiveNavLink>
@@ -187,6 +203,13 @@ export default function FavoritesDeckControls({
             className="deck-mode-button"
             href={modeWsHref}
             style={modeButtonStyle(mode === "ws")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeWsHref, {
+                flow: "favorites",
+                from_mode: mode,
+                to_mode: "ws",
+              })
+            }
           >
             Words + Sentences
           </ResponsiveNavLink>
@@ -195,6 +218,13 @@ export default function FavoritesDeckControls({
             className="deck-mode-button"
             href={modeSentencesHref}
             style={modeButtonStyle(mode === "sentences")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeSentencesHref, {
+                flow: "favorites",
+                from_mode: mode,
+                to_mode: "sentences",
+              })
+            }
           >
             Sentences
           </ResponsiveNavLink>
@@ -209,6 +239,7 @@ export default function FavoritesDeckControls({
             className="deck-category-select entry-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
+              const timingStart = performance.now();
               const nextValue = e.currentTarget.value.trim() || null;
               setSelectedCategory(nextValue);
               trackGaEvent("category_select", {
@@ -223,6 +254,11 @@ export default function FavoritesDeckControls({
                 const nextUrl = buildPageHref(mode, nextValue);
                 window.history.replaceState(window.history.state, "", nextUrl);
               }
+              emitCategorySwitchTiming(timingStart, {
+                flow: "favorites",
+                mode,
+                category: nextValue ?? "all",
+              });
             }}
             style={{
               width: "100%",
@@ -253,17 +289,24 @@ export default function FavoritesDeckControls({
               <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
-                onClick={() =>
+                onClick={() => {
+                  const optionValue = normalizeSessionOptionValue(size.value);
+                  startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
+                    flow: "favorites",
+                    mode,
+                    category: selectedCategory ?? "all",
+                    n: optionValue,
+                  });
                   trackGaEvent("session_option_select", {
                     flow: "favorites_review",
                     option_type: "review",
-                    option_value: normalizeSessionOptionValue(size.value),
+                    option_value: optionValue,
                     mode,
                     category: selectedCategory ?? "all",
                     target_lang: targetLang,
                     support_lang: supportLang,
-                  })
-                }
+                  });
+                }}
                 style={reviewButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >

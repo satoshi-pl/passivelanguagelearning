@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
+import {
+  consumeRouteInteractionTiming,
+  emitCategorySwitchTiming,
+  startRouteInteractionTiming,
+} from "@/lib/analytics/interactionTiming";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -77,6 +82,10 @@ export default function ReviewDeckControls({
 
     return `/decks/${deckId}/practice?${qs.toString()}`;
   }, [deckId, mode, buildReviewPageHref, selectedCategory]);
+
+  useEffect(() => {
+    consumeRouteInteractionTiming();
+  }, []);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -182,6 +191,13 @@ export default function ReviewDeckControls({
             className="deck-mode-button"
             href={modeWordsHref}
             style={modeButtonStyle(mode === "words")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeWordsHref, {
+                flow: "passive_review",
+                from_mode: mode,
+                to_mode: "words",
+              })
+            }
           >
             Words
           </ResponsiveNavLink>
@@ -189,6 +205,13 @@ export default function ReviewDeckControls({
             className="deck-mode-button"
             href={modeWsHref}
             style={modeButtonStyle(mode === "ws")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeWsHref, {
+                flow: "passive_review",
+                from_mode: mode,
+                to_mode: "ws",
+              })
+            }
           >
             Words + Sentences
           </ResponsiveNavLink>
@@ -196,6 +219,13 @@ export default function ReviewDeckControls({
             className="deck-mode-button"
             href={modeSentencesHref}
             style={modeButtonStyle(mode === "sentences")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeSentencesHref, {
+                flow: "passive_review",
+                from_mode: mode,
+                to_mode: "sentences",
+              })
+            }
           >
             Sentences
           </ResponsiveNavLink>
@@ -210,6 +240,7 @@ export default function ReviewDeckControls({
             className="deck-category-select entry-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
+              const timingStart = performance.now();
               const nextValue = e.currentTarget.value.trim() || null;
               setSelectedCategory(nextValue);
               trackGaEvent("category_select", {
@@ -227,6 +258,11 @@ export default function ReviewDeckControls({
                 const nextUrl = buildReviewPageHref(mode, nextValue);
                 window.history.replaceState(window.history.state, "", nextUrl);
               }
+              emitCategorySwitchTiming(timingStart, {
+                flow: "passive_review",
+                mode,
+                category: nextValue ?? "all",
+              });
             }}
             style={{
               width: "100%",
@@ -257,11 +293,18 @@ export default function ReviewDeckControls({
               <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
-                onClick={() =>
+                onClick={() => {
+                  const optionValue = normalizeSessionOptionValue(size.value);
+                  startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
+                    flow: "passive_review",
+                    mode,
+                    category: selectedCategory ?? "all",
+                    n: optionValue,
+                  });
                   trackGaEvent("session_option_select", {
                     flow: "passive_learning",
                     option_type: "review",
-                    option_value: normalizeSessionOptionValue(size.value),
+                    option_value: optionValue,
                     deck_id: deckId,
                     deck_name: deckName,
                     mode,
@@ -269,8 +312,8 @@ export default function ReviewDeckControls({
                     target_lang: targetLang,
                     support_lang: supportLang,
                     level,
-                  })
-                }
+                  });
+                }}
                 style={reviewAmountLinkStyle}
                 className="deck-review-size-link deck-action-button deck-action-button--primary"
               >

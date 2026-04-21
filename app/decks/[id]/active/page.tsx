@@ -216,6 +216,9 @@ export default async function DeckActivePage({
         .map((r) => ({ value: r.category, label: `${r.category} (${r.wsTotalPairs})` })),
     };
   } else {
+    if (aggregateErr) {
+      console.warn("[active-dashboard] aggregate RPC fallback:", aggregateErr.message);
+    }
     const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
       await Promise.all([
         supabase

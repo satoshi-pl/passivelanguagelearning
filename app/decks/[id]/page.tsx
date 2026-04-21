@@ -180,6 +180,9 @@ export default async function DeckDetailPage({
       };
     }
   } else {
+    if (aggregateErr) {
+      console.warn("[passive-dashboard] aggregate RPC fallback:", aggregateErr.message);
+    }
     const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
       await Promise.all([
         supabase.from("pairs").select("id, category").eq("deck_id", deckId),

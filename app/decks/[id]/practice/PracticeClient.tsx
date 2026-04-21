@@ -17,6 +17,10 @@ import { useSessionBuilder } from "./lib/useSessionBuilder";
 import type { PairRow, ProgressMap, LearnMode } from "./lib/types";
 import { normalizeMode } from "./lib/learning";
 import { resolvePracticeAudioUrl } from "./lib/resolvePracticeAudioUrl";
+import {
+  consumeRouteInteractionTiming,
+  emitInteractionTiming,
+} from "@/lib/analytics/interactionTiming";
 
 const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
@@ -309,6 +313,32 @@ export default function PracticeClient({
   const favouriteActionBusyRef = useRef(false);
 
   const [audioGateHint, setAudioGateHint] = useState("");
+  const [pendingCardInteraction, setPendingCardInteraction] = useState<{
+    interaction: "mastered" | "easy";
+    startedAtMs: number;
+    fromCardKey: string;
+  } | null>(null);
+
+  useEffect(() => {
+    consumeRouteInteractionTiming();
+  }, []);
+
+  const currentCardKey = useMemo(() => {
+    if (!flow.currentPair || !flow.currentStage) return "";
+    return `${flow.currentPair.id}|${flow.currentStage}`;
+  }, [flow.currentPair?.id, flow.currentStage]);
+
+  useEffect(() => {
+    if (!pendingCardInteraction) return;
+    if (!currentCardKey) return;
+    if (currentCardKey === pendingCardInteraction.fromCardKey) return;
+
+    emitInteractionTiming(pendingCardInteraction.interaction, pendingCardInteraction.startedAtMs, {
+      mode,
+      review: isReview ? 1 : 0,
+    });
+    setPendingCardInteraction(null);
+  }, [pendingCardInteraction, currentCardKey, mode, isReview]);
 
   useEffect(() => {
     if (!audioGateHint) return;
@@ -790,12 +820,24 @@ export default function PracticeClient({
         }}
         onMastered={async () => {
           flow.audio.enable();
+          setPendingCardInteraction({
+            interaction: "mastered",
+            startedAtMs: performance.now(),
+            fromCardKey: currentCardKey,
+          });
           // markDone already advances learnQueue / idx or finishes the session for
           // words/sentences learn — do not call goNext again (stale closure would double-advance).
           await flow.markDone((href) => router.replace(href));
         }}
         onReviewHard={() => flow.markReviewHard((href) => router.replace(href))}
-        onReviewEasy={() => void flow.markReviewEasy((href) => router.replace(href))}
+        onReviewEasy={() => {
+          setPendingCardInteraction({
+            interaction: "easy",
+            startedAtMs: performance.now(),
+            fromCardKey: currentCardKey,
+          });
+          void flow.markReviewEasy((href) => router.replace(href));
+        }}
         reportOpen={report.reportOpen}
         setReportOpen={report.setReportOpen}
         reportCat={report.reportCat}

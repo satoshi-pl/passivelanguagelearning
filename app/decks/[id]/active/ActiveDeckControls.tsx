@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
+import {
+  consumeRouteInteractionTiming,
+  emitCategorySwitchTiming,
+  startRouteInteractionTiming,
+} from "@/lib/analytics/interactionTiming";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -121,6 +126,10 @@ export default function ActiveDeckControls({
     qs.set("back", buildDashboardBackHref(mode, selectedCategory));
     return `/decks/${deckId}/active/review?${qs.toString()}`;
   };
+
+  useEffect(() => {
+    consumeRouteInteractionTiming();
+  }, []);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -256,6 +265,13 @@ export default function ActiveDeckControls({
             className="deck-mode-button"
             href={modeWordsHref}
             style={modeButtonStyle(mode === "words")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeWordsHref, {
+                flow: "active_learning",
+                from_mode: mode,
+                to_mode: "words",
+              })
+            }
           >
             Words
           </ResponsiveNavLink>
@@ -263,6 +279,13 @@ export default function ActiveDeckControls({
             className="deck-mode-button"
             href={modeWsHref}
             style={modeButtonStyle(mode === "ws")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeWsHref, {
+                flow: "active_learning",
+                from_mode: mode,
+                to_mode: "ws",
+              })
+            }
           >
             Words + Sentences
           </ResponsiveNavLink>
@@ -270,6 +293,13 @@ export default function ActiveDeckControls({
             className="deck-mode-button"
             href={modeSentencesHref}
             style={modeButtonStyle(mode === "sentences")}
+            onClick={() =>
+              startRouteInteractionTiming("mode_switch", modeSentencesHref, {
+                flow: "active_learning",
+                from_mode: mode,
+                to_mode: "sentences",
+              })
+            }
           >
             Sentences
           </ResponsiveNavLink>
@@ -284,6 +314,7 @@ export default function ActiveDeckControls({
             className="deck-category-select entry-category-select"
             value={selectedCategory ?? ""}
             onChange={(e) => {
+              const timingStart = performance.now();
               const nextValue = e.currentTarget.value.trim() || null;
               setSelectedCategory(nextValue);
               trackGaEvent("category_select", {
@@ -301,6 +332,11 @@ export default function ActiveDeckControls({
                 const nextUrl = buildActivePageHref(mode, nextValue);
                 window.history.replaceState(window.history.state, "", nextUrl);
               }
+              emitCategorySwitchTiming(timingStart, {
+                flow: "active_learning",
+                mode,
+                category: nextValue ?? "all",
+              });
             }}
             style={{
               width: "100%",
@@ -339,11 +375,18 @@ export default function ActiveDeckControls({
               <ResponsiveNavLink
                 key={size.label}
                 href={buildPracticeHref(size.value)}
-                onClick={() =>
+                onClick={() => {
+                  const optionValue = normalizeSessionOptionValue(size.value);
+                  startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
+                    flow: "active_learning",
+                    mode,
+                    category: selectedCategory ?? "all",
+                    n: optionValue,
+                  });
                   trackGaEvent("session_option_select", {
                     flow: "active_learning",
                     option_type: "active",
-                    option_value: normalizeSessionOptionValue(size.value),
+                    option_value: optionValue,
                     deck_id: deckId,
                     deck_name: deckName,
                     mode,
@@ -351,8 +394,8 @@ export default function ActiveDeckControls({
                     target_lang: targetLang,
                     support_lang: supportLang,
                     level,
-                  })
-                }
+                  });
+                }}
                 style={learnButtonStyle}
                 className="deck-action-button deck-action-button--primary deck-learn-button"
               >

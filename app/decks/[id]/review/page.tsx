@@ -148,6 +148,9 @@ export default async function DeckReviewPage({
         .map((r) => ({ value: r.category, label: `${r.category} (${r.ws})` })),
     };
   } else {
+    if (aggregateErr) {
+      console.warn("[passive-review] aggregate RPC fallback:", aggregateErr.message);
+    }
     const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
       await Promise.all([
         supabase

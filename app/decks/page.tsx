@@ -661,6 +661,7 @@ export default async function DecksPage({
                 <TrackedResponsiveNavLink
                   href={`/decks/${String(deck.id)}?back=${encodeURIComponent(currentDecksHref)}`}
                   eventName="start_practice_click"
+                  interactionTiming="open_dashboard"
                   eventParams={{
                     deck_id: deck.id,
                     deck_name: deck.name,

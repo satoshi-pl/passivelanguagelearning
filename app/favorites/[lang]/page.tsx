@@ -226,6 +226,9 @@ export default async function FavoritesLangPage({
         .map((r) => ({ value: r.category, label: `${r.category} (${r.ws})` })),
     };
   } else {
+    if (aggregateErr) {
+      console.warn("[favorites] aggregate RPC fallback:", aggregateErr.message);
+    }
     const { count: favCount, error: favErr } = await supabase
       .from("user_favorites")
       .select("pair_id", { count: "exact", head: true })
