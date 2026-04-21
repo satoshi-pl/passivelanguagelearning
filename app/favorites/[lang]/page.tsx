@@ -3,7 +3,6 @@ export const revalidate = 0;
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import RouteTimingConsumer from "@/app/components/RouteTimingConsumer";
 import FavoritesDeckControls from "./FavoritesDeckControls";
@@ -159,33 +158,76 @@ export default async function FavoritesLangPage({
   const selectedCategoryFromUrl = normalizeCategoryParam(sp.category);
   const requestedSupport = getSingleParam(sp.support).toLowerCase();
 
-  const { data: supportDecks, error: supportDecksErr } = await supabase
-    .from("decks")
-    .select("native_lang")
-    .eq("target_lang", targetLang);
+  // When the URL already names a support language, a single indexed lookup
+  // (at most one row) is enough to confirm the pair — avoid scanning every
+  // deck row for that target just to build the full support list.
+  let selectedSupport: string;
+  if (requestedSupport) {
+    const { data: supportProbe, error: supportProbeErr } = await supabase
+      .from("decks")
+      .select("id")
+      .eq("target_lang", targetLang)
+      .ilike("native_lang", requestedSupport)
+      .limit(1)
+      .maybeSingle();
 
-  if (supportDecksErr) {
-    return <ErrorBlock href="/decks" error={supportDecksErr} />;
-  }
+    if (supportProbeErr) {
+      return <ErrorBlock href="/decks" error={supportProbeErr} />;
+    }
 
-  const supportOptions = Array.from(
-    new Set(
-      (supportDecks ?? [])
-        .map((row) => (row.native_lang || "").toLowerCase().trim())
-        .filter(Boolean)
-    )
-  ).sort((a, b) => langName(a).localeCompare(langName(b)));
+    if (supportProbe) {
+      selectedSupport = requestedSupport;
+    } else {
+      const { data: supportDecks, error: supportDecksErr } = await supabase
+        .from("decks")
+        .select("native_lang")
+        .eq("target_lang", targetLang);
 
-  if (supportOptions.length === 0) {
-    redirect("/decks");
-  }
+      if (supportDecksErr) {
+        return <ErrorBlock href="/decks" error={supportDecksErr} />;
+      }
 
-  const selectedSupport = supportOptions.includes(requestedSupport)
-    ? requestedSupport
-    : supportOptions[0];
+      const supportOptions = Array.from(
+        new Set(
+          (supportDecks ?? [])
+            .map((row) => (row.native_lang || "").toLowerCase().trim())
+            .filter(Boolean)
+        )
+      ).sort((a, b) => langName(a).localeCompare(langName(b)));
 
-  if (requestedSupport !== selectedSupport) {
-    redirect(buildFavoritesHref({ target: targetLang, support: selectedSupport, mode }));
+      if (supportOptions.length === 0) {
+        redirect("/decks");
+      }
+
+      selectedSupport = supportOptions[0]!;
+
+      if (requestedSupport !== selectedSupport) {
+        redirect(buildFavoritesHref({ target: targetLang, support: selectedSupport, mode }));
+      }
+    }
+  } else {
+    const { data: supportDecks, error: supportDecksErr } = await supabase
+      .from("decks")
+      .select("native_lang")
+      .eq("target_lang", targetLang);
+
+    if (supportDecksErr) {
+      return <ErrorBlock href="/decks" error={supportDecksErr} />;
+    }
+
+    const supportOptions = Array.from(
+      new Set(
+        (supportDecks ?? [])
+          .map((row) => (row.native_lang || "").toLowerCase().trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => langName(a).localeCompare(langName(b)));
+
+    if (supportOptions.length === 0) {
+      redirect("/decks");
+    }
+
+    selectedSupport = supportOptions[0]!;
   }
 
   const decksHref = `/decks?target=${targetLang}&support=${selectedSupport}`;
