@@ -4,6 +4,7 @@ export const revalidate = 0;
 import { normalizeCategoryParam } from "./practice/lib/categories";
 import { redirect } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import PassiveDeckControls from "./PassiveDeckControls";
 
@@ -282,9 +283,23 @@ export default async function DeckDetailPage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
-          <ResponsiveNavLink className="pll-back-link" href={backToDecksHref} style={{ textDecoration: "none", color: "inherit" }}>
+          <TrackedResponsiveNavLink
+            className="pll-back-link"
+            href={backToDecksHref}
+            eventName="back_navigation_click"
+            interactionTiming="back_navigation"
+            eventParams={{
+              source_page: "passive_dashboard",
+              destination: backToDecksHref,
+              flow: "passive_learning",
+              mode,
+              category: initialSelectedCategory ?? "all",
+              deck_id: deckId,
+            }}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
             ← Back to My decks
-          </ResponsiveNavLink>
+          </TrackedResponsiveNavLink>
 
           <div style={{ marginTop: 20 }}>
             <h1

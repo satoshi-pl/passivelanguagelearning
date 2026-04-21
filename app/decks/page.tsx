@@ -5,6 +5,7 @@ import RememberDecksHref from "./RememberDecksHref";
 import { redirect } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
+import RouteTimingConsumer from "@/app/components/RouteTimingConsumer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import AutoSubmitSupportSelect from "./AutoSubmitSupportSelect";
 
@@ -342,6 +343,7 @@ export default async function DecksPage({
 
   return (
     <div className="pll-workspace" style={{ maxWidth: 1040, margin: "40px auto", padding: "0 24px" }}>
+      <RouteTimingConsumer />
       <RememberDecksHref href={currentDecksHref} />
 
       <div

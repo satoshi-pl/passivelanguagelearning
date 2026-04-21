@@ -4,6 +4,8 @@ export const revalidate = 0;
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
+import RouteTimingConsumer from "@/app/components/RouteTimingConsumer";
 import FavoritesDeckControls from "./FavoritesDeckControls";
 
 type Mode = "words" | "ws" | "sentences";
@@ -103,9 +105,20 @@ function ErrorBlock({
 }) {
   return (
     <div className="pll-workspace" style={{ maxWidth: 980, margin: "40px auto", padding: "0 24px" }}>
-      <ResponsiveNavLink className="pll-back-link" href={href} style={{ textDecoration: "none", color: "var(--foreground)" }}>
+      <TrackedResponsiveNavLink
+        className="pll-back-link"
+        href={href}
+        eventName="back_navigation_click"
+        interactionTiming="back_navigation"
+        eventParams={{
+          source_page: "favorites_error",
+          destination: href,
+          flow: "favorites",
+        }}
+        style={{ textDecoration: "none", color: "var(--foreground)" }}
+      >
         ← Back to My decks
-      </ResponsiveNavLink>
+      </TrackedResponsiveNavLink>
       <h1 style={{ marginTop: 12, fontSize: 30, fontWeight: 900 }}>Favourites</h1>
       <pre
         style={{
@@ -338,6 +351,7 @@ export default async function FavoritesLangPage({
 
   return (
     <div className="pll-workspace" style={{ maxWidth: 980, margin: "40px auto", padding: "0 24px" }}>
+      <RouteTimingConsumer />
       <div
         className="pll-primary-card"
         style={{
@@ -349,9 +363,22 @@ export default async function FavoritesLangPage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 900, margin: "0 auto" }}>
-          <ResponsiveNavLink className="pll-back-link" href={decksHref} style={{ textDecoration: "none", color: "var(--foreground)" }}>
+          <TrackedResponsiveNavLink
+            className="pll-back-link"
+            href={decksHref}
+            eventName="back_navigation_click"
+            interactionTiming="back_navigation"
+            eventParams={{
+              source_page: "favorites",
+              destination: decksHref,
+              flow: "favorites",
+              mode,
+              category: initialSelectedCategory ?? "all",
+            }}
+            style={{ textDecoration: "none", color: "var(--foreground)" }}
+          >
             ← Back to My decks
-          </ResponsiveNavLink>
+          </TrackedResponsiveNavLink>
 
           <div style={{ marginTop: 18 }}>
             <h1

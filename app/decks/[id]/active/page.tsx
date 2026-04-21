@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { redirect } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeCategoryParam } from "../practice/lib/categories";
 import ActiveDeckControls from "./ActiveDeckControls";
@@ -382,9 +383,23 @@ export default async function DeckActivePage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
-          <ResponsiveNavLink className="pll-back-link" href={backToDecksHref} style={{ textDecoration: "none", color: "inherit" }}>
+          <TrackedResponsiveNavLink
+            className="pll-back-link"
+            href={backToDecksHref}
+            eventName="back_navigation_click"
+            interactionTiming="back_navigation"
+            eventParams={{
+              source_page: "active_dashboard",
+              destination: backToDecksHref,
+              flow: "active_learning",
+              mode,
+              category: initialSelectedCategory ?? "all",
+              deck_id: deckId,
+            }}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
             {backLabel}
-          </ResponsiveNavLink>
+          </TrackedResponsiveNavLink>
 
           <div style={{ marginTop: 20 }}>
             <h1

@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { redirect } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ReviewDeckControls from "./ReviewDeckControls";
 
@@ -249,9 +250,23 @@ export default async function DeckReviewPage({
           }}
         >
           <div className="pll-card-inner" style={{ width: "100%", maxWidth: 920, margin: "0 auto" }}>
-            <ResponsiveNavLink className="pll-back-link" href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
+            <TrackedResponsiveNavLink
+              className="pll-back-link"
+              href={deckDetailHref}
+              eventName="back_navigation_click"
+              interactionTiming="back_navigation"
+              eventParams={{
+                source_page: "passive_review",
+                destination: deckDetailHref,
+                flow: "passive_review",
+                mode,
+                category: initialSelectedCategory ?? "all",
+                deck_id: deckId,
+              }}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
               ← Back to {deck.name} Passive Learning
-            </ResponsiveNavLink>
+            </TrackedResponsiveNavLink>
 
             <div style={{ marginTop: 20 }}>
               <h1
@@ -290,8 +305,18 @@ export default async function DeckReviewPage({
                 </div>
 
                 <div style={{ marginTop: 24 }}>
-                  <ResponsiveNavLink
+                  <TrackedResponsiveNavLink
                     href={deckDetailHref}
+                    eventName="back_navigation_click"
+                    interactionTiming="back_navigation"
+                    eventParams={{
+                      source_page: "passive_review_empty",
+                      destination: deckDetailHref,
+                      flow: "passive_review",
+                      mode,
+                      category: initialSelectedCategory ?? "all",
+                      deck_id: deckId,
+                    }}
                     style={{
                       display: "inline-block",
                       padding: "10px 16px",
@@ -304,7 +329,7 @@ export default async function DeckReviewPage({
                     }}
                   >
                     Go back
-                  </ResponsiveNavLink>
+                  </TrackedResponsiveNavLink>
                 </div>
               </div>
             </div>
@@ -328,9 +353,23 @@ export default async function DeckReviewPage({
         }}
       >
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 820, margin: "0 auto" }}>
-          <ResponsiveNavLink className="pll-back-link" href={deckDetailHref} style={{ textDecoration: "none", color: "inherit" }}>
+          <TrackedResponsiveNavLink
+            className="pll-back-link"
+            href={deckDetailHref}
+            eventName="back_navigation_click"
+            interactionTiming="back_navigation"
+            eventParams={{
+              source_page: "passive_review",
+              destination: deckDetailHref,
+              flow: "passive_review",
+              mode,
+              category: initialSelectedCategory ?? "all",
+              deck_id: deckId,
+            }}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
             ← Back to {deck.name} Passive Learning
-          </ResponsiveNavLink>
+          </TrackedResponsiveNavLink>
 
           <div style={{ marginTop: 18 }}>
             <h1

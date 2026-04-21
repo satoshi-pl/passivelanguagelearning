@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hydrateCanonicalFirstAudioForPairs } from "@/lib/audio/hydrateCanonicalFirstAudio";
@@ -292,9 +293,22 @@ export default async function FavoritesPracticePage({
   return (
     <div className="pll-workspace mx-auto max-w-[920px] px-4 pt-2 pb-8 sm:px-6 md:pt-10 md:pb-10">
       <div className="mb-2 sm:mb-4 md:mb-4">
-        <ResponsiveNavLink className="pll-back-link" href={finishHref} style={{ textDecoration: "none", color: "inherit" }}>
+        <TrackedResponsiveNavLink
+          className="pll-back-link"
+          href={finishHref}
+          eventName="back_navigation_click"
+          interactionTiming="back_navigation"
+          eventParams={{
+            source_page: "favorites_practice",
+            destination: finishHref,
+            flow: "favorites",
+            mode,
+            category: selectedCategory || "all",
+          }}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
           ← Back to {langName(targetLang)} favourites
-        </ResponsiveNavLink>
+        </TrackedResponsiveNavLink>
 
         <h1 className="mt-1 text-[1.65rem] font-black leading-tight tracking-tight sm:mt-2 sm:text-3xl md:mt-2">
           {langName(targetLang)} - Favourites

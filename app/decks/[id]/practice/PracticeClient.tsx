@@ -20,6 +20,7 @@ import { resolvePracticeAudioUrl } from "./lib/resolvePracticeAudioUrl";
 import {
   consumeRouteInteractionTiming,
   emitInteractionTiming,
+  startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
 
 const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -700,7 +701,20 @@ export default function PracticeClient({
         <PracticeEmptyState
           title={emptyState.title}
           text={emptyState.text}
-          onBack={() => router.replace(finishHref)}
+          onBack={() => {
+            startRouteInteractionTiming("back_navigation", finishHref, {
+              source_page: "practice_empty_state",
+              destination: finishHref,
+              flow: isFavoritesSession
+                ? "favorites"
+                : isReview
+                  ? (itemIsActive ? "active_review" : "passive_review")
+                  : (itemIsActive ? "active_learning" : "passive_learning"),
+              mode,
+              category: categoryParam || "all",
+            });
+            router.replace(finishHref);
+          }}
         />
       </>
     );
