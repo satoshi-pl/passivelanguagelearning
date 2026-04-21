@@ -7,6 +7,7 @@ import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 import {
   consumeRouteInteractionTiming,
+  emitInteractionTiming,
   emitCategorySwitchTiming,
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
@@ -77,12 +78,13 @@ export default function PassiveDeckControls({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const storageKey = `pll:deck:${deckId}:passive-category`;
+  const [currentMode, setCurrentMode] = useState<Mode>(mode);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialSelectedCategory);
 
   const helperText =
-    mode === "words"
+    currentMode === "words"
       ? "Learn words only."
-      : mode === "sentences"
+      : currentMode === "sentences"
         ? "Learn sentences only."
         : "Learn words first, then sentences.";
 
@@ -120,21 +122,21 @@ export default function PassiveDeckControls({
     const qs = new URLSearchParams();
     qs.set("n", String(n));
     qs.set("o", "0");
-    qs.set("mode", mode);
-    qs.set("back", buildDashboardBackHref(mode, selectedCategory));
+    qs.set("mode", currentMode);
+    qs.set("back", buildDashboardBackHref(currentMode, selectedCategory));
 
     if (selectedCategory) {
       qs.set("category", selectedCategory);
     }
 
     return `/decks/${deckId}/practice?${qs.toString()}`;
-  }, [deckId, mode, buildDashboardBackHref, selectedCategory]);
+  }, [deckId, currentMode, buildDashboardBackHref, selectedCategory]);
 
   const buildOptionalHref = (pathname: string) => {
     const qs = new URLSearchParams();
-    qs.set("mode", mode);
+    qs.set("mode", currentMode);
 
-    const passiveDashboardHref = buildDashboardBackHref(mode, selectedCategory);
+    const passiveDashboardHref = buildDashboardBackHref(currentMode, selectedCategory);
     qs.set("back", passiveDashboardHref);
 
     if (selectedCategory) {
@@ -147,6 +149,10 @@ export default function PassiveDeckControls({
   useEffect(() => {
     consumeRouteInteractionTiming();
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    setCurrentMode(mode);
+  }, [mode]);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -165,13 +171,13 @@ export default function PassiveDeckControls({
       if (!initialSelectedCategory) {
         setSelectedCategory(saved);
 
-        const nextUrl = buildDeckPageHref(mode, saved);
+        const nextUrl = buildDeckPageHref(currentMode, saved);
         window.history.replaceState(window.history.state, "", nextUrl);
       }
     } catch {
       // ignore storage errors
     }
-  }, [storageKey, categoryOptions, initialSelectedCategory, mode, buildDeckPageHref]);
+  }, [storageKey, categoryOptions, initialSelectedCategory, currentMode, buildDeckPageHref]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -230,6 +236,28 @@ export default function PassiveDeckControls({
       boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
     }) as const;
 
+  const onModeClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, nextMode: Mode) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      event.preventDefault();
+      if (nextMode === currentMode) return;
+
+      const startedAt = performance.now();
+      setCurrentMode(nextMode);
+      const nextUrl = buildDeckPageHref(nextMode, selectedCategory);
+      window.history.replaceState(window.history.state, "", nextUrl);
+      emitInteractionTiming("mode_switch", startedAt, {
+        flow: "passive_learning",
+        from_mode: currentMode,
+        to_mode: nextMode,
+      });
+    },
+    [buildDeckPageHref, currentMode, selectedCategory]
+  );
+
   const secondaryActionStyle = {
     display: "inline-block",
     padding: "12px 16px",
@@ -269,42 +297,27 @@ export default function PassiveDeckControls({
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWordsHref}
-            style={modeButtonStyle(mode === "words")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWordsHref, {
-                flow: "passive_learning",
-                from_mode: mode,
-                to_mode: "words",
-              })
-            }
+            style={modeButtonStyle(currentMode === "words")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "words")}
           >
             Words
           </ResponsiveNavLink>
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWsHref}
-            style={modeButtonStyle(mode === "ws")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWsHref, {
-                flow: "passive_learning",
-                from_mode: mode,
-                to_mode: "ws",
-              })
-            }
+            style={modeButtonStyle(currentMode === "ws")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "ws")}
           >
             Words + Sentences
           </ResponsiveNavLink>
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeSentencesHref}
-            style={modeButtonStyle(mode === "sentences")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeSentencesHref, {
-                flow: "passive_learning",
-                from_mode: mode,
-                to_mode: "sentences",
-              })
-            }
+            style={modeButtonStyle(currentMode === "sentences")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "sentences")}
           >
             Sentences
           </ResponsiveNavLink>
@@ -326,18 +339,18 @@ export default function PassiveDeckControls({
                 flow: "passive_learning",
                 deck_id: deckId,
                 deck_name: deckName,
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
                 target_lang: targetLang,
                 support_lang: supportLang,
                 level,
               });
 
-              const nextUrl = buildDeckPageHref(mode, nextValue);
+              const nextUrl = buildDeckPageHref(currentMode, nextValue);
               window.history.replaceState(window.history.state, "", nextUrl);
               emitCategorySwitchTiming(timingStart, {
                 flow: "passive_learning",
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
               });
             }}
@@ -380,7 +393,7 @@ export default function PassiveDeckControls({
                 const optionValue = normalizeSessionOptionValue(size.value);
                 startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
                   flow: "passive_learning",
-                  mode,
+                  mode: currentMode,
                   category: selectedCategory ?? "all",
                   n: optionValue,
                 });
@@ -390,7 +403,7 @@ export default function PassiveDeckControls({
                   option_value: optionValue,
                   deck_id: deckId,
                   deck_name: deckName,
-                  mode,
+                  mode: currentMode,
                   category: selectedCategory ?? "all",
                   target_lang: targetLang,
                   support_lang: supportLang,
@@ -416,7 +429,7 @@ export default function PassiveDeckControls({
                   path: "passive_review",
                   deck_id: deckId,
                   deck_name: deckName,
-                  mode,
+                  mode: currentMode,
                   category: selectedCategory ?? "all",
                   target_lang: targetLang,
                   support_lang: supportLang,
@@ -445,7 +458,7 @@ export default function PassiveDeckControls({
                   path: "active_learning",
                   deck_id: deckId,
                   deck_name: deckName,
-                  mode,
+                  mode: currentMode,
                   category: selectedCategory ?? "all",
                   target_lang: targetLang,
                   support_lang: supportLang,

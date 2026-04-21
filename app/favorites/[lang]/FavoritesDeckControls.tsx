@@ -7,6 +7,7 @@ import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 import {
   consumeRouteInteractionTiming,
+  emitInteractionTiming,
   emitCategorySwitchTiming,
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
@@ -38,13 +39,14 @@ export default function FavoritesDeckControls({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const storageKey = `pll:favorites:${targetLang}:${supportLang}:category`;
+  const [currentMode, setCurrentMode] = useState<Mode>(mode);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialSelectedCategory);
 
   const currentCategoryOptions = useMemo(
-    () => categoryOptionsByMode[mode] ?? [],
-    [categoryOptionsByMode, mode]
+    () => categoryOptionsByMode[currentMode] ?? [],
+    [categoryOptionsByMode, currentMode]
   );
-  const currentModeTotal = favoriteTotalsByMode[mode] ?? 0;
+  const currentModeTotal = favoriteTotalsByMode[currentMode] ?? 0;
 
   const reviewSizes = [
     { value: 5, label: "Review 5" },
@@ -68,21 +70,25 @@ export default function FavoritesDeckControls({
   const buildPracticeHref = useCallback((n: number) => {
     const qs = new URLSearchParams();
     qs.set("support", supportLang);
-    qs.set("mode", mode);
+    qs.set("mode", currentMode);
     qs.set("n", String(n));
     qs.set("o", "0");
-    qs.set("back", buildPageHref(mode, selectedCategory));
+    qs.set("back", buildPageHref(currentMode, selectedCategory));
 
     if (selectedCategory) {
       qs.set("category", selectedCategory);
     }
 
     return `/favorites/${targetLang}/practice?${qs.toString()}`;
-  }, [supportLang, mode, buildPageHref, selectedCategory, targetLang]);
+  }, [supportLang, currentMode, buildPageHref, selectedCategory, targetLang]);
 
   useEffect(() => {
     consumeRouteInteractionTiming();
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    setCurrentMode(mode);
+  }, [mode]);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -101,13 +107,13 @@ export default function FavoritesDeckControls({
       if (!initialSelectedCategory) {
         setSelectedCategory(saved);
 
-        const nextUrl = buildPageHref(mode, saved);
+        const nextUrl = buildPageHref(currentMode, saved);
         window.history.replaceState(window.history.state, "", nextUrl);
       }
     } catch {
       // ignore storage errors
     }
-  }, [storageKey, currentCategoryOptions, initialSelectedCategory, mode, buildPageHref]);
+  }, [storageKey, currentCategoryOptions, initialSelectedCategory, currentMode, buildPageHref]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -132,10 +138,10 @@ export default function FavoritesDeckControls({
     setSelectedCategory(null);
 
     if (typeof window !== "undefined") {
-      const nextUrl = buildPageHref(mode, null);
+      const nextUrl = buildPageHref(currentMode, null);
       window.history.replaceState(window.history.state, "", nextUrl);
     }
-  }, [selectedCategory, currentCategoryOptions, mode, buildPageHref]);
+  }, [selectedCategory, currentCategoryOptions, currentMode, buildPageHref]);
 
   const modeButtonStyle = (active: boolean) =>
     ({
@@ -169,6 +175,35 @@ export default function FavoritesDeckControls({
     boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
   } as const;
 
+  const onModeClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, nextMode: Mode) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      event.preventDefault();
+      if (nextMode === currentMode) return;
+
+      const startedAt = performance.now();
+      const validOptions = categoryOptionsByMode[nextMode] ?? [];
+      const nextCategory =
+        selectedCategory && validOptions.some((c) => c.value === selectedCategory)
+          ? selectedCategory
+          : null;
+
+      setCurrentMode(nextMode);
+      setSelectedCategory(nextCategory);
+      const nextUrl = buildPageHref(nextMode, nextCategory);
+      window.history.replaceState(window.history.state, "", nextUrl);
+      emitInteractionTiming("mode_switch", startedAt, {
+        flow: "favorites",
+        from_mode: currentMode,
+        to_mode: nextMode,
+      });
+    },
+    [buildPageHref, categoryOptionsByMode, currentMode, selectedCategory]
+  );
+
   const modeWordsHref = buildPageHref("words", selectedCategory);
   const modeWsHref = buildPageHref("ws", selectedCategory);
   const modeSentencesHref = buildPageHref("sentences", selectedCategory);
@@ -190,14 +225,9 @@ export default function FavoritesDeckControls({
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWordsHref}
-            style={modeButtonStyle(mode === "words")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWordsHref, {
-                flow: "favorites",
-                from_mode: mode,
-                to_mode: "words",
-              })
-            }
+            style={modeButtonStyle(currentMode === "words")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "words")}
           >
             Words
           </ResponsiveNavLink>
@@ -205,14 +235,9 @@ export default function FavoritesDeckControls({
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWsHref}
-            style={modeButtonStyle(mode === "ws")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWsHref, {
-                flow: "favorites",
-                from_mode: mode,
-                to_mode: "ws",
-              })
-            }
+            style={modeButtonStyle(currentMode === "ws")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "ws")}
           >
             Words + Sentences
           </ResponsiveNavLink>
@@ -220,14 +245,9 @@ export default function FavoritesDeckControls({
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeSentencesHref}
-            style={modeButtonStyle(mode === "sentences")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeSentencesHref, {
-                flow: "favorites",
-                from_mode: mode,
-                to_mode: "sentences",
-              })
-            }
+            style={modeButtonStyle(currentMode === "sentences")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "sentences")}
           >
             Sentences
           </ResponsiveNavLink>
@@ -247,19 +267,19 @@ export default function FavoritesDeckControls({
               setSelectedCategory(nextValue);
               trackGaEvent("category_select", {
                 flow: "favorites_review",
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
                 target_lang: targetLang,
                 support_lang: supportLang,
               });
 
               if (typeof window !== "undefined") {
-                const nextUrl = buildPageHref(mode, nextValue);
+                const nextUrl = buildPageHref(currentMode, nextValue);
                 window.history.replaceState(window.history.state, "", nextUrl);
               }
               emitCategorySwitchTiming(timingStart, {
                 flow: "favorites",
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
               });
             }}
@@ -296,7 +316,7 @@ export default function FavoritesDeckControls({
                   const optionValue = normalizeSessionOptionValue(size.value);
                   startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
                     flow: "favorites",
-                    mode,
+                    mode: currentMode,
                     category: selectedCategory ?? "all",
                     n: optionValue,
                   });
@@ -304,7 +324,7 @@ export default function FavoritesDeckControls({
                     flow: "favorites_review",
                     option_type: "review",
                     option_value: optionValue,
-                    mode,
+                    mode: currentMode,
                     category: selectedCategory ?? "all",
                     target_lang: targetLang,
                     support_lang: supportLang,
@@ -320,9 +340,9 @@ export default function FavoritesDeckControls({
         </div>
       ) : (
         <div style={{ marginTop: 14, fontSize: 13, color: "var(--foreground-muted)" }}>
-          {mode === "words"
+          {currentMode === "words"
             ? "No favourited words in this category right now."
-            : mode === "sentences"
+            : currentMode === "sentences"
               ? "No favourited sentences in this category right now."
               : "No favourites in this category right now."}
         </div>

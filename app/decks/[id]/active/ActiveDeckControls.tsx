@@ -7,6 +7,7 @@ import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 import {
   consumeRouteInteractionTiming,
+  emitInteractionTiming,
   emitCategorySwitchTiming,
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
@@ -79,10 +80,14 @@ export default function ActiveDeckControls({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const storageKey = `pll:deck:${deckId}:active-category`;
+  const [currentMode, setCurrentMode] = useState<Mode>(mode);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialSelectedCategory);
 
-  const currentCategoryOptions = useMemo(() => categoryOptionsByMode[mode] ?? [], [categoryOptionsByMode, mode]);
-  const currentModePending = pendingTotalsByMode[mode] ?? 0;
+  const currentCategoryOptions = useMemo(
+    () => categoryOptionsByMode[currentMode] ?? [],
+    [categoryOptionsByMode, currentMode]
+  );
+  const currentModePending = pendingTotalsByMode[currentMode] ?? 0;
 
   const sessionSizes = [
     { value: 5, label: "Active 5" },
@@ -111,28 +116,32 @@ export default function ActiveDeckControls({
     const qs = new URLSearchParams();
     qs.set("n", String(n));
     qs.set("o", "0");
-    qs.set("mode", mode);
+    qs.set("mode", currentMode);
     qs.set("dir", "active");
     qs.set("source", "learn");
-    qs.set("back", buildDashboardBackHref(mode, selectedCategory));
+    qs.set("back", buildDashboardBackHref(currentMode, selectedCategory));
 
     if (selectedCategory) {
       qs.set("category", selectedCategory);
     }
 
     return `/decks/${deckId}/practice?${qs.toString()}`;
-  }, [deckId, mode, buildDashboardBackHref, selectedCategory]);
+  }, [deckId, currentMode, buildDashboardBackHref, selectedCategory]);
 
   const buildReviewHref = () => {
     const qs = new URLSearchParams();
-    qs.set("mode", mode);
-    qs.set("back", buildDashboardBackHref(mode, selectedCategory));
+    qs.set("mode", currentMode);
+    qs.set("back", buildDashboardBackHref(currentMode, selectedCategory));
     return `/decks/${deckId}/active/review?${qs.toString()}`;
   };
 
   useEffect(() => {
     consumeRouteInteractionTiming();
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    setCurrentMode(mode);
+  }, [mode]);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -151,13 +160,13 @@ export default function ActiveDeckControls({
       if (!initialSelectedCategory) {
         setSelectedCategory(saved);
 
-        const nextUrl = buildActivePageHref(mode, saved);
+        const nextUrl = buildActivePageHref(currentMode, saved);
         window.history.replaceState(window.history.state, "", nextUrl);
       }
     } catch {
       // ignore storage errors
     }
-  }, [storageKey, currentCategoryOptions, initialSelectedCategory, mode, buildActivePageHref]);
+  }, [storageKey, currentCategoryOptions, initialSelectedCategory, currentMode, buildActivePageHref]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -182,10 +191,10 @@ export default function ActiveDeckControls({
     setSelectedCategory(null);
 
     if (typeof window !== "undefined") {
-      const nextUrl = buildActivePageHref(mode, null);
+      const nextUrl = buildActivePageHref(currentMode, null);
       window.history.replaceState(window.history.state, "", nextUrl);
     }
-  }, [selectedCategory, currentCategoryOptions, mode, buildActivePageHref]);
+  }, [selectedCategory, currentCategoryOptions, currentMode, buildActivePageHref]);
 
   const selectedProgress = useMemo(() => {
     if (!selectedCategory) return null;
@@ -260,6 +269,35 @@ export default function ActiveDeckControls({
     boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
   } as const;
 
+  const onModeClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, nextMode: Mode) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      event.preventDefault();
+      if (nextMode === currentMode) return;
+
+      const startedAt = performance.now();
+      const validOptions = categoryOptionsByMode[nextMode] ?? [];
+      const nextCategory =
+        selectedCategory && validOptions.some((c) => c.value === selectedCategory)
+          ? selectedCategory
+          : null;
+
+      setCurrentMode(nextMode);
+      setSelectedCategory(nextCategory);
+      const nextUrl = buildActivePageHref(nextMode, nextCategory);
+      window.history.replaceState(window.history.state, "", nextUrl);
+      emitInteractionTiming("mode_switch", startedAt, {
+        flow: "active_learning",
+        from_mode: currentMode,
+        to_mode: nextMode,
+      });
+    },
+    [buildActivePageHref, categoryOptionsByMode, currentMode, selectedCategory]
+  );
+
   return (
     <div className="entry-controls-shell">
       <div style={{ marginTop: 20 }}>
@@ -267,42 +305,27 @@ export default function ActiveDeckControls({
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWordsHref}
-            style={modeButtonStyle(mode === "words")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWordsHref, {
-                flow: "active_learning",
-                from_mode: mode,
-                to_mode: "words",
-              })
-            }
+            style={modeButtonStyle(currentMode === "words")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "words")}
           >
             Words
           </ResponsiveNavLink>
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWsHref}
-            style={modeButtonStyle(mode === "ws")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWsHref, {
-                flow: "active_learning",
-                from_mode: mode,
-                to_mode: "ws",
-              })
-            }
+            style={modeButtonStyle(currentMode === "ws")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "ws")}
           >
             Words + Sentences
           </ResponsiveNavLink>
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeSentencesHref}
-            style={modeButtonStyle(mode === "sentences")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeSentencesHref, {
-                flow: "active_learning",
-                from_mode: mode,
-                to_mode: "sentences",
-              })
-            }
+            style={modeButtonStyle(currentMode === "sentences")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "sentences")}
           >
             Sentences
           </ResponsiveNavLink>
@@ -324,7 +347,7 @@ export default function ActiveDeckControls({
                 flow: "active_learning",
                 deck_id: deckId,
                 deck_name: deckName,
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
                 target_lang: targetLang,
                 support_lang: supportLang,
@@ -332,12 +355,12 @@ export default function ActiveDeckControls({
               });
 
               if (typeof window !== "undefined") {
-                const nextUrl = buildActivePageHref(mode, nextValue);
+                const nextUrl = buildActivePageHref(currentMode, nextValue);
                 window.history.replaceState(window.history.state, "", nextUrl);
               }
               emitCategorySwitchTiming(timingStart, {
                 flow: "active_learning",
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
               });
             }}
@@ -382,7 +405,7 @@ export default function ActiveDeckControls({
                   const optionValue = normalizeSessionOptionValue(size.value);
                   startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
                     flow: "active_learning",
-                    mode,
+                    mode: currentMode,
                     category: selectedCategory ?? "all",
                     n: optionValue,
                   });
@@ -392,7 +415,7 @@ export default function ActiveDeckControls({
                     option_value: optionValue,
                     deck_id: deckId,
                     deck_name: deckName,
-                    mode,
+                    mode: currentMode,
                     category: selectedCategory ?? "all",
                     target_lang: targetLang,
                     support_lang: supportLang,
@@ -408,9 +431,9 @@ export default function ActiveDeckControls({
           </div>
         ) : (
           <div style={{ marginTop: 14, fontSize: 12, color: "var(--foreground-muted)" }}>
-            {mode === "words"
+            {currentMode === "words"
               ? "No pending active words right now."
-              : mode === "sentences"
+              : currentMode === "sentences"
                 ? "No pending active sentences right now."
                 : "No pending active items right now."}
           </div>
@@ -424,7 +447,7 @@ export default function ActiveDeckControls({
                 path: "active_review",
                 deck_id: deckId,
                 deck_name: deckName,
-                mode,
+                mode: currentMode,
                 category: selectedCategory ?? "all",
                 target_lang: targetLang,
                 support_lang: supportLang,

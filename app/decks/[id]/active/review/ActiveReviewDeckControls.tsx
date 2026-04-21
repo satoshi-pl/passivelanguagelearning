@@ -7,6 +7,7 @@ import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
 import {
   consumeRouteInteractionTiming,
+  emitInteractionTiming,
   emitCategorySwitchTiming,
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
@@ -46,10 +47,14 @@ export default function ActiveReviewDeckControls({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const storageKey = `pll:deck:${deckId}:active-review-category`;
+  const [currentMode, setCurrentMode] = useState<Mode>(mode);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialSelectedCategory);
 
-  const currentCategoryOptions = useMemo(() => categoryOptionsByMode[mode] ?? [], [categoryOptionsByMode, mode]);
-  const currentModeTotal = reviewTotalsByMode[mode] ?? 0;
+  const currentCategoryOptions = useMemo(
+    () => categoryOptionsByMode[currentMode] ?? [],
+    [categoryOptionsByMode, currentMode]
+  );
+  const currentModeTotal = reviewTotalsByMode[currentMode] ?? 0;
 
   const reviewSizes = [
     { value: 5, label: "Review 5" },
@@ -74,21 +79,25 @@ export default function ActiveReviewDeckControls({
     const qs = new URLSearchParams();
     qs.set("n", String(n));
     qs.set("o", "0");
-    qs.set("mode", mode);
+    qs.set("mode", currentMode);
     qs.set("source", "review");
     qs.set("dir", "active");
-    qs.set("back", buildReviewPageHref(mode, selectedCategory));
+    qs.set("back", buildReviewPageHref(currentMode, selectedCategory));
 
     if (selectedCategory) {
       qs.set("category", selectedCategory);
     }
 
     return `/decks/${deckId}/practice?${qs.toString()}`;
-  }, [deckId, mode, buildReviewPageHref, selectedCategory]);
+  }, [deckId, currentMode, buildReviewPageHref, selectedCategory]);
 
   useEffect(() => {
     consumeRouteInteractionTiming();
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    setCurrentMode(mode);
+  }, [mode]);
 
   useEffect(() => {
     setSelectedCategory(initialSelectedCategory);
@@ -107,13 +116,13 @@ export default function ActiveReviewDeckControls({
       if (!initialSelectedCategory) {
         setSelectedCategory(saved);
 
-        const nextUrl = buildReviewPageHref(mode, saved);
+        const nextUrl = buildReviewPageHref(currentMode, saved);
         window.history.replaceState(window.history.state, "", nextUrl);
       }
     } catch {
       // ignore storage errors
     }
-  }, [storageKey, currentCategoryOptions, initialSelectedCategory, mode, buildReviewPageHref]);
+  }, [storageKey, currentCategoryOptions, initialSelectedCategory, currentMode, buildReviewPageHref]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -138,10 +147,10 @@ export default function ActiveReviewDeckControls({
     setSelectedCategory(null);
 
     if (typeof window !== "undefined") {
-      const nextUrl = buildReviewPageHref(mode, null);
+      const nextUrl = buildReviewPageHref(currentMode, null);
       window.history.replaceState(window.history.state, "", nextUrl);
     }
-  }, [selectedCategory, currentCategoryOptions, mode, buildReviewPageHref]);
+  }, [selectedCategory, currentCategoryOptions, currentMode, buildReviewPageHref]);
 
   const modeButtonStyle = (active: boolean) =>
     ({
@@ -172,6 +181,35 @@ export default function ActiveReviewDeckControls({
     boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
   } as const;
 
+  const onModeClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, nextMode: Mode) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      event.preventDefault();
+      if (nextMode === currentMode) return;
+
+      const startedAt = performance.now();
+      const validOptions = categoryOptionsByMode[nextMode] ?? [];
+      const nextCategory =
+        selectedCategory && validOptions.some((c) => c.value === selectedCategory)
+          ? selectedCategory
+          : null;
+
+      setCurrentMode(nextMode);
+      setSelectedCategory(nextCategory);
+      const nextUrl = buildReviewPageHref(nextMode, nextCategory);
+      window.history.replaceState(window.history.state, "", nextUrl);
+      emitInteractionTiming("mode_switch", startedAt, {
+        flow: "active_review",
+        from_mode: currentMode,
+        to_mode: nextMode,
+      });
+    },
+    [buildReviewPageHref, categoryOptionsByMode, currentMode, selectedCategory]
+  );
+
   const modeWordsHref = buildReviewPageHref("words", selectedCategory);
   const modeWsHref = buildReviewPageHref("ws", selectedCategory);
   const modeSentencesHref = buildReviewPageHref("sentences", selectedCategory);
@@ -193,42 +231,27 @@ export default function ActiveReviewDeckControls({
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWordsHref}
-            style={modeButtonStyle(mode === "words")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWordsHref, {
-                flow: "active_review",
-                from_mode: mode,
-                to_mode: "words",
-              })
-            }
+            style={modeButtonStyle(currentMode === "words")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "words")}
           >
             Words
           </ResponsiveNavLink>
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeWsHref}
-            style={modeButtonStyle(mode === "ws")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeWsHref, {
-                flow: "active_review",
-                from_mode: mode,
-                to_mode: "ws",
-              })
-            }
+            style={modeButtonStyle(currentMode === "ws")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "ws")}
           >
             Words + Sentences
           </ResponsiveNavLink>
           <ResponsiveNavLink
             className="deck-mode-button"
             href={modeSentencesHref}
-            style={modeButtonStyle(mode === "sentences")}
-            onClick={() =>
-              startRouteInteractionTiming("mode_switch", modeSentencesHref, {
-                flow: "active_review",
-                from_mode: mode,
-                to_mode: "sentences",
-              })
-            }
+            style={modeButtonStyle(currentMode === "sentences")}
+            pendingDurationMs={220}
+            onClick={(event) => onModeClick(event, "sentences")}
           >
             Sentences
           </ResponsiveNavLink>
@@ -250,7 +273,7 @@ export default function ActiveReviewDeckControls({
                 flow: "active_learning",
                 deck_id: deckId,
                 deck_name: deckName,
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
                 target_lang: targetLang,
                 support_lang: supportLang,
@@ -258,12 +281,12 @@ export default function ActiveReviewDeckControls({
               });
 
               if (typeof window !== "undefined") {
-                const nextUrl = buildReviewPageHref(mode, nextValue);
+                const nextUrl = buildReviewPageHref(currentMode, nextValue);
                 window.history.replaceState(window.history.state, "", nextUrl);
               }
               emitCategorySwitchTiming(timingStart, {
                 flow: "active_review",
-                mode,
+                mode: currentMode,
                 category: nextValue ?? "all",
               });
             }}
@@ -300,7 +323,7 @@ export default function ActiveReviewDeckControls({
                   const optionValue = normalizeSessionOptionValue(size.value);
                   startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
                     flow: "active_review",
-                    mode,
+                    mode: currentMode,
                     category: selectedCategory ?? "all",
                     n: optionValue,
                   });
@@ -310,7 +333,7 @@ export default function ActiveReviewDeckControls({
                     option_value: optionValue,
                     deck_id: deckId,
                     deck_name: deckName,
-                    mode,
+                    mode: currentMode,
                     category: selectedCategory ?? "all",
                     target_lang: targetLang,
                     support_lang: supportLang,
@@ -327,9 +350,9 @@ export default function ActiveReviewDeckControls({
         </div>
       ) : (
         <div style={{ marginTop: 18, fontSize: 12, color: "var(--foreground-muted)" }}>
-          {mode === "words"
+          {currentMode === "words"
             ? "No reviewable active words right now."
-            : mode === "sentences"
+              : currentMode === "sentences"
             ? "No reviewable active sentences right now."
             : "No reviewable active items right now."}
         </div>
