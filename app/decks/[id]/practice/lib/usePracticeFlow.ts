@@ -60,6 +60,7 @@ export function usePracticeFlow({
   // STATE
   // =========================
   const [progress, setProgress] = useState<ProgressMap>(initialProgress || {});
+  const progressRef = useRef<ProgressMap>(initialProgress || {});
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -88,6 +89,10 @@ export function usePracticeFlow({
   useEffect(() => {
     sessionPairsRef.current = sessionPairs;
   }, [sessionPairs]);
+
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
 
   // Review repetition counters (per pair id)
   const reviewRepeatCountRef = useRef<Record<string, number>>({});
@@ -362,6 +367,64 @@ export function usePracticeFlow({
     // WS learn is initialized via startPractice() or WS skip-preview effect
   }, [viewMode, sessionPairs, progress, isReview, mode, learnQueue.length]);
 
+  const previousSessionLenRef = useRef(0);
+
+  // When session pairs are appended during practice (no-limit chunking),
+  // extend the active queues/steps without resetting the current card.
+  useEffect(() => {
+    const prevLen = previousSessionLenRef.current;
+    const nextLen = sessionPairs.length;
+    previousSessionLenRef.current = nextLen;
+
+    if (nextLen <= prevLen) return;
+    if (viewMode !== "practice") return;
+
+    const appendedIndices = Array.from({ length: nextLen - prevLen }, (_, i) => prevLen + i);
+    if (appendedIndices.length === 0) return;
+
+    if (isReview) {
+      setQueue((prev) => {
+        if (prev.length === 0) return prev;
+        const existing = new Set(prev);
+        const fresh = appendedIndices.filter((i) => !existing.has(i));
+        if (fresh.length === 0) return prev;
+        return [...prev, ...fresh];
+      });
+      return;
+    }
+
+    if (mode === "words" || mode === "sentences") {
+      const pendingToAdd = appendedIndices.filter((i) => {
+        const p = sessionPairs[i];
+        if (!p) return false;
+        return getPendingStage(p, progressRef.current, mode) !== null;
+      });
+      if (pendingToAdd.length === 0) return;
+
+      setLearnQueue((prev) => {
+        const existing = new Set(prev);
+        const fresh = pendingToAdd.filter((i) => !existing.has(i));
+        if (fresh.length === 0) return prev;
+        return [...prev, ...fresh];
+      });
+      return;
+    }
+
+    if (mode === "ws") {
+      const newSteps: LearnStep[] = [];
+      for (const i of appendedIndices) {
+        const p = sessionPairs[i];
+        if (!p) continue;
+        const pr = getPr(p, progressRef.current);
+        if (!pr.word_mastered) newSteps.push({ pairIndex: i, stage: "word" });
+        if (hasSentence(p) && !pr.sentence_mastered) newSteps.push({ pairIndex: i, stage: "sentence" });
+      }
+      if (newSteps.length === 0) return;
+
+      setWsSteps((prev) => [...prev, ...newSteps]);
+    }
+  }, [sessionPairs, viewMode, isReview, mode]);
+
   const currentPair = sessionPairs[idx] || null;
 
   const currentStage: Stage | null = useMemo(() => {
@@ -533,12 +596,40 @@ export function usePracticeFlow({
     setViewMode("practice");
   }, [previewAudio, isReview, mode, initWsPractice]);
 
+  const appendSessionChunk = useCallback(
+    (incomingPairs: PairRow[], incomingProgress: ProgressMap) => {
+      if (!incomingPairs.length) return;
+
+      setProgress((prev) => {
+        const next: ProgressMap = { ...prev };
+        for (const [pairId, patch] of Object.entries(incomingProgress || {})) {
+          const current = next[pairId];
+          next[pairId] = {
+            word_mastered: (current?.word_mastered ?? false) || !!patch.word_mastered,
+            sentence_mastered:
+              (current?.sentence_mastered ?? false) || !!patch.sentence_mastered,
+          };
+        }
+        return next;
+      });
+
+      setSessionPairs((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id));
+        const fresh = incomingPairs.filter((p) => p?.id && !existingIds.has(p.id));
+        if (fresh.length === 0) return prev;
+        return [...prev, ...fresh];
+      });
+    },
+    []
+  );
+
   return {
     // core
     progress,
     setProgress,
 
     sessionPairs,
+    appendSessionChunk,
     viewMode,
     setViewMode,
 

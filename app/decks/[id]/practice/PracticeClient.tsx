@@ -55,6 +55,15 @@ type Props = {
   initialProgress?: ProgressMap;
   deckNameById?: Record<string, string>;
   deckLevelById?: Record<string, string | null>;
+  chunkLoadConfig?: {
+    enabled: boolean;
+    initialOffset: number;
+    chunkSize: number;
+    mode: LearnMode;
+    dir: "passive" | "active";
+    source: "learn" | "review";
+    category: string;
+  };
 };
 
 export default function PracticeClient({
@@ -67,6 +76,7 @@ export default function PracticeClient({
   initialProgress = {},
   deckNameById = {},
   deckLevelById = {},
+  chunkLoadConfig,
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -200,6 +210,75 @@ export default function PracticeClient({
 
     return `${sourceLabel} ${rawLevel}`;
   }, [isFavoritesSession, flow.currentPair, deckLevelById]);
+
+  const [chunkBusy, setChunkBusy] = useState(false);
+  const [chunkHasMore, setChunkHasMore] = useState<boolean>(!!chunkLoadConfig?.enabled);
+  const [nextChunkOffset, setNextChunkOffset] = useState<number>(() => {
+    const base = chunkLoadConfig?.initialOffset ?? offset;
+    return base + safePairs.length;
+  });
+
+  useEffect(() => {
+    const base = chunkLoadConfig?.initialOffset ?? offset;
+    setChunkHasMore(!!chunkLoadConfig?.enabled);
+    setChunkBusy(false);
+    setNextChunkOffset(base + safePairs.length);
+  }, [chunkLoadConfig, offset, safePairs.length]);
+
+  const loadMoreSessionPairs = useCallback(async () => {
+    if (!chunkLoadConfig?.enabled) return;
+    if (chunkBusy) return;
+    if (!chunkHasMore) return;
+    if (!safeDeckId) return;
+
+    setChunkBusy(true);
+    try {
+      const res = await fetch("/api/practice/session-chunk", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          deckId: safeDeckId,
+          mode: chunkLoadConfig.mode,
+          dir: chunkLoadConfig.dir,
+          source: chunkLoadConfig.source,
+          category: chunkLoadConfig.category,
+          offset: nextChunkOffset,
+          limit: chunkLoadConfig.chunkSize,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setChunkHasMore(false);
+        return;
+      }
+
+      const items = Array.isArray((json as { pairs?: PairRow[] }).pairs)
+        ? ((json as { pairs: PairRow[] }).pairs as PairRow[])
+        : [];
+      const progressPatch =
+        ((json as { progress?: ProgressMap }).progress as ProgressMap | undefined) || {};
+      const hasMore = Boolean((json as { hasMore?: boolean }).hasMore);
+
+      if (items.length > 0) {
+        flow.appendSessionChunk(items, progressPatch);
+        setNextChunkOffset((prev) => prev + items.length);
+      }
+
+      setChunkHasMore(hasMore && items.length > 0);
+    } catch {
+      setChunkHasMore(false);
+    } finally {
+      setChunkBusy(false);
+    }
+  }, [chunkLoadConfig, chunkBusy, chunkHasMore, nextChunkOffset, safeDeckId, flow]);
+
+  useEffect(() => {
+    if (!chunkLoadConfig?.enabled) return;
+    if (!chunkHasMore) return;
+    if (chunkBusy) return;
+    void loadMoreSessionPairs();
+  }, [chunkLoadConfig, chunkHasMore, chunkBusy, loadMoreSessionPairs]);
 
   useEffect(() => {
     if (!debugAudio) return;

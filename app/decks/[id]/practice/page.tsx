@@ -41,6 +41,7 @@ type PairRow = {
 type LearnMode = "words" | "ws" | "sentences";
 type Dir = "passive" | "active";
 type Source = "learn" | "review" | "favorites";
+const INITIAL_NO_LIMIT_CHUNK = 30;
 
 function normalizeMode(raw: unknown): LearnMode {
   const v = String(raw ?? "").toLowerCase().trim();
@@ -150,7 +151,7 @@ export default async function DeckPracticePage({
   const sizes = [0, 5, 10, 15];
   const requestedN = Number(sp.n ?? "10");
   const chosenN = sizes.includes(requestedN) ? requestedN : 10;
-  const rpcN = chosenN === 0 ? 100000 : chosenN;
+  const rpcN = chosenN === 0 ? INITIAL_NO_LIMIT_CHUNK : chosenN;
 
   const requestedO = Number(sp.o ?? "0");
   const offset = Number.isFinite(requestedO) && requestedO >= 0 ? requestedO : 0;
@@ -390,6 +391,15 @@ export default async function DeckPracticePage({
           dir={dir}
           pairs={pairs}
           initialProgress={progressMap}
+          chunkLoadConfig={{
+            enabled: chosenN === 0 && source !== "favorites",
+            initialOffset: offset,
+            chunkSize: INITIAL_NO_LIMIT_CHUNK,
+            mode,
+            dir,
+            source: source === "review" ? "review" : "learn",
+            category: selectedCategory,
+          }}
         />
       </div>
     </Container>
