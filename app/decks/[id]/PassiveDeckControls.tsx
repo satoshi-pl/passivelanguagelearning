@@ -146,6 +146,20 @@ export default function PassiveDeckControls({
     return `${pathname}?${qs.toString()}`;
   };
 
+  const buildPassiveReviewHref = useCallback(() => {
+    const qs = new URLSearchParams();
+    qs.set("mode", currentMode);
+    qs.set("back", buildDashboardBackHref(currentMode, selectedCategory));
+    qs.set("deck_name", deckName);
+    qs.set("target_lang", targetLang);
+    qs.set("support_lang", supportLang);
+    qs.set("level_label", level);
+    if (selectedCategory) {
+      qs.set("category", selectedCategory);
+    }
+    return `/decks/${deckId}/review?${qs.toString()}`;
+  }, [currentMode, buildDashboardBackHref, selectedCategory, deckName, targetLang, supportLang, level, deckId]);
+
   useEffect(() => {
     consumeRouteInteractionTiming();
   }, [pathname, searchParams]);
@@ -203,7 +217,7 @@ export default function PassiveDeckControls({
   const modeWordsHref = buildDeckPageHref("words", selectedCategory);
   const modeWsHref = buildDeckPageHref("ws", selectedCategory);
   const modeSentencesHref = buildDeckPageHref("sentences", selectedCategory);
-  const passiveReviewHref = buildOptionalHref(`/decks/${deckId}/review`);
+  const passiveReviewHref = buildPassiveReviewHref();
   const activeHref = buildOptionalHref(`/decks/${deckId}/active`);
 
   const prefetchHrefs = useMemo(
