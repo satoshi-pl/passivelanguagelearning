@@ -25,7 +25,7 @@ export default function ResponsiveNavLink({
   href,
   className,
   pendingClassName = "nav-link-pending",
-  pendingDurationMs = 1200,
+  pendingDurationMs = 700,
   onClick,
   onPointerDown,
   onPointerEnter,
