@@ -65,6 +65,7 @@ export default function ResponsiveNavLink({
       data-nav-pending={pending ? "true" : "false"}
       aria-busy={pending || undefined}
       onPointerDown={(e) => {
+        primePrefetch();
         armPending();
         onPointerDown?.(e);
       }}
@@ -78,6 +79,7 @@ export default function ResponsiveNavLink({
         onTouchStart?.(e);
       }}
       onClick={(e) => {
+        primePrefetch();
         armPending();
         onClick?.(e);
       }}

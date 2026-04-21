@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
+import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 
 type DeckRow = {
   id: string;
@@ -145,6 +146,12 @@ export default function DecksLevelSection({
       }),
     [targetLang, supportLang, selectedLevel]
   );
+
+  const deckDashboardHrefs = useMemo(
+    () => pairDecks.map((deck) => `/decks/${String(deck.id)}?back=${encodeURIComponent(currentDecksHref)}`),
+    [pairDecks, currentDecksHref]
+  );
+  usePrefetchRoutes([favoritesHref, ...deckDashboardHrefs]);
 
   const onLevelSelect = (nextLevel: string) => {
     if (nextLevel === selectedLevel) return;
