@@ -156,6 +156,41 @@ export function usePracticeActions(args: Args) {
     } catch {}
   };
 
+  const persistPairProgress = async ({
+    pairId,
+    kind,
+    dir,
+  }: {
+    pairId: string;
+    kind: "word" | "sentence";
+    dir: "passive" | "active";
+  }) => {
+    let lastError = "";
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const res = await fetch("/api/pair-progress", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ pairId, kind, dir }),
+        });
+
+        if (res.ok) return;
+
+        const json = await res.json().catch(() => ({}));
+        lastError = String((json as { error?: unknown })?.error || res.statusText || "unknown error");
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : "network error";
+      }
+
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      }
+    }
+
+    console.error("pair-progress background save failed:", { pairId, kind, dir, error: lastError });
+  };
+
   const finishSession = async (routerReplace: (href: string) => void) => {
     if (finishingRef.current) return;
     finishingRef.current = true;
@@ -498,32 +533,22 @@ export function usePracticeActions(args: Args) {
 
     setBusy(true);
     try {
-      const res = await fetch("/api/pair-progress", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          pairId: args.currentPair.id,
-          kind: args.currentStage === "word" ? "word" : "sentence",
-          dir: isActive ? "active" : "passive",
-        }),
-      });
+      const pairId = args.currentPair.id;
+      const kind = args.currentStage === "word" ? "word" : "sentence";
+      const dir = isActive ? "active" : "passive";
 
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        console.error("pair-progress error:", (json as any)?.error || res.statusText);
-        return;
-      }
+      void persistPairProgress({ pairId, kind, dir });
 
       setProgress((prev) => {
-        const prevRow = prev[args.currentPair!.id] || {
+        const prevRow = prev[pairId] || {
           word_mastered: false,
           sentence_mastered: false,
         };
         const updatedRow =
-          args.currentStage === "word"
+          kind === "word"
             ? { ...prevRow, word_mastered: true }
             : { ...prevRow, sentence_mastered: true };
-        return { ...prev, [args.currentPair!.id]: updatedRow };
+        return { ...prev, [pairId]: updatedRow };
       });
 
       // LEARN words/sentences: remove mastered item from learnQueue
