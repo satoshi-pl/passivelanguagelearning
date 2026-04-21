@@ -126,53 +126,23 @@ export function usePracticeActions(args: Args) {
   // ✅ favourites sessions are "single-stage" even in ws review
   const isFavSession = safeDeckId === "favorites";
 
-  // ✅ send last-reviewed ping for BOTH Hard and Easy
-  const sendReviewPing = async () => {
-    if (!currentPair || !currentStage) return;
-
-    const deckIdToSend = isFavSession
-      ? String((currentPair as any)?.deck_id ?? "")
-      : safeDeckId;
-
-    const dirToSend = isFavSession
-      ? (String((currentPair as any)?.fav_dir ?? "").toLowerCase().trim() === "active"
-          ? "active"
-          : "passive")
-      : (isActive ? "active" : "passive");
-
-    if (!deckIdToSend) return;
-
-    try {
-      await fetch("/api/pair-review", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          pairId: currentPair.id,
-          deckId: deckIdToSend,
-          stage: currentStage,
-          dir: dirToSend,
-        }),
-      });
-    } catch {}
-  };
-
-  const persistPairProgress = async ({
-    pairId,
-    kind,
-    dir,
+  const persistRequestWithRetry = async ({
+    endpoint,
+    body,
+    label,
   }: {
-    pairId: string;
-    kind: "word" | "sentence";
-    dir: "passive" | "active";
+    endpoint: string;
+    body: Record<string, unknown>;
+    label: string;
   }) => {
     let lastError = "";
 
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        const res = await fetch("/api/pair-progress", {
+        const res = await fetch(endpoint, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ pairId, kind, dir }),
+          body: JSON.stringify(body),
         });
 
         if (res.ok) return;
@@ -188,7 +158,50 @@ export function usePracticeActions(args: Args) {
       }
     }
 
-    console.error("pair-progress background save failed:", { pairId, kind, dir, error: lastError });
+    console.error(`${label} background save failed:`, { endpoint, body, error: lastError });
+  };
+
+  const queueReviewPing = () => {
+    if (!currentPair || !currentStage) return;
+
+    const deckIdToSend = isFavSession
+      ? String((currentPair as any)?.deck_id ?? "")
+      : safeDeckId;
+
+    const dirToSend = isFavSession
+      ? (String((currentPair as any)?.fav_dir ?? "").toLowerCase().trim() === "active"
+          ? "active"
+          : "passive")
+      : (isActive ? "active" : "passive");
+
+    if (!deckIdToSend) return;
+
+    void persistRequestWithRetry({
+      endpoint: "/api/pair-review",
+      body: {
+        pairId: currentPair.id,
+        deckId: deckIdToSend,
+        stage: currentStage,
+        dir: dirToSend,
+      },
+      label: "pair-review",
+    });
+  };
+
+  const persistPairProgress = ({
+    pairId,
+    kind,
+    dir,
+  }: {
+    pairId: string;
+    kind: "word" | "sentence";
+    dir: "passive" | "active";
+  }) => {
+    void persistRequestWithRetry({
+      endpoint: "/api/pair-progress",
+      body: { pairId, kind, dir },
+      label: "pair-progress",
+    });
   };
 
   const finishSession = async (routerReplace: (href: string) => void) => {
@@ -405,7 +418,7 @@ export function usePracticeActions(args: Args) {
     }
 
     // ✅ Hard counts as reviewed too (updates last_reviewed_at)
-    void sendReviewPing();
+    queueReviewPing();
 
     // ✅ disable ws word->sentence chaining in favourites
     if (isFavSession && mode === "ws") {
@@ -499,8 +512,8 @@ export function usePracticeActions(args: Args) {
       };
     }
 
-    // ✅ Easy counts as reviewed (updates last_reviewed_at)
-    await sendReviewPing();
+    // ✅ Easy counts as reviewed too; persist in background so UI can advance instantly
+    queueReviewPing();
 
     // ✅ disable ws word->sentence chaining in favourites
     if (isFavSession && mode === "ws") {
@@ -537,7 +550,7 @@ export function usePracticeActions(args: Args) {
       const kind = args.currentStage === "word" ? "word" : "sentence";
       const dir = isActive ? "active" : "passive";
 
-      void persistPairProgress({ pairId, kind, dir });
+      persistPairProgress({ pairId, kind, dir });
 
       setProgress((prev) => {
         const prevRow = prev[pairId] || {
