@@ -132,6 +132,13 @@ export default function ActiveDeckControls({
     const qs = new URLSearchParams();
     qs.set("mode", currentMode);
     qs.set("back", buildDashboardBackHref(currentMode, selectedCategory));
+    qs.set("deck_name", deckName);
+    qs.set("target_lang", targetLang);
+    qs.set("support_lang", supportLang);
+    qs.set("level_label", level);
+    if (selectedCategory) {
+      qs.set("category", selectedCategory);
+    }
     return `/decks/${deckId}/active/review?${qs.toString()}`;
   };
 

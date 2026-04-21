@@ -38,6 +38,10 @@ type ActiveReviewSearchParams = {
   mode?: string | string[];
   back?: string | string[];
   category?: string | string[];
+  deck_name?: string | string[];
+  target_lang?: string | string[];
+  support_lang?: string | string[];
+  level_label?: string | string[];
 };
 
 function normalizeMode(raw: unknown): Mode {
@@ -82,12 +86,43 @@ export default async function DeckActiveReviewPage({
   const mode = normalizeMode(sp.mode);
   const selectedCategoryFromUrl = normalizeCategoryParam(sp.category);
   const backParam = getSingleParam(sp.back);
+  const deckNameFromParam = getSingleParam(sp.deck_name);
+  const targetLangFromParam = getSingleParam(sp.target_lang).toLowerCase();
+  const supportLangFromParam = getSingleParam(sp.support_lang).toLowerCase();
+  const levelLabelFromParam = getSingleParam(sp.level_label);
 
-  const { data: deck, error: deckErr } = await supabase
-    .from("decks")
-    .select("id, name, target_lang, native_lang, level")
-    .eq("id", deckId)
-    .single();
+  const hasDeckContextFromEntry =
+    !!deckNameFromParam && !!targetLangFromParam && !!supportLangFromParam;
+
+  const deckPromise = hasDeckContextFromEntry
+    ? Promise.resolve({
+        data: {
+          id: deckId,
+          name: deckNameFromParam,
+          target_lang: targetLangFromParam,
+          native_lang: supportLangFromParam,
+          level: levelLabelFromParam || null,
+        },
+        error: null,
+      })
+    : supabase
+        .from("decks")
+        .select("id, name, target_lang, native_lang, level")
+        .eq("id", deckId)
+        .single();
+
+  const activeDeckHref =
+    backParam && backParam.startsWith("/")
+      ? backParam
+      : `/decks/${deckId}/active?mode=${mode}`;
+
+  const aggregatePromise = supabase.rpc(
+    "get_active_review_aggregates",
+    { p_user_id: user.id, p_deck_id: deckId }
+  );
+
+  const [{ data: deck, error: deckErr }, { data: aggregateRows, error: aggregateErr }] =
+    await Promise.all([deckPromise, aggregatePromise]);
 
   if (deckErr || !deck) {
     return (
@@ -101,11 +136,6 @@ export default async function DeckActiveReviewPage({
     );
   }
 
-  const activeDeckHref =
-    backParam && backParam.startsWith("/")
-      ? backParam
-      : `/decks/${deckId}/active?mode=${mode}`;
-
   let overallWordsReviewable = 0;
   let overallSentencesReviewable = 0;
   let overallWsReviewable = 0;
@@ -114,11 +144,6 @@ export default async function DeckActiveReviewPage({
     sentences: [],
     ws: [],
   };
-
-  const { data: aggregateRows, error: aggregateErr } = await supabase.rpc(
-    "get_active_review_aggregates",
-    { p_user_id: user.id, p_deck_id: deckId }
-  );
 
   if (!aggregateErr && (aggregateRows ?? []).length > 0) {
     const rows = (aggregateRows ?? []) as ReviewAggregateRow[];
