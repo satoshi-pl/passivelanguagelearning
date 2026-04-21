@@ -3,12 +3,14 @@
 import Link, { type LinkProps } from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 type AnchorProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href">;
 
 type Props = LinkProps &
   AnchorProps & {
     pendingClassName?: string;
+    pendingDurationMs?: number;
   };
 
 function toHrefString(href: LinkProps["href"]) {
@@ -23,6 +25,7 @@ export default function ResponsiveNavLink({
   href,
   className,
   pendingClassName = "nav-link-pending",
+  pendingDurationMs = 1200,
   onClick,
   onPointerDown,
   onPointerEnter,
@@ -43,9 +46,11 @@ export default function ResponsiveNavLink({
   }, []);
 
   const armPending = () => {
-    setPending(true);
+    flushSync(() => {
+      setPending(true);
+    });
     if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => setPending(false), 900);
+    timeoutRef.current = window.setTimeout(() => setPending(false), pendingDurationMs);
   };
 
   const primePrefetch = () => {
