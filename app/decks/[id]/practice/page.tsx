@@ -145,6 +145,10 @@ function nowMs() {
   return performance.now();
 }
 
+function createReviewShuffleSeed() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default async function DeckPracticePage({
   params,
   searchParams,
@@ -186,6 +190,7 @@ export default async function DeckPracticePage({
   const mode = normalizeMode(sp.mode);
   const dir = normalizeDir(sp.dir);
   const source = normalizeSource(sp.source);
+  const reviewShuffleSeed = source === "review" ? createReviewShuffleSeed() : undefined;
   const selectedCategory = normalizeCategoryParam(sp.category);
   const timingDebug = getSingleParam(sp.timing) === "1";
 
@@ -517,6 +522,7 @@ export default async function DeckPracticePage({
           dir={dir}
           pairs={pairs}
           initialProgress={progressMap}
+          reviewShuffleSeed={reviewShuffleSeed}
           chunkLoadConfig={{
             enabled: source !== "favorites" && (chosenN === 0 || chosenN > initialRpcN),
             initialOffset: offset,

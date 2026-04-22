@@ -10,14 +10,24 @@ import {
   getPr,
 } from "./learning";
 
-// Fisher–Yates shuffle
-function shuffle<T>(arr: T[]) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+function hashString(input: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
-  return a;
+  return hash >>> 0;
+}
+
+function seededShuffle<T>(arr: T[], seed: string, getKey: (item: T, index: number) => string) {
+  return [...arr]
+    .map((item, index) => ({
+      item,
+      score: hashString(`${seed}:${index}:${getKey(item, index)}`),
+      index,
+    }))
+    .sort((a, b) => (a.score === b.score ? a.index - b.index : a.score - b.score))
+    .map((entry) => entry.item);
 }
 
 type Args = {
@@ -29,12 +39,13 @@ type Args = {
 
   chosenN: number;
   offset: number;
+  shuffleSeed?: string;
 
   sessionPairs: PairRow[];
 };
 
 export function buildSessionPairs(args: Omit<Args, "sessionPairs">) {
-  const { safePairs, progress, mode, isReview, chosenN, offset } = args;
+  const { safePairs, progress, mode, isReview, chosenN, offset, shuffleSeed } = args;
   const takeN = chosenN <= 0 ? Number.MAX_SAFE_INTEGER : chosenN;
 
   // ============================
@@ -46,7 +57,9 @@ export function buildSessionPairs(args: Omit<Args, "sessionPairs">) {
 
     if (eligible.length === 0) return [];
 
-    const shuffled = shuffle(eligible);
+    const shuffled = shuffleSeed
+      ? seededShuffle(eligible, shuffleSeed, (pair) => pair.id)
+      : seededShuffle(eligible, `review:${mode}:${offset}:${takeN}`, (pair) => pair.id);
     const start = Math.min(offset, shuffled.length);
     return shuffled.slice(start, start + takeN);
   }

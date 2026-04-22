@@ -71,6 +71,7 @@ type Props = {
     source: "learn" | "review";
     category?: string;
   };
+  reviewShuffleSeed?: string;
   serverTiming?: {
     auth_user_lookup_ms: number;
     deck_lookup_ms: number;
@@ -114,6 +115,7 @@ export default function PracticeClient({
   deckNameById = {},
   deckLevelById = {},
   chunkLoadConfig,
+  reviewShuffleSeed,
   serverTiming = null,
 }: Props) {
   const router = useRouter();
@@ -192,6 +194,7 @@ export default function PracticeClient({
     finishHref,
     pairs: safePairs,
     initialProgress: initialProgress || {},
+    reviewShuffleSeed,
     resolveAudioUrl,
     debugAudio,
   });

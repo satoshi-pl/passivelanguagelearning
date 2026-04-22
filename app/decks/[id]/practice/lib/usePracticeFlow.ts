@@ -34,6 +34,7 @@ type Args = {
 
   pairs: PairRow[];
   initialProgress: ProgressMap;
+  reviewShuffleSeed?: string;
 
   resolveAudioUrl: (raw?: string | null) => string;
   debugAudio?: boolean;
@@ -51,15 +52,6 @@ type InitialPracticeBootstrap = {
   reviewStage: Stage;
 };
 
-function shuffleIndices(count: number) {
-  const indices = Array.from({ length: count }, (_, index) => index);
-  for (let index = indices.length - 1; index > 0; index--) {
-    const nextIndex = Math.floor(Math.random() * (index + 1));
-    [indices[index], indices[nextIndex]] = [indices[nextIndex], indices[index]];
-  }
-  return indices;
-}
-
 function buildInitialPracticeBootstrap({
   deckId,
   mode,
@@ -68,6 +60,7 @@ function buildInitialPracticeBootstrap({
   offset,
   pairs,
   initialProgress,
+  reviewShuffleSeed,
 }: {
   deckId: string;
   mode: LearnMode;
@@ -76,6 +69,7 @@ function buildInitialPracticeBootstrap({
   offset: number;
   pairs: PairRow[];
   initialProgress: ProgressMap;
+  reviewShuffleSeed?: string;
 }): InitialPracticeBootstrap {
   const buildKey = `${deckId}|${mode}|${isReview}|${chosenN}|${offset}|${pairs.length}`;
   const sessionPairs = buildSessionPairs({
@@ -85,6 +79,7 @@ function buildInitialPracticeBootstrap({
     isReview,
     chosenN,
     offset,
+    shuffleSeed: isReview ? reviewShuffleSeed : undefined,
   });
 
   if (sessionPairs.length === 0) {
@@ -102,8 +97,8 @@ function buildInitialPracticeBootstrap({
   }
 
   if (isReview) {
-    const queue = shuffleIndices(sessionPairs.length);
-    const idx = queue[0] ?? 0;
+    const queue = sessionPairs.map((_, index) => index);
+    const idx = 0;
     return {
       buildKey,
       sessionPairs,
@@ -183,6 +178,7 @@ export function usePracticeFlow({
   finishHref,
   pairs,
   initialProgress,
+  reviewShuffleSeed,
   resolveAudioUrl,
   debugAudio = false,
 }: Args) {
@@ -196,8 +192,9 @@ export function usePracticeFlow({
         offset,
         pairs,
         initialProgress,
+        reviewShuffleSeed,
       }),
-    [deckId, mode, isReview, chosenN, offset, pairs, initialProgress]
+    [deckId, mode, isReview, chosenN, offset, pairs, initialProgress, reviewShuffleSeed]
   );
 
   // ✅ detect favourites session (used to lock WS review to fav_kind)
@@ -285,6 +282,7 @@ export function usePracticeFlow({
       offset,
       pairs,
       initialProgress,
+      reviewShuffleSeed,
     });
     if (lastBuildKeyRef.current === nextBootstrap.buildKey) return;
     lastBuildKeyRef.current = nextBootstrap.buildKey;
@@ -333,7 +331,7 @@ export function usePracticeFlow({
     setSessionPairs(nextBootstrap.sessionPairs);
     previousSessionLenRef.current = nextBootstrap.sessionPairs.length;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deckId, mode, isReview, chosenN, offset, pairs.length, initialProgress]);
+  }, [deckId, mode, isReview, chosenN, offset, pairs.length, initialProgress, reviewShuffleSeed]);
 
   // =========================
   // WS: effective mode + preview sizing

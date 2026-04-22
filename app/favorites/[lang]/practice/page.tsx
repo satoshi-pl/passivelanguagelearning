@@ -5,7 +5,6 @@ import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { hydrateCanonicalFirstAudioForPairs } from "@/lib/audio/hydrateCanonicalFirstAudio";
 import PracticeClient from "../../../decks/[id]/practice/PracticeClient";
 
 type LearnMode = "words" | "ws" | "sentences";
@@ -27,17 +26,19 @@ type PairRow = {
   word_target_audio_url?: string | null;
   sentence_target_audio_url?: string | null;
 
-  fav_dir?: "active" | "passive" | string | null;
-  fav_kind?: "word" | "sentence" | string | null;
+  fav_dir?: "active" | "passive" | null;
+  fav_kind?: "word" | "sentence" | null;
 };
 
-async function hydrateAudioForPairs(
-  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
-  pairs: PairRow[],
-  targetLang: string
-) {
-  return hydrateCanonicalFirstAudioForPairs(supabase, pairs, targetLang);
-}
+type SupportDeckRow = {
+  native_lang: string | null;
+};
+
+type DeckLookupRow = {
+  id: string;
+  name: string | null;
+  level: string | null;
+};
 
 function normalizeMode(raw: unknown): LearnMode {
   const v = String(raw ?? "").toLowerCase().trim();
@@ -51,6 +52,10 @@ function normalizeCategoryParam(value: string | string[] | undefined) {
 
 function getSingleParam(value: string | string[] | undefined) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function createReviewShuffleSeed() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function langName(codeOrName: string) {
@@ -174,8 +179,8 @@ export default async function FavoritesPracticePage({
 
   const supportOptions = Array.from(
     new Set(
-      (supportDecks ?? [])
-        .map((row) => String((row as any).native_lang ?? "").toLowerCase().trim())
+      ((supportDecks ?? []) as SupportDeckRow[])
+        .map((row) => String(row.native_lang ?? "").toLowerCase().trim())
         .filter(Boolean)
     )
   ).sort((a, b) => langName(a).localeCompare(langName(b)));
@@ -189,49 +194,49 @@ export default async function FavoritesPracticePage({
     : supportOptions[0];
 
   const pageHref = buildFavoritesHref({
-  target: targetLang,
-  support: selectedSupport,
-  mode,
-  category: selectedCategory || undefined,
-});
+    target: targetLang,
+    support: selectedSupport,
+    mode,
+    category: selectedCategory || undefined,
+  });
 
   const requestedBack = getSingleParam(sp.back);
   const finishHref = requestedBack ? decodeURIComponent(requestedBack) : pageHref;
 
   // Normalize missing/invalid support in URL
   if (requestedSupport !== selectedSupport) {
-  const normalizedBack = pageHref;
-  redirect(
-    buildFavoritesPracticeHref({
-      target: targetLang,
-      support: selectedSupport,
-      mode,
-      n: chosenN,
-      o: offset,
-      back: normalizedBack,
-      category: selectedCategory || undefined,
-    })
-  );
-}
+    const normalizedBack = pageHref;
+    redirect(
+      buildFavoritesPracticeHref({
+        target: targetLang,
+        support: selectedSupport,
+        mode,
+        n: chosenN,
+        o: offset,
+        back: normalizedBack,
+        category: selectedCategory || undefined,
+      })
+    );
+  }
 
   const { data: sessionPairs, error } = selectedCategory
-  ? await supabase.rpc("get_favorites_session_pairs_by_category", {
-      p_user_id: user.id,
-      p_target_lang: targetLang,
-      p_native_lang: selectedSupport,
-      p_mode: mode,
-      p_n: chosenN,
-      p_offset: offset,
-      p_category: selectedCategory,
-    })
-  : await supabase.rpc("get_favorites_session_pairs", {
-      p_user_id: user.id,
-      p_target_lang: targetLang,
-      p_native_lang: selectedSupport,
-      p_mode: mode,
-      p_n: chosenN,
-      p_offset: offset,
-    });
+    ? await supabase.rpc("get_favorites_session_pairs_by_category", {
+        p_user_id: user.id,
+        p_target_lang: targetLang,
+        p_native_lang: selectedSupport,
+        p_mode: mode,
+        p_n: chosenN,
+        p_offset: offset,
+        p_category: selectedCategory,
+      })
+    : await supabase.rpc("get_favorites_session_pairs", {
+        p_user_id: user.id,
+        p_target_lang: targetLang,
+        p_native_lang: selectedSupport,
+        p_mode: mode,
+        p_n: chosenN,
+        p_offset: offset,
+      });
 
   if (error) {
     return (
@@ -251,11 +256,7 @@ export default async function FavoritesPracticePage({
     );
   }
 
-  const pairs = await hydrateAudioForPairs(
-    supabase,
-    (sessionPairs || []) as PairRow[],
-    targetLang
-  );
+  const pairs = ((sessionPairs || []) as PairRow[]);
 
   const progressMap: Record<string, { word_mastered: boolean; sentence_mastered: boolean }> = {};
   for (const p of pairs) {
@@ -278,12 +279,12 @@ export default async function FavoritesPracticePage({
       .in("id", deckIds);
 
     if (!deckErr) {
-      for (const d of deckRows ?? []) {
-        const id = String((d as any).id ?? "").trim();
-        const name = String((d as any).name ?? "").trim();
+      for (const d of (deckRows ?? []) as DeckLookupRow[]) {
+        const id = String(d.id ?? "").trim();
+        const name = String(d.name ?? "").trim();
         if (id && name) deckNameById[id] = name;
         if (id) {
-          const level = String((d as any).level ?? "").trim();
+          const level = String(d.level ?? "").trim();
           deckLevelById[id] = level || null;
         }
       }
@@ -320,16 +321,17 @@ export default async function FavoritesPracticePage({
       </div>
 
       <PracticeClient
-  deckId={"favorites"}
-  deckName={`${langName(targetLang)} - Favourites`}
-  targetLang={targetLang}
-  nativeLang={selectedSupport}
-  dir="passive"
-  pairs={pairs as any}
-  initialProgress={progressMap as any}
-  deckNameById={deckNameById}
-  deckLevelById={deckLevelById}
-/>
+        deckId="favorites"
+        deckName={`${langName(targetLang)} - Favourites`}
+        targetLang={targetLang}
+        nativeLang={selectedSupport}
+        dir="passive"
+        pairs={pairs}
+        initialProgress={progressMap}
+        reviewShuffleSeed={createReviewShuffleSeed()}
+        deckNameById={deckNameById}
+        deckLevelById={deckLevelById}
+      />
     </div>
   );
 }
