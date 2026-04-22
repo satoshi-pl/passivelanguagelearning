@@ -11,6 +11,11 @@ import {
   emitCategorySwitchTiming,
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
+import {
+  seedActiveReviewWarmCache,
+  warmActiveReviewPageData,
+} from "@/lib/active-review/warmCache";
+import { buildActiveReviewHref as buildActiveReviewEntryHref } from "@/lib/active-review/shared";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -128,19 +133,32 @@ export default function ActiveDeckControls({
     return `/decks/${deckId}/practice?${qs.toString()}`;
   }, [deckId, currentMode, buildDashboardBackHref, selectedCategory]);
 
-  const buildReviewHref = () => {
-    const qs = new URLSearchParams();
-    qs.set("mode", currentMode);
-    qs.set("back", buildDashboardBackHref(currentMode, selectedCategory));
-    qs.set("deck_name", deckName);
-    qs.set("target_lang", targetLang);
-    qs.set("support_lang", supportLang);
-    qs.set("level_label", level);
-    if (selectedCategory) {
-      qs.set("category", selectedCategory);
-    }
-    return `/decks/${deckId}/active/review?${qs.toString()}`;
-  };
+  const buildReviewHref = () =>
+    buildActiveReviewEntryHref({
+      deckId,
+      mode: currentMode,
+      backToDeckHref: buildDashboardBackHref(currentMode, selectedCategory),
+      deckName,
+      targetLang,
+      supportLang,
+      level,
+      category: selectedCategory,
+      warmEntry: true,
+    });
+  const warmActiveReview = useCallback(() => {
+    const backToDeckHref = buildDashboardBackHref(currentMode, selectedCategory);
+    seedActiveReviewWarmCache({
+      deckId,
+      deckName,
+      targetLang,
+      supportLang,
+      level,
+      backToDeckHref,
+    });
+    void warmActiveReviewPageData(deckId, backToDeckHref).catch(() => {
+      // Warm prefetch should never interrupt the primary dashboard UI.
+    });
+  }, [buildDashboardBackHref, currentMode, selectedCategory, deckId, deckName, targetLang, supportLang, level]);
 
   useEffect(() => {
     consumeRouteInteractionTiming();
@@ -188,6 +206,10 @@ export default function ActiveDeckControls({
       // ignore storage errors
     }
   }, [selectedCategory, storageKey]);
+
+  useEffect(() => {
+    warmActiveReview();
+  }, [warmActiveReview]);
 
   useEffect(() => {
     if (!selectedCategory) return;
@@ -449,17 +471,23 @@ export default function ActiveDeckControls({
         <div className="deck-optional-section" style={{ marginTop: 18 }}>
           <ResponsiveNavLink
             href={activeReviewHref}
+            onPointerEnter={() => warmActiveReview()}
+            onPointerDown={() => warmActiveReview()}
+            onTouchStart={() => warmActiveReview()}
             onClick={() =>
-              trackGaEvent("learning_path_select", {
-                path: "active_review",
-                deck_id: deckId,
-                deck_name: deckName,
-                mode: currentMode,
-                category: selectedCategory ?? "all",
-                target_lang: targetLang,
-                support_lang: supportLang,
-                level,
-              })
+              {
+                warmActiveReview();
+                trackGaEvent("learning_path_select", {
+                  path: "active_review",
+                  deck_id: deckId,
+                  deck_name: deckName,
+                  mode: currentMode,
+                  category: selectedCategory ?? "all",
+                  target_lang: targetLang,
+                  support_lang: supportLang,
+                  level,
+                });
+              }
             }
             style={secondaryActionStyle}
             className="deck-action-button deck-action-button--secondary"
