@@ -39,6 +39,139 @@ type Args = {
   debugAudio?: boolean;
 };
 
+type InitialPracticeBootstrap = {
+  buildKey: string;
+  sessionPairs: PairRow[];
+  viewMode: ViewMode;
+  queue: number[];
+  idx: number;
+  learnQueue: number[];
+  wsSteps: LearnStep[];
+  learnWsStage: Stage;
+  reviewStage: Stage;
+};
+
+function shuffleIndices(count: number) {
+  const indices = Array.from({ length: count }, (_, index) => index);
+  for (let index = indices.length - 1; index > 0; index--) {
+    const nextIndex = Math.floor(Math.random() * (index + 1));
+    [indices[index], indices[nextIndex]] = [indices[nextIndex], indices[index]];
+  }
+  return indices;
+}
+
+function buildInitialPracticeBootstrap({
+  deckId,
+  mode,
+  isReview,
+  chosenN,
+  offset,
+  pairs,
+  initialProgress,
+}: {
+  deckId: string;
+  mode: LearnMode;
+  isReview: boolean;
+  chosenN: number;
+  offset: number;
+  pairs: PairRow[];
+  initialProgress: ProgressMap;
+}): InitialPracticeBootstrap {
+  const buildKey = `${deckId}|${mode}|${isReview}|${chosenN}|${offset}|${pairs.length}`;
+  const sessionPairs = buildSessionPairs({
+    safePairs: pairs,
+    progress: initialProgress,
+    mode,
+    isReview,
+    chosenN,
+    offset,
+  });
+
+  if (sessionPairs.length === 0) {
+    return {
+      buildKey,
+      sessionPairs,
+      viewMode: "preview",
+      queue: [],
+      idx: 0,
+      learnQueue: [],
+      wsSteps: [],
+      learnWsStage: "word",
+      reviewStage: mode === "sentences" ? "sentence" : "word",
+    };
+  }
+
+  if (isReview) {
+    const queue = shuffleIndices(sessionPairs.length);
+    const idx = queue[0] ?? 0;
+    return {
+      buildKey,
+      sessionPairs,
+      viewMode: "practice",
+      queue,
+      idx,
+      learnQueue: [],
+      wsSteps: [],
+      learnWsStage: "word",
+      reviewStage: mode === "sentences" ? "sentence" : "word",
+    };
+  }
+
+  if (mode === "sentences") {
+    const learnQueue = sessionPairs
+      .map((_, index) => index)
+      .filter((index) => {
+        const pair = sessionPairs[index];
+        return pair ? getPendingStage(pair, initialProgress, mode) !== null : false;
+      });
+
+    return {
+      buildKey,
+      sessionPairs,
+      viewMode: "practice",
+      queue: [],
+      idx: learnQueue[0] ?? 0,
+      learnQueue,
+      wsSteps: [],
+      learnWsStage: "word",
+      reviewStage: "sentence",
+    };
+  }
+
+  if (mode === "ws") {
+    const wsSteps = buildWsSteps(sessionPairs, initialProgress);
+    const hasPendingWord = wsSteps.some((step) => step.stage === "word");
+    const hasPendingSentence = wsSteps.some((step) => step.stage === "sentence");
+    const firstStep = wsSteps[0];
+
+    if (!hasPendingWord && hasPendingSentence && firstStep) {
+      return {
+        buildKey,
+        sessionPairs,
+        viewMode: "practice",
+        queue: [],
+        idx: firstStep.pairIndex,
+        learnQueue: [],
+        wsSteps,
+        learnWsStage: firstStep.stage,
+        reviewStage: "word",
+      };
+    }
+  }
+
+  return {
+    buildKey,
+    sessionPairs,
+    viewMode: "preview",
+    queue: [],
+    idx: 0,
+    learnQueue: [],
+    wsSteps: [],
+    learnWsStage: "word",
+    reviewStage: "word",
+  };
+}
+
 export function usePracticeFlow({
   deckId,
   safeDeckId,
@@ -53,6 +186,20 @@ export function usePracticeFlow({
   resolveAudioUrl,
   debugAudio = false,
 }: Args) {
+  const initialBootstrap = useMemo(
+    () =>
+      buildInitialPracticeBootstrap({
+        deckId,
+        mode,
+        isReview,
+        chosenN,
+        offset,
+        pairs,
+        initialProgress,
+      }),
+    [deckId, mode, isReview, chosenN, offset, pairs, initialProgress]
+  );
+
   // ✅ detect favourites session (used to lock WS review to fav_kind)
   const isFavoritesSession = safeDeckId === "favorites" || deckId === "favorites";
 
@@ -64,15 +211,15 @@ export function usePracticeFlow({
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const [sessionPairs, setSessionPairs] = useState<PairRow[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>("preview");
+  const [sessionPairs, setSessionPairs] = useState<PairRow[]>(initialBootstrap.sessionPairs);
+  const [viewMode, setViewMode] = useState<ViewMode>(initialBootstrap.viewMode);
 
   const [showTranslations, setShowTranslations] = useState(true);
 
   // REVIEW queue (indices into sessionPairs)
-  const [queue, setQueue] = useState<number[]>([]);
+  const [queue, setQueue] = useState<number[]>(initialBootstrap.queue);
   const [qPos, setQPos] = useState(0);
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(initialBootstrap.idx);
 
   // LEARN words/sentences: linear position through sessionPairs (kept for UI/compat)
   const [learnPos, setLearnPos] = useState(0);
@@ -82,7 +229,7 @@ export function usePracticeFlow({
   }, [learnPos]);
 
   // ✅ LEARN queue (indices into sessionPairs) — used for defer-to-end
-  const [learnQueue, setLearnQueue] = useState<number[]>([]);
+  const [learnQueue, setLearnQueue] = useState<number[]>(initialBootstrap.learnQueue);
   const [learnQPos, setLearnQPos] = useState(0);
 
   const sessionPairsRef = useRef<PairRow[]>([]);
@@ -104,12 +251,12 @@ export function usePracticeFlow({
   const [isFinishing, setIsFinishing] = useState(false);
 
   // Learn WS steps
-  const [learnWsStage, setLearnWsStage] = useState<Stage>("word");
-  const [wsSteps, setWsSteps] = useState<LearnStep[]>([]);
+  const [learnWsStage, setLearnWsStage] = useState<Stage>(initialBootstrap.learnWsStage);
+  const [wsSteps, setWsSteps] = useState<LearnStep[]>(initialBootstrap.wsSteps);
   const [wsPos, setWsPos] = useState(0);
 
   // Review-only stage override
-  const [reviewStage, setReviewStage] = useState<Stage>("word");
+  const [reviewStage, setReviewStage] = useState<Stage>(initialBootstrap.reviewStage);
 
   // =========================
   // AUDIO
@@ -126,29 +273,40 @@ export function usePracticeFlow({
   // =========================
   // SESSION BUILD (guarded to avoid infinite loops)
   // =========================
-  const lastBuildKeyRef = useRef<string>("");
+  const lastBuildKeyRef = useRef<string>(initialBootstrap.buildKey);
+  const previousSessionLenRef = useRef(initialBootstrap.sessionPairs.length);
 
   useEffect(() => {
-    const buildKey = `${deckId}|${mode}|${isReview}|${chosenN}|${offset}|${pairs.length}`;
-    if (lastBuildKeyRef.current === buildKey) return;
-    lastBuildKeyRef.current = buildKey;
+    const nextBootstrap = buildInitialPracticeBootstrap({
+      deckId,
+      mode,
+      isReview,
+      chosenN,
+      offset,
+      pairs,
+      initialProgress,
+    });
+    if (lastBuildKeyRef.current === nextBootstrap.buildKey) return;
+    lastBuildKeyRef.current = nextBootstrap.buildKey;
 
     // hard reset session-local state
+    setProgress(initialProgress || {});
+    progressRef.current = initialProgress || {};
     setRevealed(false);
     setShowTranslations(true);
 
     // review queue
-    setQueue([]);
+    setQueue(nextBootstrap.queue);
     setQPos(0);
-    setIdx(0);
+    setIdx(nextBootstrap.idx);
 
     // learn linear + learn queue
     setLearnPos(0);
     learnPosRef.current = 0;
-    setLearnQueue([]);
+    setLearnQueue(nextBootstrap.learnQueue);
     setLearnQPos(0);
 
-    setViewMode("preview");
+    setViewMode(nextBootstrap.viewMode);
 
     // audio stop + reset preview UI
     audioRef.current.stop();
@@ -161,30 +319,21 @@ export function usePracticeFlow({
     reviewDoneRef.current = {};
 
     // reset stages
-    setReviewStage(mode === "sentences" ? "sentence" : "word");
-    setLearnWsStage("word");
+    setReviewStage(nextBootstrap.reviewStage);
+    setLearnWsStage(nextBootstrap.learnWsStage);
 
     // reset ws learn steps
-    setWsSteps([]);
+    setWsSteps(nextBootstrap.wsSteps);
     setWsPos(0);
 
     // reset finishing flag
     setIsFinishing(false);
 
     // rebuild session
-    const slice = buildSessionPairs({
-      safePairs: pairs,
-      progress,
-      mode,
-      isReview,
-      chosenN,
-      offset,
-    });
-
-    setSessionPairs(slice);
-    setViewMode("preview");
+    setSessionPairs(nextBootstrap.sessionPairs);
+    previousSessionLenRef.current = nextBootstrap.sessionPairs.length;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deckId, mode, isReview, chosenN, offset, pairs.length]);
+  }, [deckId, mode, isReview, chosenN, offset, pairs.length, initialProgress]);
 
   // =========================
   // WS: effective mode + preview sizing
@@ -314,6 +463,7 @@ export function usePracticeFlow({
 
     // REVIEW: random queue
     if (isReview) {
+      if (queue.length > 0) return;
       const indices = sessionPairs.map((_, i) => i);
       for (let i = indices.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -365,9 +515,7 @@ export function usePracticeFlow({
     }
 
     // WS learn is initialized via startPractice() or WS skip-preview effect
-  }, [viewMode, sessionPairs, progress, isReview, mode, learnQueue.length]);
-
-  const previousSessionLenRef = useRef(0);
+  }, [viewMode, sessionPairs, progress, isReview, mode, learnQueue.length, queue.length]);
 
   // When session pairs are appended during practice (no-limit chunking),
   // extend the active queues/steps without resetting the current card.
@@ -434,7 +582,7 @@ export function usePracticeFlow({
     // In favourites review sessions, each row represents ONE favourited item.
     // So we lock the stage to fav_kind and never show the "other half".
     if (isReview && isFavoritesSession) {
-      const k = String((currentPair as any)?.fav_kind ?? "").toLowerCase().trim();
+      const k = String(currentPair.fav_kind ?? "").toLowerCase().trim();
       if (k === "word") return "word";
       if (k === "sentence") {
         // safety: if sentence missing, fall back to word
@@ -502,7 +650,7 @@ export function usePracticeFlow({
     // ✅ effective active for favourites sessions (per item)
     const isFavSession = safeDeckId === "favorites" || deckId === "favorites";
     const effectiveIsActive = isFavSession
-      ? String((currentPair as any)?.fav_dir ?? "").toLowerCase().trim() === "active"
+      ? String(currentPair.fav_dir ?? "").toLowerCase().trim() === "active"
       : isActive;
 
     // Passive: play BEFORE reveal
@@ -623,6 +771,52 @@ export function usePracticeFlow({
     []
   );
 
+  const mergeSessionAudioById = useCallback(
+    (
+      updates: Record<
+        string,
+        { word_target_audio_url?: string | null; sentence_target_audio_url?: string | null }
+      >
+    ) => {
+      const ids = Object.keys(updates);
+      if (ids.length === 0) return;
+
+      setSessionPairs((prev) => {
+        let changed = false;
+        const next = prev.map((pair) => {
+          const patch = updates[pair.id];
+          if (!patch) return pair;
+
+          const nextWord =
+            typeof patch.word_target_audio_url === "string"
+              ? patch.word_target_audio_url
+              : pair.word_target_audio_url;
+          const nextSentence =
+            typeof patch.sentence_target_audio_url === "string"
+              ? patch.sentence_target_audio_url
+              : pair.sentence_target_audio_url;
+
+          if (
+            nextWord === pair.word_target_audio_url &&
+            nextSentence === pair.sentence_target_audio_url
+          ) {
+            return pair;
+          }
+
+          changed = true;
+          return {
+            ...pair,
+            word_target_audio_url: nextWord,
+            sentence_target_audio_url: nextSentence,
+          };
+        });
+
+        return changed ? next : prev;
+      });
+    },
+    []
+  );
+
   return {
     // core
     progress,
@@ -630,6 +824,7 @@ export function usePracticeFlow({
 
     sessionPairs,
     appendSessionChunk,
+    mergeSessionAudioById,
     viewMode,
     setViewMode,
 

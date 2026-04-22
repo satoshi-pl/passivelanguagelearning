@@ -9,6 +9,8 @@ export type PairRow = {
 
   word_target_audio_url?: string | null;
   sentence_target_audio_url?: string | null;
+  fav_kind?: "word" | "sentence" | null;
+  fav_dir?: "active" | "passive" | null;
 };
 
 export type ProgressMap = Record<

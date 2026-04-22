@@ -22,6 +22,7 @@ import {
   emitInteractionTiming,
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
+import { trackGaEvent } from "@/lib/analytics/ga";
 
 const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
@@ -70,6 +71,36 @@ type Props = {
     source: "learn" | "review";
     category?: string;
   };
+  serverTiming?: {
+    auth_user_lookup_ms: number;
+    deck_lookup_ms: number;
+    session_selection_rpc_ms: number;
+    parallel_wait_ms: number;
+    progress_map_build_ms: number;
+    response_prep_ms: number;
+    total_server_ms: number;
+    dominant_stage: string;
+    mode: LearnMode;
+    dir: "passive" | "active";
+    source: "learn" | "review" | "favorites";
+    category: string;
+    n: number;
+    initial_rpc_n: number;
+    offset: number;
+    pairs_count: number;
+  } | null;
+};
+
+type FavoritesListResponse = {
+  error?: string;
+  items?: Array<{
+    pairId?: string;
+    kind?: "word" | "sentence" | null;
+  }>;
+};
+
+type FavoritesToggleResponse = {
+  favorited?: boolean;
 };
 
 export default function PracticeClient({
@@ -83,6 +114,7 @@ export default function PracticeClient({
   deckNameById = {},
   deckLevelById = {},
   chunkLoadConfig,
+  serverTiming = null,
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -166,7 +198,7 @@ export default function PracticeClient({
 
   const itemIsActive = useMemo(() => {
     if (!isFavoritesSession) return isActiveFromUrl;
-    const d = String((flow.currentPair as any)?.fav_dir ?? "").toLowerCase().trim();
+    const d = String(flow.currentPair?.fav_dir ?? "").toLowerCase().trim();
     return d === "active";
   }, [isFavoritesSession, isActiveFromUrl, flow.currentPair]);
 
@@ -223,12 +255,18 @@ export default function PracticeClient({
     const base = chunkLoadConfig?.initialOffset ?? offset;
     return base + safePairs.length;
   });
+  const audioEnrichQueuedRef = useRef<Set<string>>(new Set());
+  const audioEnrichDoneRef = useRef<Set<string>>(new Set());
+  const audioEnrichBusyRef = useRef(false);
 
   useEffect(() => {
     const base = chunkLoadConfig?.initialOffset ?? offset;
     setChunkHasMore(!!chunkLoadConfig?.enabled);
     setChunkBusy(false);
     setNextChunkOffset(base + safePairs.length);
+    audioEnrichQueuedRef.current = new Set();
+    audioEnrichDoneRef.current = new Set();
+    audioEnrichBusyRef.current = false;
   }, [chunkLoadConfig, offset, safePairs.length]);
 
   const loadMoreSessionPairs = useCallback(async () => {
@@ -302,6 +340,92 @@ export default function PracticeClient({
     void loadMoreSessionPairs();
   }, [chunkLoadConfig, chunkHasMore, chunkBusy, loadMoreSessionPairs]);
 
+  const flushAudioEnrichment = useCallback(async () => {
+    if (audioEnrichBusyRef.current) return;
+    if (audioEnrichQueuedRef.current.size === 0) return;
+
+    const batch = Array.from(audioEnrichQueuedRef.current).slice(0, 24);
+    if (batch.length === 0) return;
+
+    audioEnrichBusyRef.current = true;
+    for (const id of batch) audioEnrichQueuedRef.current.delete(id);
+
+    try {
+      const res = await fetch("/api/practice/hydrate-audio", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          targetLang,
+          pairIds: batch,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) return;
+
+      const items = Array.isArray((json as { items?: unknown[] }).items)
+        ? ((json as { items: Array<{ id: string; word_target_audio_url?: string | null; sentence_target_audio_url?: string | null }> }).items)
+        : [];
+
+      if (items.length > 0) {
+        const updates: Record<
+          string,
+          { word_target_audio_url?: string | null; sentence_target_audio_url?: string | null }
+        > = {};
+
+        for (const item of items) {
+          const pairId = String(item.id || "").trim();
+          if (!pairId) continue;
+          updates[pairId] = {
+            word_target_audio_url: item.word_target_audio_url ?? null,
+            sentence_target_audio_url: item.sentence_target_audio_url ?? null,
+          };
+          audioEnrichDoneRef.current.add(pairId);
+        }
+
+        flow.mergeSessionAudioById(updates);
+      }
+    } catch {
+      // Keep session usable even if enrichment fails.
+    } finally {
+      audioEnrichBusyRef.current = false;
+      if (audioEnrichQueuedRef.current.size > 0) {
+        void flushAudioEnrichment();
+      }
+    }
+  }, [flow, targetLang]);
+
+  useEffect(() => {
+    if (!targetLang) return;
+    if (flow.sessionPairs.length === 0) return;
+
+    const orderedIds: string[] = [];
+    const seen = new Set<string>();
+    const currentId = flow.currentPair?.id ? String(flow.currentPair.id).trim() : "";
+    if (currentId) {
+      orderedIds.push(currentId);
+      seen.add(currentId);
+    }
+    for (const pair of flow.sessionPairs) {
+      const pairId = String(pair?.id || "").trim();
+      if (!pairId || seen.has(pairId)) continue;
+      seen.add(pairId);
+      orderedIds.push(pairId);
+    }
+
+    let queued = false;
+    for (const pairId of orderedIds) {
+      if (audioEnrichDoneRef.current.has(pairId)) continue;
+      if (audioEnrichQueuedRef.current.has(pairId)) continue;
+      audioEnrichQueuedRef.current.add(pairId);
+      queued = true;
+    }
+
+    if (queued) {
+      void flushAudioEnrichment();
+    }
+  }, [flow.sessionPairs, flow.currentPair?.id, flushAudioEnrichment, targetLang]);
+
   useEffect(() => {
     if (!debugAudio) return;
     console.debug("[audio-debug]", "derived state", {
@@ -341,6 +465,61 @@ export default function PracticeClient({
     consumeRouteInteractionTiming();
   }, []);
 
+  useEffect(() => {
+    if (!serverTiming) return;
+    let cancelled = false;
+    let attempt = 0;
+    const maxAttempts = 20;
+
+    console.info("[start_practice_server_timing] payload received in PracticeClient", {
+      hasPayload: !!serverTiming,
+      keys: Object.keys(serverTiming),
+      total_server_ms: serverTiming.total_server_ms,
+      dominant_stage: serverTiming.dominant_stage,
+    });
+
+    const emitWhenGaReady = () => {
+      if (cancelled) return;
+      const w = window as Window & { gtag?: unknown; dataLayer?: unknown };
+      const gtagReady = typeof w.gtag === "function";
+      const dataLayerReady = Array.isArray(w.dataLayer);
+      const gaReady = gtagReady || dataLayerReady;
+
+      if (gaReady) {
+        console.info("[start_practice_server_timing] GA ready detected", {
+          gtagReady,
+          dataLayerReady,
+          attempt,
+        });
+        console.info("[start_practice_server_timing] sending event", {
+          event: "start_practice_server_timing",
+          total_server_ms: serverTiming.total_server_ms,
+          dominant_stage: serverTiming.dominant_stage,
+        });
+        trackGaEvent("start_practice_server_timing", serverTiming);
+        console.info("[start_practice_server_timing]", serverTiming);
+        return;
+      }
+
+      attempt += 1;
+      if (attempt >= maxAttempts) {
+        console.warn("[start_practice_server_timing] GA not ready; event not sent after retries", {
+          attempts: maxAttempts,
+          gtagReady,
+          dataLayerReady,
+        });
+        return;
+      }
+
+      window.setTimeout(emitWhenGaReady, 120);
+    };
+
+    emitWhenGaReady();
+    return () => {
+      cancelled = true;
+    };
+  }, [serverTiming]);
+
   const currentCardKey = useMemo(() => {
     if (!flow.currentPair || !flow.currentStage) return "";
     return `${flow.currentPair.id}|${flow.currentStage}`;
@@ -373,7 +552,7 @@ export default function PracticeClient({
 
   const favDir = useMemo(() => {
     if (isFavoritesSession) {
-      const d = String((flow.currentPair as any)?.fav_dir ?? "").toLowerCase().trim();
+      const d = String(flow.currentPair?.fav_dir ?? "").toLowerCase().trim();
       if (d === "active" || d === "passive") return d;
       return "passive";
     }
@@ -399,10 +578,10 @@ export default function PracticeClient({
             targetLang
           )}&native_lang=${encodeURIComponent(nativeLang)}`
         );
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error((json as any)?.error || "Failed to load favourites");
+        const json = (await res.json().catch(() => ({}))) as FavoritesListResponse;
+        if (!res.ok) throw new Error(json.error || "Failed to load favourites");
 
-        const items = (json as any)?.items ?? [];
+        const items = json.items ?? [];
         const next = new Set<string>();
 
         for (const it of items) {
@@ -450,10 +629,10 @@ export default function PracticeClient({
         }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as FavoritesToggleResponse;
       if (!res.ok) return "error" as const;
 
-      if ((json as any)?.favorited === true) {
+      if (json.favorited === true) {
         setFavKeys((prev) => {
           const next = new Set(prev);
           next.add(key);
@@ -484,10 +663,10 @@ export default function PracticeClient({
         }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as FavoritesToggleResponse;
       if (!res.ok) return "error" as const;
 
-      if ((json as any)?.favorited === false) {
+      if (json.favorited === false) {
         setFavKeys((prev) => {
           const next = new Set(prev);
           next.delete(key);
