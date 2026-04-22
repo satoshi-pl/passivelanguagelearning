@@ -16,12 +16,18 @@ export default function LogoHomeLink({
       prefetch={false}
       className={className}
       onClick={(event) => {
-        const target = event.target instanceof Element ? event.target : null;
-        const targetValue = target?.closest("[data-top-nav-target]")?.getAttribute("data-top-nav-target");
-        trackGaEvent("top_nav_click", {
-          target: targetValue === "logo" ? "logo" : "brand",
-          location: "top_nav",
-        });
+        try {
+          const target = event.target instanceof Element ? event.target : null;
+          const targetValue = target?.closest("[data-top-nav-target]")?.getAttribute("data-top-nav-target");
+          trackGaEvent("top_nav_click", {
+            target: targetValue === "logo" ? "logo" : "brand",
+            location: "top_nav",
+          });
+        } catch (error) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[logo-home-link] click tracking failed", { error });
+          }
+        }
       }}
     >
       {children}

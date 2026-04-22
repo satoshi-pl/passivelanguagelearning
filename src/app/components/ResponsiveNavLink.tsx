@@ -46,16 +46,28 @@ export default function ResponsiveNavLink({
   }, []);
 
   const armPending = () => {
-    flushSync(() => {
-      setPending(true);
-    });
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => setPending(false), pendingDurationMs);
+    try {
+      flushSync(() => {
+        setPending(true);
+      });
+      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = window.setTimeout(() => setPending(false), pendingDurationMs);
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[responsive-nav-link] pending state failed", { href: hrefString, error });
+      }
+    }
   };
 
   const primePrefetch = () => {
     if (!hrefString) return;
-    router.prefetch(hrefString);
+    try {
+      router.prefetch(hrefString);
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[responsive-nav-link] prefetch failed", { href: hrefString, error });
+      }
+    }
   };
 
   return (
