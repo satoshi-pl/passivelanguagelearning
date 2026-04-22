@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
+import { buildPassiveReviewHref } from "@/lib/passive-review/shared";
 import {
   consumeRouteInteractionTiming,
   emitInteractionTiming,
@@ -64,16 +65,17 @@ export default function ReviewDeckControls({
   ];
 
   const buildReviewPageHref = useCallback((nextMode: Mode, nextCategory: string | null) => {
-    const qs = new URLSearchParams();
-    qs.set("mode", nextMode);
-    qs.set("back", backToDeckHref);
-
-    if (nextCategory) {
-      qs.set("category", nextCategory);
-    }
-
-    return `/decks/${deckId}/review?${qs.toString()}`;
-  }, [backToDeckHref, deckId]);
+    return buildPassiveReviewHref({
+      deckId,
+      mode: nextMode,
+      backToDeckHref,
+      category: nextCategory,
+      deckName,
+      targetLang,
+      supportLang,
+      level,
+    });
+  }, [backToDeckHref, deckId, deckName, targetLang, supportLang, level]);
 
   const buildPracticeHref = useCallback((n: number) => {
     const qs = new URLSearchParams();
