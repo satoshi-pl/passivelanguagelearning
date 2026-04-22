@@ -4,47 +4,12 @@ export const revalidate = 0;
 import { normalizeCategoryParam } from "./practice/lib/categories";
 import { redirect } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
-import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import PassiveDeckControls from "./PassiveDeckControls";
+import PassiveDashboardPageClient from "./PassiveDashboardPageClient";
+import { getPassiveDashboardPageData } from "@/lib/passive-dashboard/pageData";
+import type { PassiveDashboardMode } from "@/lib/passive-dashboard/types";
 
-type Mode = "words" | "ws" | "sentences";
-
-type Progress = {
-  total: number;
-  mastered: number;
-  pct: number;
-};
-
-type CategoryOption = {
-  value: string;
-  label: string;
-};
-
-type CategoryProgressEntry = {
-  words: Progress;
-  sentences: Progress;
-};
-
-type PairRow = {
-  id: string;
-  category: string | null;
-};
-
-type UserPairRow = {
-  pair_id: string;
-  word_mastered_at: string | null;
-  sentence_mastered_at: string | null;
-};
-
-type PassiveAggregateRow = {
-  category: string | null;
-  total_pairs: number | null;
-  words_mastered: number | null;
-  sentences_mastered: number | null;
-};
-
-function normalizeMode(raw: unknown): Mode {
+function normalizeMode(raw: unknown): PassiveDashboardMode {
   const v = (typeof raw === "string" ? raw : "").toLowerCase().trim();
   if (v === "words" || v === "ws" || v === "sentences") return v;
   return "ws";
@@ -54,35 +19,11 @@ function getSingleParam(value: string | string[] | undefined) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function toPct(mastered: number, total: number) {
-  return total > 0 ? Math.round((mastered / total) * 100) : 0;
-}
-
-function langName(codeOrName: string) {
-  const map: Record<string, string> = {
-    es: "Spanish",
-    en: "English",
-    pl: "Polish",
-    de: "German",
-    fr: "French",
-    it: "Italian",
-    pt: "Portuguese",
-    ru: "Russian",
-    tr: "Turkish",
-    ar: "Arabic",
-    sw: "Swahili",
-    zh: "Chinese",
-    ja: "Japanese",
-    ko: "Korean",
-  };
-  const key = (codeOrName || "").toLowerCase().trim();
-  return map[key] ?? codeOrName;
-}
-
 type DeckDetailSearchParams = {
   mode?: string | string[];
   back?: string | string[];
   category?: string | string[];
+  entry?: string | string[];
 };
 
 export default async function DeckDetailPage({
@@ -105,6 +46,7 @@ export default async function DeckDetailPage({
   const mode = normalizeMode(sp.mode);
   const selectedCategoryFromUrl = normalizeCategoryParam(sp.category);
   const backParam = getSingleParam(sp.back);
+  const warmEntry = getSingleParam(sp.entry).toLowerCase() === "my_decks";
 
   let decodedBack = "";
   try {
@@ -113,228 +55,58 @@ export default async function DeckDetailPage({
     decodedBack = backParam || "";
   }
 
-  const { data: deck, error: deckErr } = await supabase
-    .from("decks")
-    .select("id, name, target_lang, native_lang, level, created_at")
-    .eq("id", deckId)
-    .single();
+  if (warmEntry) {
+    return (
+      <PassiveDashboardPageClient
+        deckId={deckId}
+        requestedBackToDecksHref={decodedBack}
+        mode={mode}
+        selectedCategoryFromUrl={selectedCategoryFromUrl}
+        initialData={null}
+        warmEntry
+      />
+    );
+  }
 
-  if (deckErr || !deck) {
+  const result = await getPassiveDashboardPageData({
+    supabase,
+    userId: user.id,
+    deckId,
+    decodedBack,
+  });
+
+  if (result.kind === "not_found") {
     return (
       <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
         <ResponsiveNavLink className="pll-back-link" href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
           ← Back to My decks
         </ResponsiveNavLink>
         <h1 style={{ marginTop: 12 }}>Deck not found</h1>
-        <pre>{JSON.stringify({ deckId, deckErr }, null, 2)}</pre>
+        <pre>{JSON.stringify({ deckId, deckErr: result.error }, null, 2)}</pre>
       </div>
     );
   }
 
-  let overallTotal = 0;
-  let overallWordsMastered = 0;
-  let overallSentencesMastered = 0;
-  let categoryOptions: CategoryOption[] = [];
-  let categoryProgressByValue: Record<string, CategoryProgressEntry> = {};
-
-  const { data: aggregateRows, error: aggregateErr } = await supabase.rpc(
-    "get_passive_dashboard_aggregates",
-    { p_user_id: user.id, p_deck_id: deckId }
-  );
-
-  if (!aggregateErr && (aggregateRows ?? []).length > 0) {
-    const rows = (aggregateRows ?? []) as PassiveAggregateRow[];
-    const overallRow = rows.find((r) => !String(r.category ?? "").trim());
-
-    overallTotal = Number(overallRow?.total_pairs ?? 0);
-    overallWordsMastered = Number(overallRow?.words_mastered ?? 0);
-    overallSentencesMastered = Number(overallRow?.sentences_mastered ?? 0);
-
-    const categoryRows = rows
-      .map((r) => ({
-        category: String(r.category ?? "").trim(),
-        total: Number(r.total_pairs ?? 0),
-        wordsMastered: Number(r.words_mastered ?? 0),
-        sentencesMastered: Number(r.sentences_mastered ?? 0),
-      }))
-      .filter((r) => r.category && r.total > 0)
-      .sort((a, b) => a.category.localeCompare(b.category));
-
-    categoryOptions = categoryRows.map((r) => ({
-      value: r.category,
-      label: `${r.category} (${r.total})`,
-    }));
-
-    categoryProgressByValue = {};
-    for (const row of categoryRows) {
-      categoryProgressByValue[row.category] = {
-        words: {
-          total: row.total,
-          mastered: row.wordsMastered,
-          pct: toPct(row.wordsMastered, row.total),
-        },
-        sentences: {
-          total: row.total,
-          mastered: row.sentencesMastered,
-          pct: toPct(row.sentencesMastered, row.total),
-        },
-      };
-    }
-  } else {
-    if (aggregateErr) {
-      console.warn("[passive-dashboard] aggregate RPC fallback:", aggregateErr.message);
-    }
-    const [{ data: pairRows, error: pairsErr }, { data: userPairRows, error: userPairsErr }] =
-      await Promise.all([
-        supabase.from("pairs").select("id, category").eq("deck_id", deckId),
-        supabase
-          .from("user_pairs")
-          .select("pair_id, word_mastered_at, sentence_mastered_at")
-          .eq("user_id", user.id)
-          .eq("deck_id", deckId),
-      ]);
-
-    const pairs = (pairsErr ? [] : pairRows ?? []) as PairRow[];
-    const userPairs = (userPairsErr ? [] : userPairRows ?? []) as UserPairRow[];
-    const progressByPairId = new Map<string, UserPairRow>();
-    for (const row of userPairs) progressByPairId.set(row.pair_id, row);
-
-    const categoryTotals = new Map<string, number>();
-    const categoryWordsMastered = new Map<string, number>();
-    const categorySentencesMastered = new Map<string, number>();
-
-    for (const pair of pairs) {
-      overallTotal += 1;
-      const progress = progressByPairId.get(pair.id);
-      if (progress?.word_mastered_at) overallWordsMastered += 1;
-      if (progress?.sentence_mastered_at) overallSentencesMastered += 1;
-
-      const category = (pair.category || "").trim();
-      if (!category) continue;
-
-      categoryTotals.set(category, (categoryTotals.get(category) ?? 0) + 1);
-      if (progress?.word_mastered_at) {
-        categoryWordsMastered.set(category, (categoryWordsMastered.get(category) ?? 0) + 1);
-      }
-      if (progress?.sentence_mastered_at) {
-        categorySentencesMastered.set(category, (categorySentencesMastered.get(category) ?? 0) + 1);
-      }
-    }
-
-    categoryOptions = Array.from(categoryTotals.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([value, count]) => ({
-        value,
-        label: `${value} (${count})`,
-      }));
-
-    categoryProgressByValue = {};
-    for (const [category, total] of categoryTotals.entries()) {
-      const wordsMastered = categoryWordsMastered.get(category) ?? 0;
-      const sentencesMastered = categorySentencesMastered.get(category) ?? 0;
-      categoryProgressByValue[category] = {
-        words: { total, mastered: wordsMastered, pct: toPct(wordsMastered, total) },
-        sentences: { total, mastered: sentencesMastered, pct: toPct(sentencesMastered, total) },
-      };
-    }
+  if (result.kind === "error") {
+    return (
+      <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
+        <ResponsiveNavLink className="pll-back-link" href="/decks" style={{ textDecoration: "none", color: "inherit" }}>
+          ← Back to My decks
+        </ResponsiveNavLink>
+        <h1 style={{ marginTop: 12 }}>Dashboard unavailable</h1>
+        <pre>{JSON.stringify(result.error, null, 2)}</pre>
+      </div>
+    );
   }
 
-  const initialSelectedCategory =
-    selectedCategoryFromUrl && categoryProgressByValue[selectedCategoryFromUrl]
-      ? selectedCategoryFromUrl
-      : null;
-
-  const overallWordsProgress: Progress = {
-    total: overallTotal,
-    mastered: overallWordsMastered,
-    pct: toPct(overallWordsMastered, overallTotal),
-  };
-
-  const overallSentencesProgress: Progress = {
-    total: overallTotal,
-    mastered: overallSentencesMastered,
-    pct: toPct(overallSentencesMastered, overallTotal),
-  };
-
-  const targetLabel = langName(deck.target_lang);
-  const nativeLabel = langName(deck.native_lang);
-  const levelLabel = String(deck.level || "").toUpperCase().trim();
-
-  const levelParam =
-    String(deck.level || "").trim().toUpperCase() ||
-    "other";
-  const defaultDecksHref = `/decks?target=${String(deck.target_lang).toLowerCase()}&support=${String(
-    deck.native_lang
-  ).toLowerCase()}&level=${encodeURIComponent(levelParam)}`;
-
-  const backToDecksHref = decodedBack || defaultDecksHref;
-
   return (
-    <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
-      <div
-        className="pll-primary-card"
-        style={{
-          border: "1px solid var(--border)",
-          borderRadius: 16,
-          background: "var(--surface-solid)",
-          color: "var(--foreground)",
-          padding: 18,
-          boxShadow: "var(--shadow)",
-        }}
-      >
-        <div className="pll-card-inner" style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
-          <TrackedResponsiveNavLink
-            className="pll-back-link"
-            href={backToDecksHref}
-            eventName="back_navigation_click"
-            interactionTiming="back_navigation"
-            eventParams={{
-              source_page: "passive_dashboard",
-              destination: backToDecksHref,
-              flow: "passive_learning",
-              mode,
-              category: initialSelectedCategory ?? "all",
-              deck_id: deckId,
-            }}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            ← Back to My decks
-          </TrackedResponsiveNavLink>
-
-          <div style={{ marginTop: 20 }}>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "clamp(2rem, 4.6vw, 2.125rem)",
-                fontWeight: 900,
-                letterSpacing: "-0.03em",
-                lineHeight: 1.08,
-              }}
-            >
-              {levelLabel
-                ? `${targetLabel} ${levelLabel} - Passive Learning`
-                : `${targetLabel} - Passive Learning`}
-            </h1>
-
-            <div style={{ marginTop: 8, color: "var(--foreground-muted)", fontSize: 15 }}>{nativeLabel}</div>
-
-            <PassiveDeckControls
-              deckId={deckId}
-              deckName={deck.name}
-              targetLang={String(deck.target_lang).toLowerCase()}
-              supportLang={String(deck.native_lang).toLowerCase()}
-              level={levelLabel || "other"}
-              mode={mode}
-              backToDecksHref={backToDecksHref}
-              initialSelectedCategory={initialSelectedCategory}
-              categoryOptions={categoryOptions}
-              overallWordsProgress={overallWordsProgress}
-              overallSentencesProgress={overallSentencesProgress}
-              categoryProgressByValue={categoryProgressByValue}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+    <PassiveDashboardPageClient
+      deckId={deckId}
+      requestedBackToDecksHref={result.data.backToDecksHref}
+      mode={mode}
+      selectedCategoryFromUrl={selectedCategoryFromUrl}
+      initialData={result.data}
+      warmEntry={false}
+    />
   );
 }

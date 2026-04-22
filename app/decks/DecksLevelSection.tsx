@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { warmFavoritesPageData } from "@/lib/favorites/warmCache";
+import {
+  seedPassiveDashboardWarmCache,
+  warmPassiveDashboardPageData,
+} from "@/lib/passive-dashboard/warmCache";
+import { buildPassiveDashboardHref } from "@/lib/passive-dashboard/shared";
 
 type DeckRow = {
   id: string;
@@ -151,10 +156,38 @@ export default function DecksLevelSection({
       }),
     [targetLang, supportLang, selectedLevel]
   );
+  const buildDeckDashboardHref = useCallback(
+    (deckId: string) =>
+      buildPassiveDashboardHref({
+        deckId,
+        backToDecksHref: currentDecksHref,
+        warmEntry: true,
+      }),
+    [currentDecksHref]
+  );
+  const warmDashboard = useCallback(
+    (deck: DeckRow, pr: DualProgress) => {
+      const deckId = String(deck.id);
+      seedPassiveDashboardWarmCache({
+        deckId,
+        deckName: deck.name,
+        targetLang: String(deck.target_lang).toLowerCase(),
+        supportLang: String(deck.native_lang).toLowerCase(),
+        levelLabel: String(deck.level || "").toUpperCase().trim(),
+        backToDecksHref: currentDecksHref,
+        overallWordsProgress: pr.words,
+        overallSentencesProgress: pr.sentences,
+      });
+      void warmPassiveDashboardPageData(deckId, currentDecksHref).catch(() => {
+        // Warm prefetch should never interrupt the primary decks UI.
+      });
+    },
+    [currentDecksHref]
+  );
 
   const deckDashboardHrefs = useMemo(
-    () => pairDecks.map((deck) => `/decks/${String(deck.id)}?back=${encodeURIComponent(currentDecksHref)}`),
-    [pairDecks, currentDecksHref]
+    () => pairDecks.map((deck) => buildDeckDashboardHref(String(deck.id))),
+    [pairDecks, buildDeckDashboardHref]
   );
   usePrefetchRoutes([favoritesHref, ...deckDashboardHrefs]);
 
@@ -278,7 +311,7 @@ export default function DecksLevelSection({
                 </div>
 
                 <TrackedResponsiveNavLink
-                  href={`/decks/${String(deck.id)}?back=${encodeURIComponent(currentDecksHref)}`}
+                  href={buildDeckDashboardHref(String(deck.id))}
                   eventName="start_practice_click"
                   interactionTiming="open_dashboard"
                   eventParams={{
@@ -288,6 +321,10 @@ export default function DecksLevelSection({
                     support_lang: deck.native_lang,
                     level: deck.level ?? "other",
                   }}
+                  onPointerEnter={() => warmDashboard(deck, pr)}
+                  onPointerDown={() => warmDashboard(deck, pr)}
+                  onTouchStart={() => warmDashboard(deck, pr)}
+                  onClick={() => warmDashboard(deck, pr)}
                   className="mt-5 flex w-full shrink-0 items-center justify-center text-center md:mt-0 md:inline-flex md:w-auto"
                   style={{
                     padding: "10px 14px",
