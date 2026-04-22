@@ -11,6 +11,11 @@ import {
   emitCategorySwitchTiming,
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
+import {
+  seedPassiveReviewWarmCache,
+  warmPassiveReviewPageData,
+} from "@/lib/passive-review/warmCache";
+import { buildPassiveReviewHref as buildPassiveReviewEntryHref } from "@/lib/passive-review/shared";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -147,18 +152,32 @@ export default function PassiveDeckControls({
   };
 
   const buildPassiveReviewHref = useCallback(() => {
-    const qs = new URLSearchParams();
-    qs.set("mode", currentMode);
-    qs.set("back", buildDashboardBackHref(currentMode, selectedCategory));
-    qs.set("deck_name", deckName);
-    qs.set("target_lang", targetLang);
-    qs.set("support_lang", supportLang);
-    qs.set("level_label", level);
-    if (selectedCategory) {
-      qs.set("category", selectedCategory);
-    }
-    return `/decks/${deckId}/review?${qs.toString()}`;
+    return buildPassiveReviewEntryHref({
+      deckId,
+      mode: currentMode,
+      backToDeckHref: buildDashboardBackHref(currentMode, selectedCategory),
+      deckName,
+      targetLang,
+      supportLang,
+      level,
+      category: selectedCategory,
+      warmEntry: true,
+    });
   }, [currentMode, buildDashboardBackHref, selectedCategory, deckName, targetLang, supportLang, level, deckId]);
+  const warmPassiveReview = useCallback(() => {
+    const backToDeckHref = buildDashboardBackHref(currentMode, selectedCategory);
+    seedPassiveReviewWarmCache({
+      deckId,
+      deckName,
+      targetLang,
+      supportLang,
+      level,
+      backToDeckHref,
+    });
+    void warmPassiveReviewPageData(deckId, backToDeckHref).catch(() => {
+      // Warm prefetch should never interrupt the primary dashboard UI.
+    });
+  }, [buildDashboardBackHref, currentMode, selectedCategory, deckId, deckName, targetLang, supportLang, level]);
 
   useEffect(() => {
     consumeRouteInteractionTiming();
@@ -206,6 +225,10 @@ export default function PassiveDeckControls({
       // ignore storage errors
     }
   }, [selectedCategory, storageKey]);
+
+  useEffect(() => {
+    warmPassiveReview();
+  }, [warmPassiveReview]);
 
   const selectedProgress = useMemo(() => {
     if (!selectedCategory) return null;
@@ -438,17 +461,23 @@ export default function PassiveDeckControls({
           <div className="deck-action-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <ResponsiveNavLink
               href={passiveReviewHref}
+              onPointerEnter={() => warmPassiveReview()}
+              onPointerDown={() => warmPassiveReview()}
+              onTouchStart={() => warmPassiveReview()}
               onClick={() =>
-                trackGaEvent("learning_path_select", {
-                  path: "passive_review",
-                  deck_id: deckId,
-                  deck_name: deckName,
-                  mode: currentMode,
-                  category: selectedCategory ?? "all",
-                  target_lang: targetLang,
-                  support_lang: supportLang,
-                  level,
-                })
+                {
+                  warmPassiveReview();
+                  trackGaEvent("learning_path_select", {
+                    path: "passive_review",
+                    deck_id: deckId,
+                    deck_name: deckName,
+                    mode: currentMode,
+                    category: selectedCategory ?? "all",
+                    target_lang: targetLang,
+                    support_lang: supportLang,
+                    level,
+                  });
+                }
               }
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
