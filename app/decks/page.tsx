@@ -308,7 +308,7 @@ export default async function DecksPage({
     .eq("native_lang", selectedSupport);
 
   const favoritesTotal = favoritesErr ? 0 : favoritesCount ?? 0;
-  const favoritesHref = `/favorites/${selectedTarget}?support=${selectedSupport}&mode=ws`;
+  const favoritesHref = `/favorites/${selectedTarget}?support=${selectedSupport}&mode=ws&entry=my_decks`;
   const currentDecksHref = buildDecksHref({
     target: selectedTarget,
     support: selectedSupport,

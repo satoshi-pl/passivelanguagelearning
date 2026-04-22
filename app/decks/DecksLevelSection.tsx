@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
+import { warmFavoritesPageData } from "@/lib/favorites/warmCache";
 
 type DeckRow = {
   id: string;
@@ -131,6 +131,11 @@ export default function DecksLevelSection({
   favoritesTotal: number;
 }) {
   const [selectedLevel, setSelectedLevel] = useState(initialSelectedLevel);
+  const warmFavorites = useCallback(() => {
+    void warmFavoritesPageData(targetLang, supportLang).catch(() => {
+      // Warm prefetch should never interrupt the primary decks UI.
+    });
+  }, [targetLang, supportLang]);
 
   const displayDecks = useMemo(
     () => pairDecks.filter((d) => (String(d.level || "").trim().toUpperCase() || LEVEL_URL_OTHER) === selectedLevel),
@@ -152,6 +157,10 @@ export default function DecksLevelSection({
     [pairDecks, currentDecksHref]
   );
   usePrefetchRoutes([favoritesHref, ...deckDashboardHrefs]);
+
+  useEffect(() => {
+    warmFavorites();
+  }, [warmFavorites]);
 
   const onLevelSelect = (nextLevel: string) => {
     if (nextLevel === selectedLevel) return;
@@ -209,6 +218,9 @@ export default function DecksLevelSection({
             href={favoritesHref}
             eventName="favorites_open"
             eventParams={{ target_lang: targetLang, support_lang: supportLang, mode: "ws" }}
+            onPointerEnter={() => warmFavorites()}
+            onPointerDown={() => warmFavorites()}
+            onTouchStart={() => warmFavorites()}
             style={{
               display: "inline-flex",
               alignItems: "center",
