@@ -19,7 +19,13 @@ function compactParams(params?: EventParams) {
 
 export function trackGaEvent(eventName: string, params?: EventParams) {
   const payload = compactParams(params);
-  sendGAEvent("event", eventName, payload ?? {});
+  try {
+    sendGAEvent("event", eventName, payload ?? {});
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[ga] event dispatch failed", { eventName, payload, error });
+    }
+  }
 }
 
 export function normalizeSessionOptionValue(value: number) {
