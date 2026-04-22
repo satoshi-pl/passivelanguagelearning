@@ -16,6 +16,7 @@ import {
   warmActiveReviewPageData,
 } from "@/lib/active-review/warmCache";
 import { buildActiveReviewHref as buildActiveReviewEntryHref } from "@/lib/active-review/shared";
+import { buildActiveDashboardHref } from "@/lib/active-dashboard/shared";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -102,15 +103,12 @@ export default function ActiveDeckControls({
   ];
 
   const buildActivePageHref = useCallback((nextMode: Mode, nextCategory: string | null) => {
-    const qs = new URLSearchParams();
-    qs.set("mode", nextMode);
-    qs.set("back", backToDecksHref);
-
-    if (nextCategory) {
-      qs.set("category", nextCategory);
-    }
-
-    return `/decks/${deckId}/active?${qs.toString()}`;
+    return buildActiveDashboardHref({
+      deckId,
+      mode: nextMode,
+      backToDecksHref,
+      category: nextCategory,
+    });
   }, [backToDecksHref, deckId]);
 
   const buildDashboardBackHref = useCallback((nextMode: Mode, nextCategory: string | null) => {

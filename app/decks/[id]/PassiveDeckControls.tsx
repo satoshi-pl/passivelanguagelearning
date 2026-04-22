@@ -16,6 +16,8 @@ import {
   warmPassiveReviewPageData,
 } from "@/lib/passive-review/warmCache";
 import { buildPassiveReviewHref as buildPassiveReviewEntryHref } from "@/lib/passive-review/shared";
+import { buildActiveDashboardHref } from "@/lib/active-dashboard/shared";
+import { warmActiveDashboardPageData } from "@/lib/active-dashboard/warmCache";
 
 type Mode = "words" | "ws" | "sentences";
 
@@ -137,19 +139,15 @@ export default function PassiveDeckControls({
     return `/decks/${deckId}/practice?${qs.toString()}`;
   }, [deckId, currentMode, buildDashboardBackHref, selectedCategory]);
 
-  const buildOptionalHref = (pathname: string) => {
-    const qs = new URLSearchParams();
-    qs.set("mode", currentMode);
-
-    const passiveDashboardHref = buildDashboardBackHref(currentMode, selectedCategory);
-    qs.set("back", passiveDashboardHref);
-
-    if (selectedCategory) {
-      qs.set("category", selectedCategory);
-    }
-
-    return `${pathname}?${qs.toString()}`;
-  };
+  const buildActiveHref = useCallback(() => {
+    return buildActiveDashboardHref({
+      deckId,
+      mode: currentMode,
+      backToDecksHref: buildDashboardBackHref(currentMode, selectedCategory),
+      category: selectedCategory,
+      warmEntry: true,
+    });
+  }, [deckId, currentMode, buildDashboardBackHref, selectedCategory]);
 
   const buildPassiveReviewHref = useCallback(() => {
     return buildPassiveReviewEntryHref({
@@ -178,6 +176,12 @@ export default function PassiveDeckControls({
       // Warm prefetch should never interrupt the primary dashboard UI.
     });
   }, [buildDashboardBackHref, currentMode, selectedCategory, deckId, deckName, targetLang, supportLang, level]);
+  const warmActiveDashboard = useCallback(() => {
+    const backToDeckHref = buildDashboardBackHref(currentMode, selectedCategory);
+    void warmActiveDashboardPageData(deckId, backToDeckHref).catch(() => {
+      // Warm prefetch should never interrupt the primary dashboard UI.
+    });
+  }, [buildDashboardBackHref, currentMode, selectedCategory, deckId]);
 
   useEffect(() => {
     consumeRouteInteractionTiming();
@@ -230,6 +234,10 @@ export default function PassiveDeckControls({
     warmPassiveReview();
   }, [warmPassiveReview]);
 
+  useEffect(() => {
+    warmActiveDashboard();
+  }, [warmActiveDashboard]);
+
   const selectedProgress = useMemo(() => {
     if (!selectedCategory) return null;
     return categoryProgressByValue[selectedCategory] ?? null;
@@ -241,7 +249,7 @@ export default function PassiveDeckControls({
   const modeWsHref = buildDeckPageHref("ws", selectedCategory);
   const modeSentencesHref = buildDeckPageHref("sentences", selectedCategory);
   const passiveReviewHref = buildPassiveReviewHref();
-  const activeHref = buildOptionalHref(`/decks/${deckId}/active`);
+  const activeHref = buildActiveHref();
 
   const prefetchHrefs = useMemo(
     () => [
@@ -496,17 +504,23 @@ export default function PassiveDeckControls({
 
             <ResponsiveNavLink
               href={activeHref}
+              onPointerEnter={() => warmActiveDashboard()}
+              onPointerDown={() => warmActiveDashboard()}
+              onTouchStart={() => warmActiveDashboard()}
               onClick={() =>
-                trackGaEvent("learning_path_select", {
-                  path: "active_learning",
-                  deck_id: deckId,
-                  deck_name: deckName,
-                  mode: currentMode,
-                  category: selectedCategory ?? "all",
-                  target_lang: targetLang,
-                  support_lang: supportLang,
-                  level,
-                })
+                {
+                  warmActiveDashboard();
+                  trackGaEvent("learning_path_select", {
+                    path: "active_learning",
+                    deck_id: deckId,
+                    deck_name: deckName,
+                    mode: currentMode,
+                    category: selectedCategory ?? "all",
+                    target_lang: targetLang,
+                    support_lang: supportLang,
+                    level,
+                  });
+                }
               }
               style={secondaryActionStyle}
               className="deck-action-button deck-action-button--secondary"
