@@ -125,6 +125,7 @@ export default function DecksLevelSection({
   progressByDeck,
   favoritesHref,
   favoritesTotal,
+  onVisibleStateChange,
 }: {
   targetLang: string;
   supportLang: string;
@@ -134,6 +135,7 @@ export default function DecksLevelSection({
   progressByDeck: Record<string, DualProgress>;
   favoritesHref: string;
   favoritesTotal: number;
+  onVisibleStateChange?: (state: { selectedLevelUrl: string; currentDecksHref: string }) => void;
 }) {
   const [selectedLevel, setSelectedLevel] = useState(initialSelectedLevel);
   const warmFavorites = useCallback(() => {
@@ -192,8 +194,19 @@ export default function DecksLevelSection({
   usePrefetchRoutes([favoritesHref, ...deckDashboardHrefs]);
 
   useEffect(() => {
+    setSelectedLevel(initialSelectedLevel);
+  }, [initialSelectedLevel]);
+
+  useEffect(() => {
     warmFavorites();
   }, [warmFavorites]);
+
+  useEffect(() => {
+    onVisibleStateChange?.({
+      selectedLevelUrl: selectedLevel,
+      currentDecksHref,
+    });
+  }, [onVisibleStateChange, selectedLevel, currentDecksHref]);
 
   const onLevelSelect = (nextLevel: string) => {
     if (nextLevel === selectedLevel) return;

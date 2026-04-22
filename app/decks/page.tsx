@@ -1,209 +1,14 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import RememberDecksHref from "./RememberDecksHref";
 import { redirect } from "next/navigation";
-import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
-import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
-import RouteTimingConsumer from "@/app/components/RouteTimingConsumer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import AutoSubmitSupportSelect from "./AutoSubmitSupportSelect";
-import DecksLevelSection from "./DecksLevelSection";
-
-type DeckRow = {
-  id: string;
-  name: string;
-  target_lang: string;
-  native_lang: string;
-  level: string | null;
-  created_at: string;
-};
-
-type Progress = { total: number; mastered: number; pct: number };
-type DualProgress = { words: Progress; sentences: Progress };
-type PairDeckRow = {
-  deck_id: string;
-};
-type UserPairDeckRow = {
-  deck_id: string;
-  word_mastered_at: string | null;
-  sentence_mastered_at: string | null;
-};
-
-function toPct(mastered: number, total: number) {
-  return total > 0 ? Math.round((mastered / total) * 100) : 0;
-}
-
-function langName(codeOrName: string) {
-  const map: Record<string, string> = {
-    es: "Spanish",
-    en: "English",
-    pl: "Polish",
-    de: "German",
-    fr: "French",
-    it: "Italian",
-    pt: "Portuguese",
-    ru: "Russian",
-    tr: "Turkish",
-    ar: "Arabic",
-    sw: "Swahili",
-    zh: "Chinese",
-    ja: "Japanese",
-    ko: "Korean",
-  };
-  const key = (codeOrName || "").toLowerCase().trim();
-  return map[key] ?? codeOrName;
-}
+import DecksPageClient from "./DecksPageClient";
+import { getDecksPageData } from "@/lib/decks/pageData";
+import { parseLevelSearchParam } from "@/lib/decks/shared";
 
 function getSingleParam(value: string | string[] | undefined) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function levelRank(level: string | null | undefined) {
-  const map: Record<string, number> = {
-    A1: 1,
-    A2: 2,
-    B1: 3,
-    B2: 4,
-    C1: 5,
-    C2: 6,
-  };
-  return map[String(level || "").toUpperCase()] ?? 999;
-}
-
-/** URL/query token for decks with no CEFR level set */
-const LEVEL_URL_OTHER = "other";
-
-function deckLevelUrlValue(level: string | null | undefined): string {
-  const u = String(level || "").trim().toUpperCase();
-  return u || LEVEL_URL_OTHER;
-}
-
-function deckLevelButtonLabel(level: string | null | undefined): string {
-  const u = String(level || "").trim().toUpperCase();
-  return u || "Other";
-}
-
-function parseLevelSearchParam(raw: string): string {
-  const t = raw.trim().toLowerCase();
-  if (!t) return "";
-  if (t === LEVEL_URL_OTHER) return LEVEL_URL_OTHER;
-  return raw.trim().toUpperCase();
-}
-
-function levelUrlSortKey(urlVal: string): number {
-  if (urlVal === LEVEL_URL_OTHER) return 999;
-  return levelRank(urlVal);
-}
-
-function buildDecksHref({
-  target,
-  support,
-  level,
-}: {
-  target?: string;
-  support?: string;
-  /** CEFR code (e.g. A1) or `other` for decks without level */
-  level?: string;
-}) {
-  const qs = new URLSearchParams();
-
-  if (target) qs.set("target", target);
-  if (support) qs.set("support", support);
-  if (level) {
-    qs.set("level", level === LEVEL_URL_OTHER ? LEVEL_URL_OTHER : level.toUpperCase());
-  }
-
-  const s = qs.toString();
-  return s ? `/decks?${s}` : "/decks";
-}
-
-async function getDeckProgressByDeckBulk(
-  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
-  userId: string,
-  deckIds: string[]
-): Promise<Record<string, DualProgress>> {
-  const empty: Record<string, DualProgress> = {};
-  for (const deckId of deckIds) {
-    empty[deckId] = {
-      words: { total: 0, mastered: 0, pct: 0 },
-      sentences: { total: 0, mastered: 0, pct: 0 },
-    };
-  }
-  if (deckIds.length === 0) return empty;
-
-  const [{ data: pairRows, error: pairErr }, { data: userPairRows, error: userPairErr }] = await Promise.all([
-    supabase.from("pairs").select("deck_id").in("deck_id", deckIds),
-    supabase
-      .from("user_pairs")
-      .select("deck_id, word_mastered_at, sentence_mastered_at")
-      .eq("user_id", userId)
-      .in("deck_id", deckIds),
-  ]);
-
-  if (pairErr || userPairErr) return empty;
-
-  const totalsByDeck: Record<string, number> = {};
-  for (const row of (pairRows ?? []) as PairDeckRow[]) {
-    const key = row.deck_id;
-    totalsByDeck[key] = (totalsByDeck[key] ?? 0) + 1;
-  }
-
-  const wordsByDeck: Record<string, number> = {};
-  const sentencesByDeck: Record<string, number> = {};
-  for (const row of (userPairRows ?? []) as UserPairDeckRow[]) {
-    const key = row.deck_id;
-    if (row.word_mastered_at) wordsByDeck[key] = (wordsByDeck[key] ?? 0) + 1;
-    if (row.sentence_mastered_at) sentencesByDeck[key] = (sentencesByDeck[key] ?? 0) + 1;
-  }
-
-  for (const deckId of deckIds) {
-    const total = totalsByDeck[deckId] ?? 0;
-    const wMastered = wordsByDeck[deckId] ?? 0;
-    const sMastered = sentencesByDeck[deckId] ?? 0;
-    empty[deckId] = {
-      words: { total, mastered: wMastered, pct: toPct(wMastered, total) },
-      sentences: { total, mastered: sMastered, pct: toPct(sMastered, total) },
-    };
-  }
-
-  return empty;
-}
-
-function linkInteractionStyle(active: boolean) {
-  return {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "12px 18px",
-    borderRadius: 999,
-    border: active ? "1px solid var(--foreground)" : "1px solid var(--border)",
-    background: active ? "var(--foreground)" : "var(--surface-solid)",
-    color: active ? "var(--surface-solid)" : "var(--foreground)",
-    textDecoration: "none",
-    fontWeight: 800,
-    fontSize: 15,
-    whiteSpace: "nowrap",
-    minHeight: 46,
-    boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
-    transition: "opacity 130ms ease",
-  } as const;
-}
-
-function FilterButton({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <ResponsiveNavLink href={href} style={linkInteractionStyle(active)}>
-      {children}
-    </ResponsiveNavLink>
-  );
 }
 
 export default async function DecksPage({
@@ -219,271 +24,50 @@ export default async function DecksPage({
   if (!user) redirect("/login");
 
   const sp = (await searchParams) ?? {};
+  const requestedTarget = getSingleParam(sp.target).toLowerCase();
+  const requestedSupport = getSingleParam(sp.support).toLowerCase();
+  const requestedLevel = parseLevelSearchParam(getSingleParam(sp.level));
+  const warmEntry = getSingleParam(sp.entry).toLowerCase() === "home";
 
-  const loadDecks = () =>
-    supabase
-      .from("decks")
-      .select("id, name, target_lang, native_lang, level, created_at")
-      .order("target_lang", { ascending: true })
-      .order("level", { ascending: true })
-      .order("native_lang", { ascending: true })
-      .order("name", { ascending: true });
+  if (warmEntry) {
+    return (
+      <DecksPageClient
+        requestedTarget={requestedTarget}
+        requestedSupport={requestedSupport}
+        requestedLevel={requestedLevel}
+        initialData={null}
+        warmEntry
+      />
+    );
+  }
 
-  const { data: decks, error: decksError } = await loadDecks();
+  const result = await getDecksPageData({
+    supabase,
+    userId: user.id,
+    requestedTarget,
+    requestedSupport,
+    requestedLevel,
+  });
 
-  if (decksError) {
+  if (result.kind === "setup") {
+    redirect("/setup");
+  }
+
+  if (result.kind === "error") {
     return (
       <div className="pll-workspace" style={{ maxWidth: 1040, margin: "40px auto", padding: "0 24px" }}>
-        <pre>{JSON.stringify(decksError, null, 2)}</pre>
+        <pre>{JSON.stringify(result.error, null, 2)}</pre>
       </div>
     );
   }
 
-  const allDecks = (decks as DeckRow[]) ?? [];
-
-  if (allDecks.length === 0) {
-    redirect("/setup");
-  }
-
-  const targetOptions = Array.from(
-    new Set(allDecks.map((d) => (d.target_lang || "").toLowerCase()).filter(Boolean))
-  ).sort((a, b) => langName(a).localeCompare(langName(b)));
-
-  const supportOptionsByTarget: Record<string, string[]> = {};
-  for (const target of targetOptions) {
-    supportOptionsByTarget[target] = Array.from(
-      new Set(
-        allDecks
-          .filter((d) => (d.target_lang || "").toLowerCase() === target)
-          .map((d) => (d.native_lang || "").toLowerCase())
-          .filter(Boolean)
-      )
-    ).sort((a, b) => langName(a).localeCompare(langName(b)));
-  }
-
-  const requestedTarget = getSingleParam(sp.target).toLowerCase();
-  const selectedTarget =
-    targetOptions.includes(requestedTarget) ? requestedTarget : targetOptions[0] ?? "";
-
-  const requestedSupport = getSingleParam(sp.support).toLowerCase();
-  const availableSupportsForSelectedTarget = supportOptionsByTarget[selectedTarget] ?? [];
-
-  const selectedSupport =
-    availableSupportsForSelectedTarget.includes(requestedSupport)
-      ? requestedSupport
-      : availableSupportsForSelectedTarget[0] ?? "";
-
-  const pairDecks = allDecks
-    .filter(
-      (d) =>
-        (d.target_lang || "").toLowerCase() === selectedTarget &&
-        (d.native_lang || "").toLowerCase() === selectedSupport
-    )
-    .sort((a, b) => levelRank(a.level) - levelRank(b.level));
-
-  const levelUrlValues = Array.from(
-    new Set(pairDecks.map((d) => deckLevelUrlValue(d.level)))
-  ).sort((a, b) => levelUrlSortKey(a) - levelUrlSortKey(b));
-
-  const requestedLevelToken = parseLevelSearchParam(getSingleParam(sp.level));
-  const selectedLevelUrl =
-    requestedLevelToken && levelUrlValues.includes(requestedLevelToken)
-      ? requestedLevelToken
-      : levelUrlValues[0] ?? LEVEL_URL_OTHER;
-
-  const pairDeckIds = pairDecks.map((deck) => deck.id);
-  const progressByDeck = await getDeckProgressByDeckBulk(supabase, user.id, pairDeckIds);
-
-  const levelOptions = levelUrlValues.map((urlVal) => {
-    const sampleDeck = pairDecks.find((d) => deckLevelUrlValue(d.level) === urlVal);
-    const label = sampleDeck ? deckLevelButtonLabel(sampleDeck.level) : urlVal;
-    return { value: urlVal, label };
-  });
-
-  const { count: favoritesCount, error: favoritesErr } = await supabase
-    .from("user_favorites")
-    .select("pair_id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("target_lang", selectedTarget)
-    .eq("native_lang", selectedSupport);
-
-  const favoritesTotal = favoritesErr ? 0 : favoritesCount ?? 0;
-  const favoritesHref = `/favorites/${selectedTarget}?support=${selectedSupport}&mode=ws&entry=my_decks`;
-  const currentDecksHref = buildDecksHref({
-    target: selectedTarget,
-    support: selectedSupport,
-    level: selectedLevelUrl,
-  });
-
   return (
-    <div className="pll-workspace" style={{ maxWidth: 1040, margin: "40px auto", padding: "0 24px" }}>
-      <RouteTimingConsumer />
-      <RememberDecksHref href={currentDecksHref} />
-
-      <div
-        style={{
-          marginBottom: 16,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 34,
-            fontWeight: 900,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.08,
-            color: "var(--foreground)",
-          }}
-        >
-          My decks
-        </h1>
-
-        <TrackedResponsiveNavLink
-          href="/decks/add-pair"
-          eventName="add_language_pair_click"
-          eventParams={{ location: "decks_page" }}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "10px 14px",
-            borderRadius: 999,
-            border: "1px solid var(--border)",
-            background: "var(--surface-solid)",
-            color: "var(--foreground)",
-            textDecoration: "none",
-            fontWeight: 800,
-            fontSize: 14,
-            whiteSpace: "nowrap",
-            boxShadow: "0 1px 0 rgba(0,0,0,0.02)",
-          }}
-        >
-          Add language pair
-        </TrackedResponsiveNavLink>
-      </div>
-
-      <div
-        style={{
-          marginBottom: 18,
-          display: "flex",
-          justifyContent: "flex-start",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            justifyContent: "center",
-            alignItems: "flex-start",
-            gap: 34,
-            flexWrap: "wrap",
-            padding: "12px 18px",
-            borderRadius: 18,
-            background: "var(--surface-muted)",
-            border: "1px solid var(--border)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-            width: "fit-content",
-            maxWidth: "100%",
-            color: "var(--foreground)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: "fit-content",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 15,
-                fontWeight: 800,
-                marginBottom: 8,
-                textAlign: "center",
-                color: "var(--foreground)",
-              }}
-            >
-              I want to learn
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              {targetOptions.map((target) => {
-                const supportsForTarget = supportOptionsByTarget[target] ?? [];
-                const supportForLink = supportsForTarget.includes(selectedSupport)
-                  ? selectedSupport
-                  : supportsForTarget[0] ?? "";
-
-                return (
-                  <FilterButton
-                    key={target}
-                    href={buildDecksHref({
-                      target,
-                      support: supportForLink,
-                    })}
-                    active={target === selectedTarget}
-                  >
-                    {langName(target)}
-                  </FilterButton>
-                );
-              })}
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: "fit-content",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 15,
-                fontWeight: 800,
-                marginBottom: 8,
-                textAlign: "center",
-                color: "var(--foreground)",
-              }}
-            >
-              From
-            </div>
-
-            <AutoSubmitSupportSelect
-              target={selectedTarget}
-              value={selectedSupport}
-              options={availableSupportsForSelectedTarget.map((support) => ({
-                value: support,
-                label: langName(support),
-              }))}
-            />
-          </div>
-
-        </div>
-      </div>
-
-      <DecksLevelSection
-        targetLang={selectedTarget}
-        supportLang={selectedSupport}
-        levelOptions={levelOptions}
-        initialSelectedLevel={selectedLevelUrl}
-        pairDecks={pairDecks}
-        progressByDeck={progressByDeck}
-        favoritesHref={favoritesHref}
-        favoritesTotal={favoritesTotal}
-      />
-    </div>
+    <DecksPageClient
+      requestedTarget={requestedTarget}
+      requestedSupport={requestedSupport}
+      requestedLevel={requestedLevel}
+      initialData={result.data}
+      warmEntry={false}
+    />
   );
 }

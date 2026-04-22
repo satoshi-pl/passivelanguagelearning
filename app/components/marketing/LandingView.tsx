@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Container } from "../Container";
+import GoToMyDecksLink from "./GoToMyDecksLink";
 
 type LandingViewProps = {
   isLoggedIn: boolean;
@@ -99,12 +100,20 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
                 <span className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-muted)]/55 px-4 py-2 text-sm font-semibold tracking-[0.09em] text-[var(--foreground)] shadow-sm max-sm:mx-auto max-sm:min-h-[2.75rem] max-sm:w-[min(20.5rem,calc(100vw-2rem))] max-sm:px-5 max-sm:py-2.5 max-sm:text-[0.9375rem] max-sm:tracking-[0.085em] max-sm:shadow-[0_2px_10px_rgba(0,0,0,0.06)] sm:px-6 sm:py-3 sm:text-base sm:tracking-[0.08em]">
                   Enjoy the progress!
                 </span>
-                <Link
-                  href={primaryHref}
-                  className={`${heroBtnPrimary} max-sm:mx-auto max-sm:h-12 max-sm:min-h-0 max-sm:w-[min(20.5rem,calc(100vw-2rem))] max-sm:px-7 max-sm:text-[0.9375rem] max-sm:font-medium`}
-                >
-                  {primaryLabel}
-                </Link>
+                {isLoggedIn ? (
+                  <GoToMyDecksLink
+                    className={`${heroBtnPrimary} max-sm:mx-auto max-sm:h-12 max-sm:min-h-0 max-sm:w-[min(20.5rem,calc(100vw-2rem))] max-sm:px-7 max-sm:text-[0.9375rem] max-sm:font-medium`}
+                  >
+                    {primaryLabel}
+                  </GoToMyDecksLink>
+                ) : (
+                  <Link
+                    href={primaryHref}
+                    className={`${heroBtnPrimary} max-sm:mx-auto max-sm:h-12 max-sm:min-h-0 max-sm:w-[min(20.5rem,calc(100vw-2rem))] max-sm:px-7 max-sm:text-[0.9375rem] max-sm:font-medium`}
+                  >
+                    {primaryLabel}
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -423,9 +432,15 @@ export default function LandingView({ isLoggedIn }: LandingViewProps) {
               <span className="pll-k">review</span> on your own terms.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-10">
-              <Link href={primaryHref} className={`${btnPrimary} min-w-[200px]`}>
-                {primaryLabel}
-              </Link>
+              {isLoggedIn ? (
+                <GoToMyDecksLink className={`${btnPrimary} min-w-[200px]`}>
+                  {primaryLabel}
+                </GoToMyDecksLink>
+              ) : (
+                <Link href={primaryHref} className={`${btnPrimary} min-w-[200px]`}>
+                  {primaryLabel}
+                </Link>
+              )}
               <Link
                 href="/faq"
                 className="text-sm font-medium text-[var(--foreground-muted)] underline decoration-[var(--border-strong)] underline-offset-[5px] transition hover:text-[var(--foreground)] hover:decoration-[var(--foreground-muted)]"
