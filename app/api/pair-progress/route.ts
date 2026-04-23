@@ -33,82 +33,29 @@ export async function POST(req: Request) {
   if (!pairId || (kind !== "word" && kind !== "sentence")) {
     return NextResponse.json({ error: "Missing pairId or invalid kind" }, { status: 400 });
   }
+  // Keep the hot path to one targeted DB write. The RPC derives deck ownership
+  // from `pairs` and enforces sentence eligibility without a route-side read.
+  const { error: rpcErr } = await supabase.rpc("write_pair_progress", {
+    p_user_id: user.id,
+    p_pair_id: pairId,
+    p_kind: kind,
+    p_dir: dir,
+  });
 
-  // ✅ Get deck_id + sentence fields for this pair (so we can enforce sentence rules)
-  const { data: pairRow, error: pairErr } = await supabase
-    .from("pairs")
-    .select("deck_id, sentence_target, sentence_native")
-    .eq("id", pairId)
-    .single();
-
-  if (pairErr || !pairRow?.deck_id) {
-    return NextResponse.json(
-      { error: pairErr?.message || "Pair not found / missing deck_id" },
-      { status: 400 }
-    );
-  }
-
-  // ✅ Enforce: cannot mark sentence mastered if the pair has no sentence
-  if (kind === "sentence") {
-    const hasSentence = !!(pairRow.sentence_target && pairRow.sentence_native);
-    if (!hasSentence) {
-      return NextResponse.json(
-        { error: "Cannot mark sentence: this pair has no sentence fields" },
-        { status: 400 }
-      );
+  if (rpcErr) {
+    const message = String(rpcErr.message || "");
+    if (message.includes("pair_not_found") || message.includes("sentence_unavailable")) {
+      return NextResponse.json({ error: message }, { status: 400 });
     }
-  }
-
-  const deckId = String(pairRow.deck_id);
-  const now = new Date().toISOString();
-
-  // ✅ IMPORTANT:
-  // Passive mastery goes to: word_mastered_at / sentence_mastered_at
-  // Active mastery goes to:  word_active_mastered_at / sentence_active_mastered_at
-  const fields =
-    dir === "active"
-      ? kind === "word"
-        ? { word_active_mastered_at: now }
-        : { sentence_active_mastered_at: now }
-      : kind === "word"
-      ? { word_mastered_at: now }
-      : { sentence_mastered_at: now };
-
-  const payload = {
-    user_id: user.id,
-    pair_id: pairId,
-    deck_id: deckId,
-    ...fields,
-  };
-
-  // ✅ UPSERT (reliable)
-  const { data: saved, error: upsertErr } = await supabase
-    .from("user_pairs")
-    .upsert(payload, { onConflict: "user_id,deck_id,pair_id" })
-    .select(
-      [
-        "user_id",
-        "pair_id",
-        "deck_id",
-        "word_mastered_at",
-        "sentence_mastered_at",
-        "word_active_mastered_at",
-        "sentence_active_mastered_at",
-      ].join(",")
-    )
-    .single();
-
-  if (upsertErr) {
     return NextResponse.json(
       {
-        error: upsertErr.message,
-        hint: upsertErr.hint,
-        details: upsertErr.details,
-        payload,
+        error: rpcErr.message,
+        hint: rpcErr.hint,
+        details: rpcErr.details,
       },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ ok: true, saved });
+  return NextResponse.json({ ok: true });
 }
