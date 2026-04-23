@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
 import { normalizeSessionOptionValue, trackGaEvent } from "@/lib/analytics/ga";
@@ -44,7 +44,6 @@ export default function ReviewDeckControls({
   categoryOptionsByMode,
   reviewTotalsByMode,
 }: Props) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const storageKey = `pll:deck:${deckId}:review-category`;
@@ -92,6 +91,14 @@ export default function ReviewDeckControls({
     return `/decks/${deckId}/practice?${qs.toString()}`;
   }, [deckId, currentMode, buildReviewPageHref, selectedCategory]);
 
+  const replaceBrowserUrl = useCallback((nextUrl: string) => {
+    if (typeof window === "undefined") return;
+    const currentSearch = searchParams?.toString() ?? "";
+    const currentHref = `${pathname}${currentSearch ? `?${currentSearch}` : ""}`;
+    if (currentHref === nextUrl) return;
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, [pathname, searchParams]);
+
   useEffect(() => {
     consumeRouteInteractionTiming();
   }, [pathname, searchParams]);
@@ -118,12 +125,12 @@ export default function ReviewDeckControls({
         setSelectedCategory(saved);
 
         const nextUrl = buildReviewPageHref(currentMode, saved);
-        router.replace(nextUrl, { scroll: false });
+        replaceBrowserUrl(nextUrl);
       }
     } catch {
       // ignore storage errors
     }
-  }, [storageKey, currentCategoryOptions, initialSelectedCategory, currentMode, buildReviewPageHref, router]);
+  }, [storageKey, currentCategoryOptions, initialSelectedCategory, currentMode, buildReviewPageHref, replaceBrowserUrl]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -148,8 +155,8 @@ export default function ReviewDeckControls({
     setSelectedCategory(null);
 
     const nextUrl = buildReviewPageHref(currentMode, null);
-    router.replace(nextUrl, { scroll: false });
-  }, [selectedCategory, currentCategoryOptions, currentMode, buildReviewPageHref, router]);
+    replaceBrowserUrl(nextUrl);
+  }, [selectedCategory, currentCategoryOptions, currentMode, buildReviewPageHref, replaceBrowserUrl]);
 
   const modeButtonStyle = (active: boolean) =>
     ({
@@ -199,14 +206,14 @@ export default function ReviewDeckControls({
       setCurrentMode(nextMode);
       setSelectedCategory(nextCategory);
       const nextUrl = buildReviewPageHref(nextMode, nextCategory);
-      router.replace(nextUrl, { scroll: false });
+      replaceBrowserUrl(nextUrl);
       emitInteractionTiming("mode_switch", startedAt, {
         flow: "passive_review",
         from_mode: currentMode,
         to_mode: nextMode,
       });
     },
-    [buildReviewPageHref, categoryOptionsByMode, currentMode, selectedCategory, router]
+    [buildReviewPageHref, categoryOptionsByMode, currentMode, selectedCategory, replaceBrowserUrl]
   );
 
   const modeWordsHref = buildReviewPageHref("words", selectedCategory);
@@ -280,7 +287,7 @@ export default function ReviewDeckControls({
               });
 
               const nextUrl = buildReviewPageHref(currentMode, nextValue);
-              router.replace(nextUrl, { scroll: false });
+              replaceBrowserUrl(nextUrl);
               emitCategorySwitchTiming(timingStart, {
                 flow: "passive_review",
                 mode: currentMode,
