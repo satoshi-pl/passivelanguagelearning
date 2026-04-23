@@ -30,10 +30,17 @@ export default function ActiveDashboardPageClient({
   initialData,
   warmEntry,
 }: Props) {
-  const cachedData = useMemo(
-    () => (warmEntry ? readActiveDashboardWarmCache(deckId) : null),
-    [warmEntry, deckId]
-  );
+  const cachedData = useMemo(() => {
+    if (!warmEntry) return null;
+    const cached = readActiveDashboardWarmCache(deckId);
+    if (!cached) return null;
+    // Cache is keyed only by deckId; a prior direct visit can store `backToDecksHref` = My Decks
+    // while this navigation carries Passive Learning in the `back` param — ignore stale snapshots.
+    if (requestedBackToDecksHref && cached.backToDecksHref !== requestedBackToDecksHref) {
+      return null;
+    }
+    return cached;
+  }, [warmEntry, deckId, requestedBackToDecksHref]);
   const [data, setData] = useState<ActiveDashboardPageData | null>(() => initialData ?? cachedData);
   const [loadError, setLoadError] = useState<string | null>(null);
   const hasInitialRenderableData = !!(initialData ?? cachedData);
@@ -97,34 +104,44 @@ export default function ActiveDashboardPageClient({
       selectedCategoryFromUrl && currentOptions.some((option) => option.value === selectedCategoryFromUrl)
         ? selectedCategoryFromUrl
         : null;
+    const backForUrl = requestedBackToDecksHref || currentData.backToDecksHref;
     const canonicalHref = buildActiveDashboardHref({
       deckId,
       mode,
-      backToDecksHref: currentData.backToDecksHref,
+      backToDecksHref: backForUrl,
       category: normalizedCategory,
+      warmEntry,
     });
     const currentHref = `${window.location.pathname}${window.location.search}`;
     if (currentHref !== canonicalHref) {
       window.history.replaceState(window.history.state, "", canonicalHref);
     }
-  }, [warmEntry, data, deckId, mode, selectedCategoryFromUrl]);
+  }, [warmEntry, data, deckId, mode, selectedCategoryFromUrl, requestedBackToDecksHref]);
+
+  const fallbackBackHref = requestedBackToDecksHref || "/decks";
+  const fallbackBackLabel =
+    requestedBackToDecksHref &&
+    requestedBackToDecksHref.startsWith(`/decks/${deckId}`) &&
+    !requestedBackToDecksHref.startsWith(`/decks/${deckId}/active`)
+      ? "← Back to Passive Learning"
+      : "← Back to My decks";
 
   if (!data && loadError) {
     return (
       <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
         <TrackedResponsiveNavLink
           className="pll-back-link"
-          href={requestedBackToDecksHref || "/decks"}
+          href={fallbackBackHref}
           eventName="back_navigation_click"
           interactionTiming="back_navigation"
           eventParams={{
             source_page: "active_dashboard_error",
-            destination: requestedBackToDecksHref || "/decks",
+            destination: fallbackBackHref,
             flow: "active_learning",
           }}
           style={{ textDecoration: "none", color: "inherit" }}
         >
-          ← Back to My decks
+          {fallbackBackLabel}
         </TrackedResponsiveNavLink>
         <h1 style={{ marginTop: 12 }}>Dashboard unavailable</h1>
         <pre>{loadError}</pre>
@@ -137,17 +154,17 @@ export default function ActiveDashboardPageClient({
       <div className="pll-workspace" style={{ maxWidth: 1040, margin: "24px auto", padding: "0 16px" }}>
         <TrackedResponsiveNavLink
           className="pll-back-link"
-          href={requestedBackToDecksHref || "/decks"}
+          href={fallbackBackHref}
           eventName="back_navigation_click"
           interactionTiming="back_navigation"
           eventParams={{
             source_page: "active_dashboard_loading",
-            destination: requestedBackToDecksHref || "/decks",
+            destination: fallbackBackHref,
             flow: "active_learning",
           }}
           style={{ textDecoration: "none", color: "inherit" }}
         >
-          ← Back to My decks
+          {fallbackBackLabel}
         </TrackedResponsiveNavLink>
         <div style={{ marginTop: 20, color: "var(--foreground-muted)" }}>Loading dashboard...</div>
       </div>
@@ -161,8 +178,9 @@ export default function ActiveDashboardPageClient({
       : null;
   const targetLabel = langName(data.targetLang);
   const nativeLabel = langName(data.supportLang);
-  const isBackToActive = data.backToDecksHref.startsWith(`/decks/${deckId}/active`);
-  const isBackToPassive = data.backToDecksHref.startsWith(`/decks/${deckId}`) && !isBackToActive;
+  const backHref = requestedBackToDecksHref || data.backToDecksHref;
+  const isBackToActive = backHref.startsWith(`/decks/${deckId}/active`);
+  const isBackToPassive = backHref.startsWith(`/decks/${deckId}`) && !isBackToActive;
   const backLabel = isBackToActive
     ? `← Back to ${data.deckName} Active Learning`
     : isBackToPassive
@@ -185,12 +203,12 @@ export default function ActiveDashboardPageClient({
         <div className="pll-card-inner" style={{ width: "100%", maxWidth: 940, margin: "0 auto" }}>
           <TrackedResponsiveNavLink
             className="pll-back-link"
-            href={data.backToDecksHref}
+            href={backHref}
             eventName="back_navigation_click"
             interactionTiming="back_navigation"
             eventParams={{
               source_page: "active_dashboard",
-              destination: data.backToDecksHref,
+              destination: backHref,
               flow: "active_learning",
               mode,
               category: initialSelectedCategory ?? "all",
@@ -225,7 +243,7 @@ export default function ActiveDashboardPageClient({
               supportLang={data.supportLang}
               level={data.levelLabel || "other"}
               mode={mode}
-              backToDecksHref={data.backToDecksHref}
+              backToDecksHref={backHref}
               initialSelectedCategory={initialSelectedCategory}
               categoryOptionsByMode={data.categoryOptionsByMode}
               overallWordsProgress={data.overallWordsProgress}
