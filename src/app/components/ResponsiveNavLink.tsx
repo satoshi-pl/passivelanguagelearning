@@ -4,6 +4,7 @@ import Link, { type LinkProps } from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { rememberNavigationOrigin, tryUseHistoryBack } from "@/lib/navigation/historyStack";
 
 type AnchorProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href">;
 
@@ -11,6 +12,7 @@ type Props = LinkProps &
   AnchorProps & {
     pendingClassName?: string;
     pendingDurationMs?: number;
+    preferHistoryBack?: boolean;
   };
 
 function toHrefString(href: LinkProps["href"]) {
@@ -26,6 +28,7 @@ export default function ResponsiveNavLink({
   className,
   pendingClassName = "nav-link-pending",
   pendingDurationMs = 700,
+  preferHistoryBack = false,
   onClick,
   onPointerDown,
   onPointerEnter,
@@ -94,6 +97,19 @@ export default function ResponsiveNavLink({
         primePrefetch();
         armPending();
         onClick?.(e);
+        if (e.defaultPrevented) return;
+        if (e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (props.target && props.target !== "_self") return;
+        if ((props.download as string | undefined) != null) return;
+        if (!hrefString) return;
+
+        if (preferHistoryBack && tryUseHistoryBack(hrefString)) {
+          e.preventDefault();
+          return;
+        }
+
+        rememberNavigationOrigin(hrefString);
       }}
       {...props}
     />

@@ -21,6 +21,7 @@ export default function TrackedResponsiveNavLink({
   return (
     <ResponsiveNavLink
       {...props}
+      preferHistoryBack={props.preferHistoryBack ?? interactionTiming === "back_navigation"}
       onClick={(event) => {
         trackGaEvent(eventName, eventParams);
         if (interactionTiming && typeof props.href === "string") {
