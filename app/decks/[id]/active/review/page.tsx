@@ -33,34 +33,6 @@ function getSingleParam(value: string | string[] | undefined) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function normalizeActiveReviewBackHref({
-  deckId,
-  rawBackHref,
-}: {
-  deckId: string;
-  rawBackHref: string;
-}) {
-  if (!rawBackHref.startsWith("/")) return rawBackHref;
-
-  try {
-    const expectedPath = `/decks/${deckId}/active`;
-    const url = new URL(rawBackHref, "http://localhost");
-    if (url.pathname !== expectedPath) return rawBackHref;
-
-    const qs = new URLSearchParams();
-    qs.set("mode", normalizeMode(url.searchParams.get("mode")));
-
-    const category = (url.searchParams.get("category") || "").trim();
-    if (category) {
-      qs.set("category", category);
-    }
-
-    return `${expectedPath}?${qs.toString()}`;
-  } catch {
-    return rawBackHref;
-  }
-}
-
 export default async function DeckActiveReviewPage({
   params,
   searchParams,
@@ -80,10 +52,7 @@ export default async function DeckActiveReviewPage({
   const sp = (await searchParams) ?? {};
   const mode = normalizeMode(sp.mode);
   const selectedCategoryFromUrl = normalizeCategoryParam(sp.category);
-  const backParam = normalizeActiveReviewBackHref({
-    deckId,
-    rawBackHref: getSingleParam(sp.back),
-  });
+  const backParam = getSingleParam(sp.back);
   const deckNameFromParam = getSingleParam(sp.deck_name);
   const targetLangFromParam = getSingleParam(sp.target_lang).toLowerCase();
   const supportLangFromParam = getSingleParam(sp.support_lang).toLowerCase();
