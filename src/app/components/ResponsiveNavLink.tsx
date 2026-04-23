@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import {
   getSavedPracticeOriginForCurrentHref,
+  hasImmediateHistoryBackMatch,
   rememberNavigationOrigin,
   rememberPracticeOrigin,
   tryUseHistoryBack,
@@ -78,6 +79,12 @@ export default function ResponsiveNavLink({
     }
   };
 
+  const shouldUseFastNativeBack = () => {
+    if (!preferHistoryBack || !hrefString) return false;
+    const savedPracticeOrigin = getSavedPracticeOriginForCurrentHref();
+    return hasImmediateHistoryBackMatch(savedPracticeOrigin || hrefString);
+  };
+
   return (
     <Link
       href={href}
@@ -85,22 +92,36 @@ export default function ResponsiveNavLink({
       data-nav-pending={pending ? "true" : "false"}
       aria-busy={pending || undefined}
       onPointerDown={(e) => {
+        if (shouldUseFastNativeBack()) {
+          onPointerDown?.(e);
+          return;
+        }
         primePrefetch();
         armPending();
         onPointerDown?.(e);
       }}
       onPointerEnter={(e) => {
+        if (shouldUseFastNativeBack()) {
+          onPointerEnter?.(e);
+          return;
+        }
         primePrefetch();
         onPointerEnter?.(e);
       }}
       onTouchStart={(e) => {
+        if (shouldUseFastNativeBack()) {
+          onTouchStart?.(e);
+          return;
+        }
         primePrefetch();
         armPending();
         onTouchStart?.(e);
       }}
       onClick={(e) => {
-        primePrefetch();
-        armPending();
+        if (!shouldUseFastNativeBack()) {
+          primePrefetch();
+          armPending();
+        }
         onClick?.(e);
         if (e.defaultPrevented) return;
         if (e.button !== 0) return;

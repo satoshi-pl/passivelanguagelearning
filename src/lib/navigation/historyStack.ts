@@ -123,6 +123,17 @@ export function tryUseHistoryBack(targetHref: string) {
   return true;
 }
 
+export function hasImmediateHistoryBackMatch(targetHref: string) {
+  const normalizedTargetHref = normalizeInternalHref(targetHref);
+  const currentHref = getCurrentHref();
+  if (!normalizedTargetHref || !currentHref || normalizedTargetHref === currentHref) {
+    return false;
+  }
+
+  const stack = readStack();
+  return stack[stack.length - 1] === normalizedTargetHref;
+}
+
 export function getSavedPracticeOriginForCurrentHref() {
   const currentHref = getCurrentHref();
   if (!currentHref || !isPracticeHref(currentHref)) return null;
