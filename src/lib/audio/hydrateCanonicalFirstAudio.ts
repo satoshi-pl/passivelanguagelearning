@@ -12,12 +12,6 @@ type PairMetaRow = {
   pair_template_id: string | null;
 };
 
-type PairAudioFallbackRow = {
-  id: string;
-  word_target_audio_url: string | null;
-  sentence_target_audio_url: string | null;
-};
-
 type TemplateAudioAssetRow = {
   pair_template_id: string;
   word_audio_key: string | null;
@@ -54,7 +48,6 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
   if (!ids.length) return rows;
 
   const pairTemplateById = new Map<string, string | null>();
-  const pairAudioFallbackById = new Map<string, PairAudioFallbackRow>();
 
   for (const row of rows) {
     const pairId = String(row.id || "").trim();
@@ -114,48 +107,16 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
     }
   }
 
-  const idsNeedingPairAudioLookup = rows
-    .map((row) => {
-      const pairTemplateId = (pairTemplateById.get(row.id) || row.pair_template_id || "").trim() || null;
-      const templateAudio = pairTemplateId ? templateById.get(pairTemplateId) : undefined;
-      const needsWordFromPairs =
-        !templateAudio?.word_audio_key && !firstNonEmpty(row.word_target_audio_url);
-      const needsSentenceFromPairs =
-        !templateAudio?.sentence_audio_key && !firstNonEmpty(row.sentence_target_audio_url);
-      return needsWordFromPairs || needsSentenceFromPairs ? row.id : null;
-    })
-    .filter((id): id is string => !!id);
-
-  if (idsNeedingPairAudioLookup.length > 0) {
-    const { data: pairAudioData, error: pairAudioErr } = (await (client
-      .from("pairs")
-      .select("id, word_target_audio_url, sentence_target_audio_url")
-      .in("id", idsNeedingPairAudioLookup) as Promise<{ data: unknown; error: unknown }>)) as {
-      data: unknown;
-      error: unknown;
-    };
-
-    if (!pairAudioErr && Array.isArray(pairAudioData)) {
-      for (const raw of pairAudioData as PairAudioFallbackRow[]) {
-        pairAudioFallbackById.set(raw.id, raw);
-      }
-    }
-  }
-
   return rows.map((row) => {
-    const pairAudioFallback = pairAudioFallbackById.get(row.id);
     const pairTemplateId = (pairTemplateById.get(row.id) || row.pair_template_id || "").trim() || null;
     const templateAudio = pairTemplateId ? templateById.get(pairTemplateId) : undefined;
 
-    const pairWordRaw = firstNonEmpty(row.word_target_audio_url, pairAudioFallback?.word_target_audio_url);
-    const pairSentenceRaw = firstNonEmpty(
-      row.sentence_target_audio_url,
-      pairAudioFallback?.sentence_target_audio_url
-    );
-
     const wordRaw = resolvePreferredAudioRaw({
       canonicalKey: templateAudio?.word_audio_key ?? null,
-      pairAudioRaw: pairWordRaw,
+      // Pair-row audio fallback is intentionally removed now that canonical
+      // coverage is complete. We still keep pair_template_id recovery so the
+      // retained pt-* fallback remains available as a temporary final safety net.
+      pairAudioRaw: null,
       targetLang,
       kind: "word",
       pairTemplateId,
@@ -163,7 +124,7 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
 
     const sentenceRaw = resolvePreferredAudioRaw({
       canonicalKey: templateAudio?.sentence_audio_key ?? null,
-      pairAudioRaw: pairSentenceRaw,
+      pairAudioRaw: null,
       targetLang,
       kind: "sentence",
       pairTemplateId,
