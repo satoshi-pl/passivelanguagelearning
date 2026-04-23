@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
+import { hydrateCanonicalFirstAudioForPairs } from "@/lib/audio/hydrateCanonicalFirstAudio";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import PracticeClient from "../../../decks/[id]/practice/PracticeClient";
@@ -256,7 +257,11 @@ export default async function FavoritesPracticePage({
     );
   }
 
-  const pairs = ((sessionPairs || []) as PairRow[]);
+  const pairs = await hydrateCanonicalFirstAudioForPairs(
+    supabase,
+    ((sessionPairs || []) as PairRow[]),
+    targetLang
+  );
 
   const progressMap: Record<string, { word_mastered: boolean; sentence_mastered: boolean }> = {};
   for (const p of pairs) {

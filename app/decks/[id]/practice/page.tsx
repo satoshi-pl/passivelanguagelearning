@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { normalizeCategoryParam } from "./lib/categories";
 import { redirect } from "next/navigation";
+import { hydrateCanonicalFirstAudioForPairs } from "@/lib/audio/hydrateCanonicalFirstAudio";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
@@ -401,8 +402,13 @@ export default async function DeckPracticePage({
     );
   }
 
-  // Keep entry path lean: defer full canonical audio hydration to client-side background enrichment.
-  const pairs = ((sessionPairs || []) as PairRow[]);
+  // Match chunk/dictionary entry semantics: resolve canonical audio first on the
+  // initial payload while preserving pair-row and pt-* fallbacks underneath.
+  const pairs = await hydrateCanonicalFirstAudioForPairs(
+    supabase,
+    ((sessionPairs || []) as PairRow[]),
+    String(deck.target_lang || "").toLowerCase()
+  );
 
   const progressBuildStartedAtMs = nowMs();
   const progressMap: Record<string, { word_mastered: boolean; sentence_mastered: boolean }> = {};
