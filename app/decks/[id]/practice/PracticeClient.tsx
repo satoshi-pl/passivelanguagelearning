@@ -27,7 +27,19 @@ import { navigateFromPractice } from "@/lib/navigation/historyStack";
 
 const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const PRACTICE_AUDIO_LOOKAHEAD_PAIRS = 8;
-const PRACTICE_CHUNK_PREFETCH_THRESHOLD = 4;
+
+function getChunkPrefetchThreshold({
+  mode,
+  isReview,
+}: {
+  mode: LearnMode;
+  isReview: boolean;
+}) {
+  if (!isReview && mode === "sentences") return 0;
+  if (isReview) return 3;
+  if (mode === "ws") return 4;
+  return 2;
+}
 
 function resolveAudioUrl(raw?: string | null) {
   return resolvePracticeAudioUrl(raw, SUPABASE_PUBLIC_URL);
@@ -264,6 +276,7 @@ export default function PracticeClient({
     const base = chunkLoadConfig?.initialOffset ?? offset;
     return base + safePairs.length;
   });
+  const chunkBusyRef = useRef(false);
   const audioEnrichQueuedRef = useRef<Set<string>>(new Set());
   const audioEnrichDoneRef = useRef<Set<string>>(new Set());
   const audioEnrichBusyRef = useRef(false);
@@ -272,6 +285,7 @@ export default function PracticeClient({
     const base = chunkLoadConfig?.initialOffset ?? offset;
     setChunkHasMore(!!chunkLoadConfig?.enabled);
     setChunkBusy(false);
+    chunkBusyRef.current = false;
     setNextChunkOffset(base + safePairs.length);
     audioEnrichQueuedRef.current = new Set();
     audioEnrichDoneRef.current = new Set();
@@ -281,6 +295,7 @@ export default function PracticeClient({
   const loadMoreSessionPairs = useCallback(async () => {
     if (!chunkLoadConfig?.enabled) return;
     if (chunkBusy) return;
+    if (chunkBusyRef.current) return;
     if (!chunkHasMore) return;
     if (!safeDeckId) return;
 
@@ -298,6 +313,7 @@ export default function PracticeClient({
       return;
     }
 
+    chunkBusyRef.current = true;
     setChunkBusy(true);
     try {
       const res = await fetch("/api/practice/session-chunk", {
@@ -346,11 +362,12 @@ export default function PracticeClient({
     } catch {
       setChunkHasMore(false);
     } finally {
+      chunkBusyRef.current = false;
       setChunkBusy(false);
     }
   }, [chunkLoadConfig, chunkBusy, chunkHasMore, nextChunkOffset, safeDeckId, flow]);
 
-  const remainingLoadedPairsAhead = useMemo(() => {
+  const remainingLoadedWorkAhead = useMemo(() => {
     if (flow.viewMode !== "practice") return Number.POSITIVE_INFINITY;
 
     if (isReview) {
@@ -358,12 +375,7 @@ export default function PracticeClient({
     }
 
     if (mode === "ws") {
-      const remainingPairIndexes = new Set<number>();
-      for (let index = flow.wsPos + 1; index < flow.wsSteps.length; index += 1) {
-        const step = flow.wsSteps[index];
-        if (step) remainingPairIndexes.add(step.pairIndex);
-      }
-      return remainingPairIndexes.size;
+      return Math.max(0, flow.wsSteps.length - (flow.wsPos + 1));
     }
 
     return Math.max(0, flow.learnQueue.length - (flow.learnQPos + 1));
@@ -378,14 +390,17 @@ export default function PracticeClient({
     flow.learnQueue.length,
     flow.learnQPos,
   ]);
+  const chunkPrefetchThreshold = useMemo(() => getChunkPrefetchThreshold({ mode, isReview }), [mode, isReview]);
 
   useEffect(() => {
     if (!chunkLoadConfig?.enabled) return;
     if (!chunkHasMore) return;
     if (chunkBusy) return;
-    if (remainingLoadedPairsAhead > PRACTICE_CHUNK_PREFETCH_THRESHOLD) return;
+    // Trigger continuation only when the loaded actionable work is nearly exhausted.
+    // This keeps no-limit practice smooth without refilling far ahead of what the user can consume.
+    if (remainingLoadedWorkAhead > chunkPrefetchThreshold) return;
     void loadMoreSessionPairs();
-  }, [chunkLoadConfig, chunkHasMore, chunkBusy, remainingLoadedPairsAhead, loadMoreSessionPairs]);
+  }, [chunkLoadConfig, chunkHasMore, chunkBusy, remainingLoadedWorkAhead, chunkPrefetchThreshold, loadMoreSessionPairs]);
 
   const flushAudioEnrichment = useCallback(async () => {
     if (audioEnrichBusyRef.current) return;
