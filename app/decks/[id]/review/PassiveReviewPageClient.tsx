@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import ReviewDeckControls from "./ReviewDeckControls";
@@ -34,20 +34,32 @@ export default function PassiveReviewPageClient({
   warmEntry,
 }: Props) {
   const router = useRouter();
-  const cachedEntry = useMemo(
-    () => (warmEntry ? readPassiveReviewWarmCache(deckId) : null),
-    [warmEntry, deckId]
-  );
-  const cachedData = cachedEntry ? withBackOverride(cachedEntry.data, requestedBackToDeckHref) : null;
-  const [data, setData] = useState<PassiveReviewPageData | null>(() =>
-    initialData ? withBackOverride(initialData, requestedBackToDeckHref) : cachedData
-  );
+  const initialRenderableData = initialData ? withBackOverride(initialData, requestedBackToDeckHref) : null;
+  const [cachedData, setCachedData] = useState<PassiveReviewPageData | null>(null);
+  const [freshData, setFreshData] = useState<PassiveReviewPageData | null>(initialRenderableData);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const hasInitialRenderableData = !!(initialData ?? cachedData);
+  const data = freshData ?? cachedData;
+  const hasRenderableDataRef = useRef<boolean>(!!data);
 
   useEffect(() => {
-    setData(initialData ? withBackOverride(initialData, requestedBackToDeckHref) : cachedData);
-  }, [initialData, cachedData, requestedBackToDeckHref]);
+    const nextData = initialData ? withBackOverride(initialData, requestedBackToDeckHref) : null;
+    setFreshData(nextData);
+  }, [initialData, requestedBackToDeckHref]);
+
+  useLayoutEffect(() => {
+    if (!warmEntry) {
+      setCachedData(null);
+      return;
+    }
+
+    const cachedEntry = readPassiveReviewWarmCache(deckId);
+    const nextCachedData = cachedEntry ? withBackOverride(cachedEntry.data, requestedBackToDeckHref) : null;
+    setCachedData(nextCachedData);
+  }, [warmEntry, deckId, requestedBackToDeckHref]);
+
+  useEffect(() => {
+    hasRenderableDataRef.current = !!data;
+  }, [data]);
 
   useEffect(() => {
     if (!warmEntry) return;
@@ -76,12 +88,13 @@ export default function PassiveReviewPageClient({
 
         const nextData = withBackOverride(payload.data, requestedBackToDeckHref);
         writeCompletePassiveReviewWarmCache(deckId, nextData);
-        setData(nextData);
+        setCachedData(nextData);
+        setFreshData(nextData);
         setLoadError(null);
       } catch (error) {
         if (cancelled) return;
         const message = error instanceof Error ? error.message : "Unable to load review";
-        if (!hasInitialRenderableData) {
+        if (!hasRenderableDataRef.current) {
           setLoadError(message);
         }
       }
@@ -92,7 +105,7 @@ export default function PassiveReviewPageClient({
     return () => {
       cancelled = true;
     };
-  }, [warmEntry, deckId, requestedBackToDeckHref, hasInitialRenderableData]);
+  }, [warmEntry, deckId, requestedBackToDeckHref]);
 
   useEffect(() => {
     if (!warmEntry || !data) return;
