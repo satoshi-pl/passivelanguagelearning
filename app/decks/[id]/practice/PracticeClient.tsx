@@ -23,6 +23,7 @@ import {
   startRouteInteractionTiming,
 } from "@/lib/analytics/interactionTiming";
 import { trackGaEvent } from "@/lib/analytics/ga";
+import { navigateFromPractice } from "@/lib/navigation/historyStack";
 
 const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
@@ -120,6 +121,9 @@ export default function PracticeClient({
 }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
+  const routeFromPractice = useCallback((href: string) => {
+    navigateFromPractice(router, href);
+  }, [router]);
 
   const mode: LearnMode = normalizeMode(sp.get("mode"));
   const debugAudio = sp.get("debugAudio") === "1";
@@ -677,7 +681,7 @@ export default function PracticeClient({
         });
 
         if (isFavoritesSession && flow.viewMode === "practice") {
-          flow.goNext((href) => router.replace(href));
+          flow.goNext(routeFromPractice);
         }
 
         return "removed" as const;
@@ -687,7 +691,7 @@ export default function PracticeClient({
     } catch {
       return "error" as const;
     }
-  }, [favPairId, favKind, favDir, isFavoritesSession, flow.viewMode, router, flow]);
+  }, [favPairId, favKind, favDir, isFavoritesSession, flow.viewMode, routeFromPractice, flow]);
 
   const onFavouriteKey = useCallback(() => {
     if (favouriteActionBusyRef.current) return "error" as const;
@@ -702,8 +706,8 @@ export default function PracticeClient({
 
   useEffect(() => {
     if (!flow.isFinishing) return;
-    router.replace(finishHref);
-  }, [flow.isFinishing, router, finishHref]);
+    routeFromPractice(finishHref);
+  }, [flow.isFinishing, routeFromPractice, finishHref]);
 
   useEffect(() => {
     if (flow.viewMode !== "practice") {
@@ -725,7 +729,7 @@ export default function PracticeClient({
     if (wsAutoAdvanceKeyRef.current === key) return;
     wsAutoAdvanceKeyRef.current = key;
 
-    flow.goNext((href) => router.replace(href));
+    flow.goNext(routeFromPractice);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     flow.viewMode,
@@ -763,13 +767,13 @@ export default function PracticeClient({
     // If we revisit the same null-stage slot in one practice segment,
     // we've cycled through queue items that are all non-actionable.
     if (nullStageCycleRef.current.has(key)) {
-      flow.finishSession((href) => router.replace(href));
+      flow.finishSession(routeFromPractice);
       return;
     }
     nullStageCycleRef.current.add(key);
     skipNullStageRef.current = key;
 
-    flow.goNext((href) => router.replace(href));
+    flow.goNext(routeFromPractice);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     flow.viewMode,
@@ -799,7 +803,7 @@ export default function PracticeClient({
     if (sessionPairsLen === 0) return;
 
     if (learnQueueLen === 0) {
-      flow.finishSession((href) => router.replace(href));
+      flow.finishSession(routeFromPractice);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flow.viewMode, isReview, mode, sessionPairsLen, learnQueueLen]);
@@ -836,12 +840,12 @@ export default function PracticeClient({
     onShowTranslations: () => flow.setShowTranslations(true),
 
     onReveal: () => flow.setRevealed(true),
-    onNext: () => flow.goNext((href) => router.replace(href)),
-    onDefer: () => flow.deferCurrent((href) => router.replace(href)),
-    onMarkDone: () => void flow.markDone((href) => router.replace(href)),
+    onNext: () => flow.goNext(routeFromPractice),
+    onDefer: () => flow.deferCurrent(routeFromPractice),
+    onMarkDone: () => void flow.markDone(routeFromPractice),
 
-    onReviewHard: () => flow.markReviewHard((href) => router.replace(href)),
-    onReviewEasy: () => void flow.markReviewEasy((href) => router.replace(href)),
+    onReviewHard: () => flow.markReviewHard(routeFromPractice),
+    onReviewEasy: () => void flow.markReviewEasy(routeFromPractice),
 
     onOpenReport: reportCtx.openReportFromContext,
     onCloseReport: report.closeReport,
@@ -912,7 +916,7 @@ export default function PracticeClient({
               mode,
               category: categoryParam || "all",
             });
-            router.replace(finishHref);
+            routeFromPractice(finishHref);
           }}
         />
       </>
@@ -1029,7 +1033,7 @@ export default function PracticeClient({
             return;
           }
           if (!flow.revealed) flow.setRevealed(true);
-          else flow.goNext((href) => router.replace(href));
+          else flow.goNext(routeFromPractice);
         }}
         onMastered={async () => {
           flow.audio.enable();
@@ -1040,16 +1044,16 @@ export default function PracticeClient({
           });
           // markDone already advances learnQueue / idx or finishes the session for
           // words/sentences learn — do not call goNext again (stale closure would double-advance).
-          await flow.markDone((href) => router.replace(href));
+          await flow.markDone(routeFromPractice);
         }}
-        onReviewHard={() => flow.markReviewHard((href) => router.replace(href))}
+        onReviewHard={() => flow.markReviewHard(routeFromPractice)}
         onReviewEasy={() => {
           setPendingCardInteraction({
             interaction: "easy",
             startedAtMs: performance.now(),
             fromCardKey: currentCardKey,
           });
-          void flow.markReviewEasy((href) => router.replace(href));
+          void flow.markReviewEasy(routeFromPractice);
         }}
         reportOpen={report.reportOpen}
         setReportOpen={report.setReportOpen}

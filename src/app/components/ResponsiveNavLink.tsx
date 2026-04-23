@@ -4,7 +4,12 @@ import Link, { type LinkProps } from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { rememberNavigationOrigin, tryUseHistoryBack } from "@/lib/navigation/historyStack";
+import {
+  getSavedPracticeOriginForCurrentHref,
+  rememberNavigationOrigin,
+  rememberPracticeOrigin,
+  tryUseHistoryBack,
+} from "@/lib/navigation/historyStack";
 
 type AnchorProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href">;
 
@@ -104,11 +109,25 @@ export default function ResponsiveNavLink({
         if ((props.download as string | undefined) != null) return;
         if (!hrefString) return;
 
+        const savedPracticeOrigin = preferHistoryBack ? getSavedPracticeOriginForCurrentHref() : null;
+        if (savedPracticeOrigin) {
+          if (tryUseHistoryBack(savedPracticeOrigin)) {
+            e.preventDefault();
+            return;
+          }
+          if (savedPracticeOrigin !== hrefString) {
+            e.preventDefault();
+            router.replace(savedPracticeOrigin);
+            return;
+          }
+        }
+
         if (preferHistoryBack && tryUseHistoryBack(hrefString)) {
           e.preventDefault();
           return;
         }
 
+        rememberPracticeOrigin(hrefString);
         rememberNavigationOrigin(hrefString);
       }}
       {...props}
