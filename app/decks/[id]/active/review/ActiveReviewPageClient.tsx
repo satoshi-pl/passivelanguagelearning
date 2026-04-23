@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import ActiveReviewDeckControls from "./ActiveReviewDeckControls";
 import { buildActiveReviewHref } from "@/lib/active-review/shared";
@@ -32,6 +33,7 @@ export default function ActiveReviewPageClient({
   initialData,
   warmEntry,
 }: Props) {
+  const router = useRouter();
   const cachedEntry = useMemo(
     () => (warmEntry ? readActiveReviewWarmCache(deckId) : null),
     [warmEntry, deckId]
@@ -113,9 +115,9 @@ export default function ActiveReviewPageClient({
     });
     const currentHref = `${window.location.pathname}${window.location.search}`;
     if (currentHref !== canonicalHref) {
-      window.history.replaceState(window.history.state, "", canonicalHref);
+      router.replace(canonicalHref, { scroll: false });
     }
-  }, [warmEntry, data, deckId, mode, selectedCategoryFromUrl]);
+  }, [warmEntry, data, deckId, mode, selectedCategoryFromUrl, router]);
 
   if (!data && loadError) {
     return (
