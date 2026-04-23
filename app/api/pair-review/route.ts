@@ -2,52 +2,54 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type Body = {
-  pairId: string;
-  deckId: string;
-  stage: "word" | "sentence";
-  dir: "active" | "passive";
+  pairId?: string;
+  deckId?: string;
+  stage?: "word" | "sentence";
+  dir?: "active" | "passive";
 };
 
 export async function POST(req: Request) {
-  try {
-    const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
-    const {
-      data: { user },
-      error: userErr,
-    } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userErr,
+  } = await supabase.auth.getUser();
 
-    if (userErr || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = (await req.json().catch(() => null)) as Body | null;
-    if (!body?.pairId || !body?.deckId || !body?.stage || !body?.dir) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-    }
-
-    const col =
-      body.stage === "word"
-        ? body.dir === "active"
-          ? "word_active_last_reviewed_at"
-          : "word_last_reviewed_at"
-        : body.dir === "active"
-        ? "sentence_active_last_reviewed_at"
-        : "sentence_last_reviewed_at";
-
-    const { error } = await supabase
-      .from("user_pairs")
-      .update({ [col]: new Date().toISOString() })
-      .eq("user_id", user.id)
-      .eq("deck_id", body.deckId)
-      .eq("pair_id", body.pairId);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Server error" }, { status: 500 });
+  if (userErr || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  let body: Body = {};
+  try {
+    body = (await req.json()) as Body;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const pairId = String(body.pairId || "").trim();
+  const deckId = String(body.deckId || "").trim();
+  const stage = body.stage;
+  const dir = body.dir;
+
+  if (!pairId || !deckId || (stage !== "word" && stage !== "sentence") || (dir !== "active" && dir !== "passive")) {
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  }
+
+  const { error: rpcErr } = await supabase.rpc("write_pair_review", {
+    p_user_id: user.id,
+    p_pair_id: pairId,
+    p_deck_id: deckId,
+    p_stage: stage,
+    p_dir: dir,
+  });
+
+  if (rpcErr) {
+    return NextResponse.json(
+      { error: rpcErr.message, hint: rpcErr.hint, details: rpcErr.details },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true });
 }
