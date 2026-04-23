@@ -22,6 +22,13 @@ type UserPairDeckRow = {
   sentence_mastered_at: string | null;
 };
 
+type DeckProgressAggregateRow = {
+  deck_id: string;
+  total_pairs: number | null;
+  words_mastered: number | null;
+  sentences_mastered: number | null;
+};
+
 type DecksPageLoadResult =
   | { kind: "ok"; data: DecksPageData }
   | { kind: "setup" }
@@ -29,11 +36,7 @@ type DecksPageLoadResult =
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
-async function getDeckProgressByDeckBulk(
-  supabase: SupabaseServerClient,
-  userId: string,
-  deckIds: string[]
-): Promise<Record<string, DecksDualProgress>> {
+function createEmptyDeckProgress(deckIds: string[]): Record<string, DecksDualProgress> {
   const empty: Record<string, DecksDualProgress> = {};
   for (const deckId of deckIds) {
     empty[deckId] = {
@@ -41,6 +44,15 @@ async function getDeckProgressByDeckBulk(
       sentences: { total: 0, mastered: 0, pct: 0 },
     };
   }
+  return empty;
+}
+
+async function getDeckProgressByDeckFallback(
+  supabase: SupabaseServerClient,
+  userId: string,
+  deckIds: string[]
+): Promise<Record<string, DecksDualProgress>> {
+  const empty = createEmptyDeckProgress(deckIds);
   if (deckIds.length === 0) return empty;
 
   const [{ data: pairRows, error: pairErr }, { data: userPairRows, error: userPairErr }] = await Promise.all([
@@ -79,6 +91,46 @@ async function getDeckProgressByDeckBulk(
   }
 
   return empty;
+}
+
+async function getDeckProgressByDeckBulk(
+  supabase: SupabaseServerClient,
+  userId: string,
+  selectedTarget: string,
+  selectedSupport: string,
+  deckIds: string[]
+): Promise<Record<string, DecksDualProgress>> {
+  const empty = createEmptyDeckProgress(deckIds);
+  if (deckIds.length === 0) return empty;
+
+  // First paint only needs per-deck progress totals, so prefer the aggregate RPC
+  // over pulling raw `pairs` and `user_pairs` rows for every visible deck.
+  const { data: aggregateRows, error: aggregateErr } = await supabase.rpc("get_my_decks_progress_aggregates", {
+    p_user_id: userId,
+    p_target_lang: selectedTarget,
+    p_native_lang: selectedSupport,
+  });
+
+  if (!aggregateErr && (aggregateRows ?? []).length > 0) {
+    for (const row of (aggregateRows ?? []) as DeckProgressAggregateRow[]) {
+      const deckId = String(row.deck_id || "");
+      if (!deckId || !empty[deckId]) continue;
+      const total = Number(row.total_pairs ?? 0);
+      const wordsMastered = Number(row.words_mastered ?? 0);
+      const sentencesMastered = Number(row.sentences_mastered ?? 0);
+      empty[deckId] = {
+        words: { total, mastered: wordsMastered, pct: toPct(wordsMastered, total) },
+        sentences: { total, mastered: sentencesMastered, pct: toPct(sentencesMastered, total) },
+      };
+    }
+    return empty;
+  }
+
+  if (aggregateErr) {
+    console.warn("[my-decks] aggregate RPC fallback:", aggregateErr.message);
+  }
+
+  return getDeckProgressByDeckFallback(supabase, userId, deckIds);
 }
 
 export async function getDecksPageData({
@@ -157,20 +209,21 @@ export async function getDecksPageData({
       : levelUrlValues[0] ?? LEVEL_URL_OTHER;
 
   const pairDeckIds = pairDecks.map((deck) => deck.id);
-  const progressByDeck = await getDeckProgressByDeckBulk(supabase, userId, pairDeckIds);
-
   const levelOptions = levelUrlValues.map((urlVal) => {
     const sampleDeck = pairDecks.find((deck) => deckLevelUrlValue(deck.level) === urlVal);
     const label = sampleDeck ? deckLevelButtonLabel(sampleDeck.level) : urlVal;
     return { value: urlVal, label };
   });
 
-  const { count: favoritesCount, error: favoritesErr } = await supabase
-    .from("user_favorites")
-    .select("pair_id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("target_lang", selectedTarget)
-    .eq("native_lang", selectedSupport);
+  const [progressByDeck, { count: favoritesCount, error: favoritesErr }] = await Promise.all([
+    getDeckProgressByDeckBulk(supabase, userId, selectedTarget, selectedSupport, pairDeckIds),
+    supabase
+      .from("user_favorites")
+      .select("pair_id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("target_lang", selectedTarget)
+      .eq("native_lang", selectedSupport),
+  ]);
 
   return {
     kind: "ok",
