@@ -26,6 +26,8 @@ import { trackGaEvent } from "@/lib/analytics/ga";
 import { navigateFromPractice } from "@/lib/navigation/historyStack";
 
 const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const PRACTICE_AUDIO_LOOKAHEAD_PAIRS = 8;
+const PRACTICE_CHUNK_PREFETCH_THRESHOLD = 4;
 
 function resolveAudioUrl(raw?: string | null) {
   return resolvePracticeAudioUrl(raw, SUPABASE_PUBLIC_URL);
@@ -326,6 +328,14 @@ export default function PracticeClient({
       const hasMore = Boolean((json as { hasMore?: boolean }).hasMore);
 
       if (items.length > 0) {
+        // Chunk responses already run canonical-first hydration on the server.
+        // Mark them done here so the client only enriches entry rows and future lookahead.
+        for (const item of items) {
+          const pairId = String(item?.id || "").trim();
+          if (!pairId) continue;
+          audioEnrichQueuedRef.current.delete(pairId);
+          audioEnrichDoneRef.current.add(pairId);
+        }
         flow.appendSessionChunk(items, progressPatch);
         setNextChunkOffset((prev) => prev + items.length);
       }
@@ -340,12 +350,42 @@ export default function PracticeClient({
     }
   }, [chunkLoadConfig, chunkBusy, chunkHasMore, nextChunkOffset, safeDeckId, flow]);
 
+  const remainingLoadedPairsAhead = useMemo(() => {
+    if (flow.viewMode !== "practice") return Number.POSITIVE_INFINITY;
+
+    if (isReview) {
+      return Math.max(0, flow.queue.length - (flow.qPos + 1));
+    }
+
+    if (mode === "ws") {
+      const remainingPairIndexes = new Set<number>();
+      for (let index = flow.wsPos + 1; index < flow.wsSteps.length; index += 1) {
+        const step = flow.wsSteps[index];
+        if (step) remainingPairIndexes.add(step.pairIndex);
+      }
+      return remainingPairIndexes.size;
+    }
+
+    return Math.max(0, flow.learnQueue.length - (flow.learnQPos + 1));
+  }, [
+    flow.viewMode,
+    isReview,
+    flow.queue.length,
+    flow.qPos,
+    mode,
+    flow.wsPos,
+    flow.wsSteps,
+    flow.learnQueue.length,
+    flow.learnQPos,
+  ]);
+
   useEffect(() => {
     if (!chunkLoadConfig?.enabled) return;
     if (!chunkHasMore) return;
     if (chunkBusy) return;
+    if (remainingLoadedPairsAhead > PRACTICE_CHUNK_PREFETCH_THRESHOLD) return;
     void loadMoreSessionPairs();
-  }, [chunkLoadConfig, chunkHasMore, chunkBusy, loadMoreSessionPairs]);
+  }, [chunkLoadConfig, chunkHasMore, chunkBusy, remainingLoadedPairsAhead, loadMoreSessionPairs]);
 
   const flushAudioEnrichment = useCallback(async () => {
     if (audioEnrichBusyRef.current) return;
@@ -409,11 +449,13 @@ export default function PracticeClient({
     const orderedIds: string[] = [];
     const seen = new Set<string>();
     const currentId = flow.currentPair?.id ? String(flow.currentPair.id).trim() : "";
-    if (currentId) {
-      orderedIds.push(currentId);
-      seen.add(currentId);
-    }
-    for (const pair of flow.sessionPairs) {
+    const currentIndex = currentId
+      ? flow.sessionPairs.findIndex((pair) => String(pair?.id || "").trim() === currentId)
+      : 0;
+    const startIndex = currentIndex >= 0 ? currentIndex : 0;
+    const lookaheadPairs = flow.sessionPairs.slice(startIndex, startIndex + PRACTICE_AUDIO_LOOKAHEAD_PAIRS);
+
+    for (const pair of lookaheadPairs) {
       const pairId = String(pair?.id || "").trim();
       if (!pairId || seen.has(pairId)) continue;
       seen.add(pairId);

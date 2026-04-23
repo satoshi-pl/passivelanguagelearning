@@ -56,13 +56,29 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
   const pairTemplateById = new Map<string, string | null>();
   const pairAudioFallbackById = new Map<string, PairAudioFallbackRow>();
 
-  const { data: pairsMetaData, error: pairsMetaErr } = (await (client
-    .from("pairs")
-    .select("id, pair_template_id")
-    .in("id", ids) as Promise<{ data: unknown; error: unknown }>)) as {
-    data: unknown;
-    error: unknown;
-  };
+  for (const row of rows) {
+    const pairId = String(row.id || "").trim();
+    if (!pairId) continue;
+    if (typeof row.pair_template_id !== "undefined") {
+      pairTemplateById.set(pairId, row.pair_template_id ?? null);
+    }
+  }
+
+  const idsMissingTemplateMeta = ids.filter((id) => !pairTemplateById.has(id));
+
+  let pairsMetaData: unknown = null;
+  let pairsMetaErr: unknown = null;
+  if (idsMissingTemplateMeta.length > 0) {
+    const pairsMetaResult = (await (client
+      .from("pairs")
+      .select("id, pair_template_id")
+      .in("id", idsMissingTemplateMeta) as Promise<{ data: unknown; error: unknown }>)) as {
+      data: unknown;
+      error: unknown;
+    };
+    pairsMetaData = pairsMetaResult.data;
+    pairsMetaErr = pairsMetaResult.error;
+  }
 
   if (!pairsMetaErr && Array.isArray(pairsMetaData)) {
     for (const raw of pairsMetaData as PairMetaRow[]) {
