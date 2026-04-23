@@ -1,10 +1,8 @@
 -- Provision only user-selected language pairs during onboarding.
--- Canonical-first audio inheritance order:
---   1) public.template_audio_assets.*_audio_key
---   2) legacy aggregate from existing public.pairs grouped by pair_template_id
--- If pairs are inserted with null audio URLs, run sql/backfill_pair_audio_urls_from_storage.sql
--- or canonical regeneration (sql/AUDIO_REGENERATION_RUNBOOK.md + tts_regenerate_canonical.js) when
--- Storage keys do not match live IDs.
+-- Phase 2 audio ownership change:
+--   - newly provisioned user pairs no longer inherit audio from template or pair-derived sources
+--   - runtime resolves audio canonically at read time, with pair-row and pt-* fallbacks still intact
+-- This stops creating fresh duplicated audio metadata in public.pairs during provisioning.
 -- p_pairs format:
 -- [
 --   { "target_lang": "es", "native_lang": "en" },
@@ -83,8 +81,8 @@ begin
     pt.word_native,
     pt.sentence_target,
     pt.sentence_native,
-    coalesce(taa.word_audio_key, audio_src.word_target_audio_url),
-    coalesce(taa.sentence_audio_key, audio_src.sentence_target_audio_url),
+    null::text as word_target_audio_url,
+    null::text as sentence_target_audio_url,
     pt.category
   from public.pair_templates pt
   join public.decks d
@@ -98,19 +96,6 @@ begin
   left join public.pairs p
     on p.deck_id = d.id
    and p.pair_template_id = pt.id
-  left join public.template_audio_assets taa
-    on taa.pair_template_id = pt.id
-  left join (
-    select
-      pair_template_id,
-      max(word_target_audio_url) as word_target_audio_url,
-      max(sentence_target_audio_url) as sentence_target_audio_url
-    from public.pairs
-    where word_target_audio_url is not null
-       or sentence_target_audio_url is not null
-    group by pair_template_id
-  ) audio_src
-    on audio_src.pair_template_id = pt.id
   where p.id is null;
 end;
 $function$;
