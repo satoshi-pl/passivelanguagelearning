@@ -85,7 +85,7 @@ export async function NavBar() {
 
             <div className="hidden min-h-14 items-center justify-between gap-4 py-2 md:flex">
               <div className="min-w-0 shrink-0">
-                <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold leading-none tracking-tight">
+                <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold leading-none tracking-tight md:focus:outline-none md:focus-visible:outline md:focus-visible:outline-2 md:focus-visible:outline-offset-4 md:focus-visible:outline-neutral-400">
                   <span
                     data-top-nav-target="logo"
                     className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold leading-none text-white"
@@ -104,12 +104,6 @@ export async function NavBar() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 lg:gap-3">
-                  <Link
-                    href="/faq"
-                    className="hidden rounded-xl px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 xl:inline"
-                  >
-                    Q&amp;A
-                  </Link>
                   <ThemeToggle />
                   <MobileAccountMenu email={email} accountLabel={accountLabel ?? email} />
                 </div>
@@ -119,7 +113,7 @@ export async function NavBar() {
         ) : (
           <div className="flex min-h-14 items-center justify-between gap-3 py-2 md:min-h-[3.75rem] md:py-3">
             <div className="min-w-0 shrink-0">
-              <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight md:leading-none">
+              <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight md:leading-none md:focus:outline-none md:focus-visible:outline md:focus-visible:outline-2 md:focus-visible:outline-offset-4 md:focus-visible:outline-neutral-400">
                 <span
                   data-top-nav-target="logo"
                   className="inline-flex h-7 w-7 max-sm:h-8 max-sm:w-8 max-sm:text-xs items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white md:h-8 md:w-8 md:text-xs md:leading-none"
