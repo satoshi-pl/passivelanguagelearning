@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { trackGaEvent } from "@/lib/analytics/ga";
+import { resolveBrowserAudioUrl } from "@/lib/audio/resolveBrowserAudioUrl";
 
 type Result = {
   pair_id: string;
@@ -32,6 +33,7 @@ function fold(s: string) {
 }
 
 type DictionaryLayout = "default" | "panel";
+const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
 export default function DictionaryHeaderSearch({
   langs,
@@ -69,14 +71,15 @@ export default function DictionaryHeaderSearch({
   const lastTrackedSearchRef = useRef("");
 
   const playAudio = async (url: string | null) => {
-    if (!url) return;
+    const resolvedUrl = resolveBrowserAudioUrl(url, SUPABASE_PUBLIC_URL);
+    if (!resolvedUrl) return;
 
     try {
-      if (!audioRef.current) audioRef.current = new Audio(url);
+      if (!audioRef.current) audioRef.current = new Audio(resolvedUrl);
       else {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        audioRef.current.src = url;
+        audioRef.current.src = resolvedUrl;
       }
 
       await audioRef.current.play();

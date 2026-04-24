@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { trackGaEvent } from "@/lib/analytics/ga";
+import { resolveBrowserAudioUrl } from "@/lib/audio/resolveBrowserAudioUrl";
 
 type DictionaryResult = {
   pair_id: string;
@@ -14,6 +15,7 @@ type DictionaryResult = {
   word_target_audio_url: string | null;
   sentence_target_audio_url: string | null;
 };
+const SUPABASE_PUBLIC_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
 function normalizeQuery(s: string) {
   return s.trim().replace(/\s+/g, " ");
@@ -119,13 +121,14 @@ export default function DictionaryClient({ initialQuery }: { initialQuery: strin
   // Audio
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playAudio = async (url: string | null) => {
-    if (!url) return;
+    const resolvedUrl = resolveBrowserAudioUrl(url, SUPABASE_PUBLIC_URL);
+    if (!resolvedUrl) return;
     try {
-      if (!audioRef.current) audioRef.current = new Audio(url);
+      if (!audioRef.current) audioRef.current = new Audio(resolvedUrl);
       else {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        audioRef.current.src = url;
+        audioRef.current.src = resolvedUrl;
       }
       await audioRef.current.play();
     } catch {
