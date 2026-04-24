@@ -207,6 +207,8 @@ export function usePracticeFlow({
   const progressRef = useRef<ProgressMap>(initialProgress || {});
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [isStartingPractice, setIsStartingPractice] = useState(false);
+  const startPracticeInFlightRef = useRef(false);
 
   const [sessionPairs, setSessionPairs] = useState<PairRow[]>(initialBootstrap.sessionPairs);
   const [viewMode, setViewMode] = useState<ViewMode>(initialBootstrap.viewMode);
@@ -292,6 +294,8 @@ export function usePracticeFlow({
     progressRef.current = initialProgress || {};
     setRevealed(false);
     setShowTranslations(true);
+    setIsStartingPractice(false);
+    startPracticeInFlightRef.current = false;
 
     // review queue
     setQueue(nextBootstrap.queue);
@@ -728,6 +732,10 @@ export function usePracticeFlow({
   });
 
   const startPractice = useCallback(() => {
+    if (startPracticeInFlightRef.current || viewMode !== "preview") return;
+    startPracticeInFlightRef.current = true;
+    setIsStartingPractice(true);
+
     audioRef.current.stop();
     previewAudio.resetPreviewAudioState();
     audioRef.current.enable();
@@ -736,11 +744,15 @@ export function usePracticeFlow({
     // ✅ WS learn: init step queue BEFORE entering practice
     if (!isReview && mode === "ws") {
       const ok = initWsPractice();
-      if (!ok) return;
+      if (!ok) {
+        startPracticeInFlightRef.current = false;
+        setIsStartingPractice(false);
+        return;
+      }
     }
 
     setViewMode("practice");
-  }, [previewAudio, isReview, mode, initWsPractice]);
+  }, [previewAudio, isReview, mode, initWsPractice, viewMode]);
 
   const appendSessionChunk = useCallback(
     (incomingPairs: PairRow[], incomingProgress: ProgressMap) => {
@@ -847,6 +859,7 @@ export function usePracticeFlow({
     revealed,
     setRevealed,
     busy,
+    isStartingPractice,
     isFinishing,
 
     // current

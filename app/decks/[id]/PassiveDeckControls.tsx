@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
 import { usePrefetchRoutes } from "@/app/components/usePrefetchRoutes";
@@ -256,11 +257,10 @@ export default function PassiveDeckControls({
       modeWordsHref,
       modeWsHref,
       modeSentencesHref,
-      ...[5, 10, 15, 0].map((n) => buildPracticeHref(n)),
       passiveReviewHref,
       activeHref,
     ],
-    [modeWordsHref, modeWsHref, modeSentencesHref, buildPracticeHref, passiveReviewHref, activeHref]
+    [modeWordsHref, modeWsHref, modeSentencesHref, passiveReviewHref, activeHref]
   );
   usePrefetchRoutes(prefetchHrefs);
 
@@ -431,9 +431,10 @@ export default function PassiveDeckControls({
       <div className="deck-actions-group">
         <div className="deck-action-row deck-learn-row" style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
           {sessionSizes.map((size) => (
-            <ResponsiveNavLink
+            <Link
               key={size.label}
               href={buildPracticeHref(size.value)}
+              prefetch={false}
               onClick={() => {
                 const optionValue = normalizeSessionOptionValue(size.value);
                 startRouteInteractionTiming("start_practice", buildPracticeHref(size.value), {
@@ -459,7 +460,7 @@ export default function PassiveDeckControls({
               className="deck-action-button deck-action-button--primary deck-learn-button"
             >
               {size.label}
-            </ResponsiveNavLink>
+            </Link>
           ))}
         </div>
 

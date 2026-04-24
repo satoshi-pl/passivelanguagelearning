@@ -43,6 +43,7 @@ type Props = {
   onRowPlay: (p: PairRow) => void;
 
   startPractice: () => void;
+  isStartingPractice: boolean;
 
   reportOpen: boolean;
   setReportOpen: (v: boolean) => void;
@@ -142,6 +143,7 @@ export default function PreviewScreen(props: Props) {
     playAllPreviewWords,
     onRowPlay,
     startPractice,
+    isStartingPractice,
     reportOpen,
     setReportOpen,
     reportCat,
@@ -253,12 +255,19 @@ export default function PreviewScreen(props: Props) {
               <button
                 type="button"
                 onClick={startPractice}
+                aria-busy={isStartingPractice || undefined}
                 className="min-h-11 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/90 max-sm:col-span-1 max-sm:w-full max-sm:min-h-10 max-sm:px-2.5 max-sm:py-1.5 max-sm:justify-center"
                 title="Start practice (Enter)"
               >
-                <span className="md:hidden">Start practice</span>
+                {isStartingPractice ? (
+                  <span
+                    aria-hidden="true"
+                    className="mr-2 inline-block h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white align-[-2px] motion-safe:animate-spin"
+                  />
+                ) : null}
+                <span className="md:hidden">{isStartingPractice ? "Starting..." : "Start practice"}</span>
                 <span className="hidden md:inline">
-                  Start practice
+                  {isStartingPractice ? "Starting..." : "Start practice"}
                   <span className="preview-control-shortcut preview-control-shortcut--on-dark"> • Enter</span>
                 </span>
               </button>

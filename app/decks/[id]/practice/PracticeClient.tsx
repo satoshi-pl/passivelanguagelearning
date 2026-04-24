@@ -1017,6 +1017,7 @@ export default function PracticeClient({
           playAllPreviewWords={(rows) => void flow.playAllPreviewWords(rows)}
           onRowPlay={flow.onPreviewRowPlay}
           startPractice={flow.startPractice}
+          isStartingPractice={flow.isStartingPractice}
           reportOpen={report.reportOpen}
           setReportOpen={report.setReportOpen}
           reportCat={report.reportCat}
