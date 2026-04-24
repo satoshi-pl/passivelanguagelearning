@@ -53,8 +53,7 @@ export async function POST(req: NextRequest) {
 
   const hydrated = await hydrateCanonicalFirstAudioForPairs(
     supabase,
-    (rows || []) as PairAudioRow[],
-    targetLang
+    (rows || []) as PairAudioRow[]
   );
 
   return NextResponse.json({

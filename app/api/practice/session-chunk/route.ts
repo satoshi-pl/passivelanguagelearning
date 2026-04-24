@@ -166,8 +166,7 @@ export async function POST(req: Request) {
 
   const hydratedPairs = await hydrateCanonicalFirstAudioForPairs(
     supabase,
-    ((sessionPairs ?? []) as PairRow[]),
-    deck.target_lang
+    ((sessionPairs ?? []) as PairRow[])
   );
 
   const progress: Record<string, { word_mastered: boolean; sentence_mastered: boolean }> = {};

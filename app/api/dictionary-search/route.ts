@@ -74,8 +74,7 @@ export async function GET(req: Request) {
   }));
   const hydratedRows = await hydrateCanonicalFirstAudioForPairs(
     supabase,
-    hydrationRows,
-    target
+    hydrationRows
   );
 
   return NextResponse.json({
