@@ -27,6 +27,29 @@ type SupabaseLike = {
   from: (table: string) => QueryBuilder;
 };
 
+function summarizeLookupError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return { message: String(error ?? "unknown error") };
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  return {
+    code: typeof candidate.code === "string" ? candidate.code : null,
+    message:
+      typeof candidate.message === "string"
+        ? candidate.message
+        : String(error),
+    details: typeof candidate.details === "string" ? candidate.details : null,
+    hint: typeof candidate.hint === "string" ? candidate.hint : null,
+  };
+}
+
 function firstNonEmpty(...vals: Array<string | null | undefined>) {
   for (const v of vals) {
     if (typeof v !== "string") continue;
@@ -73,6 +96,14 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
     pairsMetaErr = pairsMetaResult.error;
   }
 
+  if (pairsMetaErr) {
+    console.error("[audio/hydrator] pair template recovery lookup failed", {
+      pairCount: ids.length,
+      missingPairTemplateIds: idsMissingTemplateMeta.length,
+      error: summarizeLookupError(pairsMetaErr),
+    });
+  }
+
   if (!pairsMetaErr && Array.isArray(pairsMetaData)) {
     for (const raw of pairsMetaData as PairMetaRow[]) {
       pairTemplateById.set(raw.id, raw.pair_template_id);
@@ -99,6 +130,14 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
       data: unknown;
       error: unknown;
     };
+
+    if (templateErr) {
+      console.error("[audio/hydrator] canonical template audio lookup failed; using runtime fallback", {
+        pairCount: ids.length,
+        templateCount: templateIds.length,
+        error: summarizeLookupError(templateErr),
+      });
+    }
 
     if (!templateErr && Array.isArray(templateRows)) {
       for (const raw of templateRows as TemplateAudioAssetRow[]) {
