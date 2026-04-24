@@ -1,8 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import ResponsiveNavLink from "@/app/components/ResponsiveNavLink";
+import type { MouseEvent, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TrackedResponsiveNavLink from "@/app/components/TrackedResponsiveNavLink";
 import RouteTimingConsumer from "@/app/components/RouteTimingConsumer";
 import AutoSubmitSupportSelect from "./AutoSubmitSupportSelect";
@@ -25,7 +24,7 @@ type Props = {
   warmEntry: boolean;
 };
 
-function linkInteractionStyle(active: boolean) {
+function linkInteractionStyle(active: boolean, pending = false) {
   return {
     display: "inline-flex",
     alignItems: "center",
@@ -41,6 +40,7 @@ function linkInteractionStyle(active: boolean) {
     whiteSpace: "nowrap",
     minHeight: 46,
     boxShadow: active ? "none" : "0 1px 0 rgba(0,0,0,0.02)",
+    opacity: pending ? 0.72 : 1,
     transition: "opacity 130ms ease",
   } as const;
 }
@@ -48,16 +48,31 @@ function linkInteractionStyle(active: boolean) {
 function FilterButton({
   href,
   active,
+  pending,
+  onFocus,
+  onPointerEnter,
+  onClick,
   children,
 }: {
   href: string;
   active: boolean;
+  pending?: boolean;
+  onFocus?: () => void;
+  onPointerEnter?: () => void;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   children: ReactNode;
 }) {
   return (
-    <ResponsiveNavLink href={href} style={linkInteractionStyle(active)}>
+    <a
+      href={href}
+      onFocus={onFocus}
+      onPointerEnter={onPointerEnter}
+      onClick={onClick}
+      aria-busy={pending || undefined}
+      style={linkInteractionStyle(active, pending)}
+    >
       {children}
-    </ResponsiveNavLink>
+    </a>
   );
 }
 
@@ -72,6 +87,10 @@ export default function DecksPageClient({
   const lastVisibleData = useMemo(() => (warmEntry ? readDecksLastVisibleState() : null), [warmEntry]);
   const [data, setData] = useState<DecksPageData | null>(() => initialData ?? warmCachedData ?? lastVisibleData);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [pendingTargetHref, setPendingTargetHref] = useState<string | null>(null);
+  const pageDataCacheRef = useRef<Record<string, DecksPageData>>({});
+  const pageDataInFlightRef = useRef<Record<string, Promise<DecksPageData>>>({});
+  const latestTargetRequestRef = useRef<string | null>(null);
   const hasInitialRenderableData = !!(initialData ?? warmCachedData ?? lastVisibleData);
   const [visibleState, setVisibleState] = useState(() => ({
     selectedLevelUrl: (initialData ?? warmCachedData ?? lastVisibleData)?.selectedLevelUrl ?? requestedLevel,
@@ -102,11 +121,107 @@ export default function DecksPageClient({
 
   useEffect(() => {
     if (!data) return;
+    const pairHref = buildDecksHref({
+      target: data.selectedTarget,
+      support: data.selectedSupport,
+    });
+    pageDataCacheRef.current[pairHref] = data;
+    pageDataCacheRef.current[data.currentDecksHref] = data;
     setVisibleState({
       selectedLevelUrl: data.selectedLevelUrl,
       currentDecksHref: data.currentDecksHref,
     });
   }, [data]);
+
+  const fetchDecksPageData = useCallback((href: string) => {
+    const cached = pageDataCacheRef.current[href];
+    if (cached) return Promise.resolve(cached);
+
+    const inFlight = pageDataInFlightRef.current[href];
+    if (inFlight) return inFlight;
+
+    const promise = (async () => {
+      const url = new URL(href, window.location.origin);
+      const res = await fetch(`/api/decks/page-data?${url.searchParams.toString()}`, {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const payload = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        redirect?: string;
+        data?: DecksPageData;
+      };
+
+      if (payload.redirect) {
+        throw new Error(payload.redirect);
+      }
+
+      if (!res.ok || !payload.ok || !payload.data) {
+        throw new Error(payload.error || `Decks refresh failed: ${res.status}`);
+      }
+
+      pageDataCacheRef.current[href] = payload.data;
+      pageDataCacheRef.current[payload.data.currentDecksHref] = payload.data;
+      return payload.data;
+    })();
+
+    pageDataInFlightRef.current[href] = promise;
+    const clearInFlight = () => {
+      if (pageDataInFlightRef.current[href] === promise) {
+        delete pageDataInFlightRef.current[href];
+      }
+    };
+    promise.then(clearInFlight, clearInFlight);
+
+    return promise;
+  }, []);
+
+  const prefetchTargetData = useCallback(
+    (href: string) => {
+      void fetchDecksPageData(href).catch(() => {
+        // Keep hover/focus warming invisible; click can still fall back to navigation.
+      });
+    },
+    [fetchDecksPageData]
+  );
+
+  const selectTarget = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      event.preventDefault();
+
+      const cached = pageDataCacheRef.current[href];
+      latestTargetRequestRef.current = href;
+      window.history.replaceState(window.history.state, "", href);
+
+      if (cached) {
+        setPendingTargetHref(null);
+        setLoadError(null);
+        setData(cached);
+        writeDecksWarmCache(cached);
+        return;
+      }
+
+      setPendingTargetHref(href);
+      void fetchDecksPageData(href)
+        .then((nextData) => {
+          if (latestTargetRequestRef.current !== href) return;
+          setData(nextData);
+          writeDecksWarmCache(nextData);
+          setLoadError(null);
+          setPendingTargetHref(null);
+        })
+        .catch(() => {
+          if (latestTargetRequestRef.current !== href) return;
+          window.location.assign(href);
+        });
+    },
+    [fetchDecksPageData]
+  );
 
   useEffect(() => {
     if (!warmEntry) return;
@@ -140,6 +255,7 @@ export default function DecksPageClient({
           throw new Error(payload.error || `Decks refresh failed: ${res.status}`);
         }
 
+        if (latestTargetRequestRef.current) return;
         writeDecksWarmCache(payload.data);
         setData(payload.data);
         setLoadError(null);
@@ -304,15 +420,21 @@ export default function DecksPageClient({
                 const supportForLink = supportsForTarget.includes(data.selectedSupport)
                   ? data.selectedSupport
                   : supportsForTarget[0] ?? "";
+                const href = buildDecksHref({
+                  target,
+                  support: supportForLink,
+                });
+                const pending = pendingTargetHref === href;
 
                 return (
                   <FilterButton
                     key={target}
-                    href={buildDecksHref({
-                      target,
-                      support: supportForLink,
-                    })}
-                    active={target === data.selectedTarget}
+                    href={href}
+                    active={target === data.selectedTarget || pending}
+                    pending={pending}
+                    onFocus={() => prefetchTargetData(href)}
+                    onPointerEnter={() => prefetchTargetData(href)}
+                    onClick={(event) => selectTarget(event, href)}
                   >
                     {langName(target)}
                   </FilterButton>
