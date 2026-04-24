@@ -83,11 +83,18 @@ export default function AddLanguagePairClient() {
         return;
       }
 
-      const { data: deckTemplateRows, error: templateErr } = await supabaseRef.current
+      const templatesPromise = supabaseRef.current
         .from("deck_templates")
         .select("target_lang,native_lang")
         .order("target_lang", { ascending: true })
         .order("native_lang", { ascending: true });
+
+      const decksPromise = supabaseRef.current
+        .from("decks")
+        .select("id,target_lang,native_lang,level");
+
+      const [{ data: deckTemplateRows, error: templateErr }, { data: existingDeckRows, error: decksErr }] =
+        await Promise.all([templatesPromise, decksPromise]);
 
       if (cancelledRef.current) return;
       if (templateErr) {
@@ -95,10 +102,6 @@ export default function AddLanguagePairClient() {
         setLoadErrorMsg(`Could not load available language pairs: ${templateErr.message}`);
         return;
       }
-
-      const { data: existingDeckRows, error: decksErr } = await supabaseRef.current
-        .from("decks")
-        .select("id,target_lang,native_lang,level");
 
       if (cancelledRef.current) return;
       if (decksErr) {

@@ -123,7 +123,18 @@ export default function SetupDecksClient() {
         return;
       }
 
-      const { data: quick, error: qErr } = await supabaseRef.current.from("decks").select("id").limit(1);
+      const deckQuickPromise = supabaseRef.current.from("decks").select("id").limit(1);
+      const templatePairsPromise = supabaseRef.current
+        .from("deck_templates")
+        .select("target_lang,native_lang")
+        .order("target_lang", { ascending: true })
+        .order("native_lang", { ascending: true });
+
+      const [{ data: quick, error: qErr }, { data: pairRows, error: pairErr }] = await Promise.all([
+        deckQuickPromise,
+        templatePairsPromise,
+      ]);
+
       if (cancelledRef.current) return;
       if (qErr) {
         setPhase("error");
@@ -138,11 +149,6 @@ export default function SetupDecksClient() {
         return;
       }
 
-      const { data: pairRows, error: pairErr } = await supabaseRef.current
-        .from("deck_templates")
-        .select("target_lang,native_lang")
-        .order("target_lang", { ascending: true })
-        .order("native_lang", { ascending: true });
       if (cancelledRef.current) return;
       if (pairErr) {
         setPhase("error");

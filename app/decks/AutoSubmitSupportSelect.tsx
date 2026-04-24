@@ -38,11 +38,30 @@ export default function AutoSubmitSupportSelect({
     return qs.toString() ? `${pathname}?${qs.toString()}` : pathname;
   }, [pathname, searchParams, target]);
 
+  const prefetchHref = useCallback(
+    (href: string) => {
+      if (!href) return;
+      try {
+        router.prefetch(href);
+      } catch {
+        // ignore prefetch failures
+      }
+    },
+    [router]
+  );
+
   useEffect(() => {
-    for (const option of options) {
-      router.prefetch(buildHref(option.value));
-    }
-  }, [options, buildHref, router]);
+    if (!value) return;
+    prefetchHref(buildHref(value));
+  }, [value, buildHref, prefetchHref]);
+
+  const prefetchSupportValue = useCallback(
+    (nextValue: string) => {
+      if (!nextValue) return;
+      prefetchHref(buildHref(nextValue));
+    },
+    [buildHref, prefetchHref]
+  );
 
   useEffect(() => {
     return () => {
@@ -66,9 +85,11 @@ export default function AutoSubmitSupportSelect({
         position: "relative",
         minWidth: 170,
       }}
+      onPointerEnter={() => prefetchSupportValue(value)}
     >
       <select
         value={value}
+        onFocus={() => prefetchSupportValue(value)}
         onChange={(e) => handleChange(e.target.value)}
         aria-busy={isPending || undefined}
         data-nav-pending={isPending ? "true" : "false"}

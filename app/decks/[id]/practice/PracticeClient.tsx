@@ -613,6 +613,8 @@ export default function PracticeClient({
 
   const [favKeys, setFavKeys] = useState<Set<string>>(() => new Set());
   const [favLoaded, setFavLoaded] = useState(false);
+  const favKeysRef = useRef<Set<string>>(favKeys);
+  favKeysRef.current = favKeys;
 
   const favDir = useMemo(() => {
     if (isFavoritesSession) {
@@ -680,7 +682,13 @@ export default function PracticeClient({
     if (!favPairId || !favKind) return "error" as const;
 
     const key = `${favPairId}|${favKind}`;
-    if (favKeys.has(key)) return "already" as const;
+    if (favKeysRef.current.has(key)) return "already" as const;
+
+    const previous = new Set(favKeysRef.current);
+    const optimistic = new Set(previous);
+    optimistic.add(key);
+    favKeysRef.current = optimistic;
+    setFavKeys(optimistic);
 
     try {
       const res = await fetch("/api/favorites/toggle", {
@@ -694,27 +702,31 @@ export default function PracticeClient({
       });
 
       const json = (await res.json().catch(() => ({}))) as FavoritesToggleResponse;
-      if (!res.ok) return "error" as const;
-
-      if (json.favorited === true) {
-        setFavKeys((prev) => {
-          const next = new Set(prev);
-          next.add(key);
-          return next;
-        });
-        return "added" as const;
+      if (!res.ok || json.favorited !== true) {
+        favKeysRef.current = previous;
+        setFavKeys(previous);
+        return "error" as const;
       }
 
-      return "error" as const;
+      return "added" as const;
     } catch {
+      favKeysRef.current = previous;
+      setFavKeys(previous);
       return "error" as const;
     }
-  }, [favKeys, favPairId, favKind, favDir]);
+  }, [favPairId, favKind, favDir]);
 
   const onRemoveFavourite = useCallback(async () => {
     if (!favPairId || !favKind) return "error" as const;
 
     const key = `${favPairId}|${favKind}`;
+    if (!favKeysRef.current.has(key)) return "error" as const;
+
+    const previous = new Set(favKeysRef.current);
+    const optimistic = new Set(previous);
+    optimistic.delete(key);
+    favKeysRef.current = optimistic;
+    setFavKeys(optimistic);
 
     try {
       const res = await fetch("/api/favorites/toggle", {
@@ -728,24 +740,20 @@ export default function PracticeClient({
       });
 
       const json = (await res.json().catch(() => ({}))) as FavoritesToggleResponse;
-      if (!res.ok) return "error" as const;
-
-      if (json.favorited === false) {
-        setFavKeys((prev) => {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        });
-
-        if (isFavoritesSession && flow.viewMode === "practice") {
-          flow.goNext(routeFromPractice);
-        }
-
-        return "removed" as const;
+      if (!res.ok || json.favorited !== false) {
+        favKeysRef.current = previous;
+        setFavKeys(previous);
+        return "error" as const;
       }
 
-      return "error" as const;
+      if (isFavoritesSession && flow.viewMode === "practice") {
+        flow.goNext(routeFromPractice);
+      }
+
+      return "removed" as const;
     } catch {
+      favKeysRef.current = previous;
+      setFavKeys(previous);
       return "error" as const;
     }
   }, [favPairId, favKind, favDir, isFavoritesSession, flow.viewMode, routeFromPractice, flow]);
