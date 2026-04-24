@@ -1,8 +1,16 @@
 # PLL audio restore — regeneration (canonical per template)
 
-## Root cause
+> Emergency repair runbook.
+>
+> Current runtime inherited audio is resolved from canonical template metadata.
+> This document remains relevant for storage/object repair and for repopulating
+> compatibility metadata on `public.pairs`, not as a description of normal
+> runtime ownership.
 
-- The app plays audio from `public.pairs.word_target_audio_url` and `public.pairs.sentence_target_audio_url`.
+## Historical root cause
+
+- Earlier runtime/app paths played audio directly from
+  `public.pairs.word_target_audio_url` and `public.pairs.sentence_target_audio_url`.
 - Storage bucket `tts` can still contain many MP3s while playback fails if **those objects were produced for a different ID universe** (older DB, different project, or keys that never matched the current `pairs.id` / `pair_template_id` values).
 - In that situation, **SQL backfill that guesses paths from current row IDs** will not find real objects. See `sql/AUDIO_BACKFILL_RUNBOOK.md` only when keys truly match the live schema.
 
@@ -11,15 +19,18 @@
 - Legacy scripts wrote `{locale}/word/{pairs.id}.mp3` (and sentence). If the live DB was re-seeded or migrated, **current** `pairs.id` values do not correspond to the filenames that exist in the bucket.
 - Copying URLs from guessed paths then points the browser at **404 or wrong audio**.
 
-## Chosen regeneration strategy
+## Regeneration strategy
 
 - **One canonical file per `pair_templates.id` + kind (word / sentence)**, under bucket `tts`, using keys that **do not collide** with legacy `pairs.id` filenames:
   - `{languageCode}/word/pt-{pair_template_id}.mp3`
   - `{languageCode}/sentence/pt-{pair_template_id}.mp3`
 - `languageCode` is derived from `deck_templates.target_lang` for that template (same mapping as in `tts_regenerate_canonical.js`).
-- After Google TTS + upload, the script runs **`UPDATE public.pairs SET ... WHERE pair_template_id = ...`** so every user row for that template gets the **same** public URL.
+- After Google TTS + upload, the script runs **`UPDATE public.pairs SET ... WHERE pair_template_id = ...`** so every user row for that template gets the same compatibility URL value.
 - **Skip logic (default):** for each template, generate word/sentence only if **at least one** `pairs` row for that template still has a **null** URL for that column (unless `--force true`). Templates with **no** `pairs` rows are skipped (nothing to update).
-- **Provisioning:** `sync_selected_content_for_user` and the default-content path already pick up `max(word_target_audio_url)` / sentence grouped by `pair_template_id`. After regeneration, new users inherit the same URLs without schema changes. If you use `mv_pair_template_audio`, run `REFRESH MATERIALIZED VIEW public.mv_pair_template_audio` after a bulk regen (see `sql/sync_default_content_performance.sql`).
+- **Provisioning note:** current provisioning does not inherit audio into new
+  `pairs` rows. The `public.pairs` updates performed by this script are retained
+  for compatibility/repair workflows; canonical runtime reads still come from
+  `template_audio_assets`.
 
 ## Prerequisites (local)
 
@@ -76,7 +87,7 @@ select
 from public.pairs;
 ```
 
-2. **Spot-check URLs:** pick a `pair_template_id`, confirm `pairs` rows share the same URL, and open it in a browser (full `https://...` from `getPublicUrl`).
+2. **Spot-check URLs:** pick a `pair_template_id`, confirm `pairs` rows share the same compatibility URL value, and open it in a browser (full `https://...` from `getPublicUrl`).
 
 3. **App:** open practice for an existing deck — word and sentence playback. Create or sync a **new** user / deck and confirm audio still works (provisioning inheritance).
 

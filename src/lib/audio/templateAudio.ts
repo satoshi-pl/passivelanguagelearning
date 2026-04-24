@@ -1,4 +1,4 @@
-export function normalizeTemplateAudioKeyToRaw(key?: string | null) {
+function normalizeTemplateAudioKeyToRaw(key?: string | null) {
   const raw = (key || "").trim();
   if (!raw) return null;
 

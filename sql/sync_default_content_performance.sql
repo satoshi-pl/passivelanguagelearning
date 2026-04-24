@@ -5,10 +5,10 @@
 --   provisioning inherited audio from pair-derived aggregates, which both duplicated
 --   metadata into new user pairs and required extra lookup work.
 --
--- Phase 2 audio ownership change:
---   provisioning now leaves pairs.*_audio_url null for newly created rows.
---   Runtime already resolves canonical audio first, with pair-row and pt-* fallbacks
---   still preserved at read time.
+-- Audio ownership state today:
+--   provisioning leaves pairs.*_audio_url null for newly created rows.
+--   Runtime inherited audio comes from canonical template metadata, not pair-row
+--   or synthesized fallback resolution.
 --
 -- Legacy note:
 --   mv_pair_template_audio is retained in the repo for compatibility/reference, but
@@ -17,9 +17,9 @@
 -- Apply in Supabase SQL Editor as a privileged role (postgres / dashboard).
 -- After deploy: REFRESH MATERIALIZED VIEW when bulk audio backfills change sources.
 --
--- If public.pairs audio URL columns are null or wrong but Storage keys do not match live row IDs,
--- run sql/AUDIO_REGENERATION_RUNBOOK.md (tts_regenerate_canonical.js). If keys match pairs.id layout,
--- sql/backfill_pair_audio_urls_from_storage.sql (sql/AUDIO_BACKFILL_RUNBOOK.md) may suffice.
+-- If legacy public.pairs audio URL columns need operational repair, use
+-- sql/AUDIO_REGENERATION_RUNBOOK.md (canonical regeneration) or, for legacy pairs.id
+-- storage layouts only, sql/AUDIO_BACKFILL_RUNBOOK.md.
 -- =============================================================================
 
 -- 1) Lookup: one row per pair_template_id with best-known audio URLs
@@ -53,7 +53,7 @@ END
 $mv$;
 
 COMMENT ON MATERIALIZED VIEW public.mv_pair_template_audio IS
-  'Pre-aggregated audio URLs per pair_template_id for sync_default_content_for_user; REFRESH after bulk audio updates.';
+  'Historical pair-audio aggregate retained for compatibility/reference; sync_default_content_for_user no longer depends on it.';
 
 -- 1b) After large audio backfills, re-run this (CONCURRENTLY needs unique index above):
 -- REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_pair_template_audio;

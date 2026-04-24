@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   const { data: rows, error } = await supabase
     .from("pairs")
-    .select("id, pair_template_id, word_target_audio_url, sentence_target_audio_url")
+    .select("id, pair_template_id")
     .in("id", pairIds);
 
   if (error) {

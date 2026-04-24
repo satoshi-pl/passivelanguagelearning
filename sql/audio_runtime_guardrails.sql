@@ -1,5 +1,11 @@
--- Runtime guardrail snapshot for canonical-first audio resolution.
+-- Runtime guardrail snapshot for the canonical-only inherited audio architecture.
 -- Read-only. Intended for repeated checks after releases/backfills.
+--
+-- Important:
+-- - `pairs` and `pt_fallback` buckets are retained as legacy diagnostic labels.
+-- - They no longer represent active runtime fallback tiers in the app.
+-- - Non-zero values indicate historical/compatibility data shape or hypothetical
+--   recovery paths, not live runtime resolution behavior.
 
 with locale_map as (
   select

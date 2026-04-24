@@ -1,17 +1,28 @@
 # PLL audio restore — storage backfill runbook
 
+> Historical / emergency reference only.
+>
+> Current runtime playback does **not** use `public.pairs.word_target_audio_url`
+> and `public.pairs.sentence_target_audio_url` as the inherited source of truth.
+> Runtime now resolves inherited audio from canonical template metadata.
+>
+> This runbook remains useful only when legacy pair-audio URL metadata itself
+> needs repair for compatibility or operational reasons.
+
 If Storage object keys **do not** match the current live `pairs.id` / dataset (common after re-seed or env mismatch), backfill from guessed paths will not restore playback. Use **`sql/AUDIO_REGENERATION_RUNBOOK.md`** and `tts_regenerate_canonical.js` instead.
 
-## Root cause
+## Historical root cause
 
-- Playback reads `public.pairs.word_target_audio_url` and `public.pairs.sentence_target_audio_url`.
+- Legacy playback paths read `public.pairs.word_target_audio_url` and `public.pairs.sentence_target_audio_url`.
 - `pair_templates` has **no** audio columns; URLs always lived on `pairs`.
 - Supabase Storage bucket `tts` still contains the MP3 objects, but **`pairs` URL columns became all null** (metadata loss).
-- The app resolves playable URLs from those columns (and supports `storage/v1/...` relative paths); with nulls, audio cannot work.
+- At the time this runbook was written, the app resolved playable URLs from those
+  columns (and supported `storage/v1/...` relative paths); with nulls, audio
+  could not work.
 
-## Why files could exist but the app stayed silent
+## Why files could exist but the app stayed silent then
 
-- The browser never fetches Storage directly from `pair_templates` or deck text alone.
+- The browser never fetched Storage directly from `pair_templates` or deck text alone.
 - Without DB URLs, `hasAudio` is false and play handlers no-op / controls stay disabled.
 
 ## Deterministic URL rule (from repo TTS scripts)
@@ -49,11 +60,11 @@ Spot-check one row and open the resolved URL in a browser (prepend your project 
 
 - `https://<project-ref>.supabase.co` + `/` + `storage/v1/object/public/tts/es-ES/word/<pair-id>.mp3`
 
-## Provisioning after backfill
+## Provisioning after backfill (historical)
 
-- `sync_default_content_for_user` / `sync_selected_content_for_user` copy audio from existing `pairs` rows with the same `pair_template_id`.
+- Older provisioning paths copied audio from existing `pairs` rows with the same `pair_template_id`.
 - After this backfill, that propagation works again **as long as** the copied URLs remain valid for all rows that share them (true when URLs are template-agnostic or identical per template; if you rely solely on per-row `pairs.id` keys, new users may still need a TTS pass for brand-new UUIDs).
 
-## App expectations
+## Compatibility expectations
 
 - `app/decks/[id]/practice/lib/resolvePracticeAudioUrl.ts` accepts `https://...`, `storage/v1/...`, or `tts/...` keys.

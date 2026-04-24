@@ -1,6 +1,10 @@
 PLL AUDIO FIX NOTES
 ===================
 
+Historical reference only.
+This note reflects a pre-canonical-cutover provisioning/audio incident and
+should not be read as the current runtime architecture.
+
 Date
 ----
 2026-04-10

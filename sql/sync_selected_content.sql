@@ -1,7 +1,7 @@
 -- Provision only user-selected language pairs during onboarding.
--- Phase 2 audio ownership change:
---   - newly provisioned user pairs no longer inherit audio from template or pair-derived sources
---   - runtime resolves audio canonically at read time, with pair-row and pt-* fallbacks still intact
+-- Audio ownership state today:
+--   - newly provisioned user pairs do not inherit audio into public.pairs
+--   - runtime resolves inherited audio from canonical template metadata at read time
 -- This stops creating fresh duplicated audio metadata in public.pairs during provisioning.
 -- p_pairs format:
 -- [

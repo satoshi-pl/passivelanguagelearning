@@ -1,5 +1,13 @@
 -- Audio architecture validation snapshot query.
 -- Read-only: can be run in Supabase SQL editor or psql.
+--
+-- Important:
+-- - `pairs` and `pt_fallback` resolution labels are retained for continuity with
+--   earlier migration phases.
+-- - They are now legacy diagnostic/inference categories, not active runtime
+--   fallback tiers in the app.
+-- - `rows_recoverable_only_through_fallback` should be read as a historical
+--   diagnostic metric, not as evidence of a live runtime dependency.
 
 with locale_map as (
   select
