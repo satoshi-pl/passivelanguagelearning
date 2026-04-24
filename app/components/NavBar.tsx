@@ -85,21 +85,21 @@ export async function NavBar() {
 
             <div className="hidden min-h-14 items-center justify-between gap-4 py-2 md:flex">
               <div className="min-w-0 shrink-0">
-                <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight">
+                <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold leading-none tracking-tight">
                   <span
                     data-top-nav-target="logo"
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-[11px] font-extrabold leading-none text-white"
                   >
                     PLL
                   </span>
-                  <span data-top-nav-target="brand" className="text-[19px] font-semibold">
+                  <span data-top-nav-target="brand" className="text-[19px] font-semibold leading-none">
                     Passive Language Learning
                   </span>
                 </LogoHomeLink>
               </div>
 
               <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:gap-3">
-                <div className="shrink-0">
+                <div className="min-w-0 shrink">
                   <DictionaryHeaderSearch langs={langs} />
                 </div>
 
@@ -119,16 +119,16 @@ export async function NavBar() {
         ) : (
           <div className="flex min-h-14 items-center justify-between gap-3 py-2 md:min-h-[3.75rem] md:py-3">
             <div className="min-w-0 shrink-0">
-              <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight">
+              <LogoHomeLink className="flex items-center gap-3 whitespace-nowrap font-semibold tracking-tight md:leading-none">
                 <span
                   data-top-nav-target="logo"
-                  className="inline-flex h-7 w-7 max-sm:h-8 max-sm:w-8 max-sm:text-xs items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white md:h-8 md:w-8 md:text-xs"
+                  className="inline-flex h-7 w-7 max-sm:h-8 max-sm:w-8 max-sm:text-xs items-center justify-center rounded-full bg-black text-[11px] font-extrabold text-white md:h-8 md:w-8 md:text-xs md:leading-none"
                 >
                   PLL
                 </span>
                 <span
                   data-top-nav-target="brand"
-                  className="hidden text-[19px] font-semibold md:inline md:text-[1.05rem]"
+                  className="hidden text-[19px] font-semibold leading-none md:inline md:text-[1.05rem]"
                 >
                   Passive Language Learning
                 </span>
