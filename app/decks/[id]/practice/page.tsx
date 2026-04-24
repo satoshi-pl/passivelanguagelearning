@@ -402,11 +402,12 @@ export default async function DeckPracticePage({
     );
   }
 
-  // Match chunk/dictionary entry semantics: resolve inherited audio from
-  // canonical template metadata only on the initial payload.
+  // Match chunk/dictionary entry semantics: resolve canonical audio first on the
+  // initial payload while preserving pair-row and pt-* fallbacks underneath.
   const pairs = await hydrateCanonicalFirstAudioForPairs(
     supabase,
-    ((sessionPairs || []) as PairRow[])
+    ((sessionPairs || []) as PairRow[]),
+    String(deck.target_lang || "").toLowerCase()
   );
 
   const progressBuildStartedAtMs = nowMs();

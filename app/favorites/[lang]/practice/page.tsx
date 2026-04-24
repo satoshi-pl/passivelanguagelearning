@@ -259,7 +259,8 @@ export default async function FavoritesPracticePage({
 
   const pairs = await hydrateCanonicalFirstAudioForPairs(
     supabase,
-    ((sessionPairs || []) as PairRow[])
+    ((sessionPairs || []) as PairRow[]),
+    targetLang
   );
 
   const progressMap: Record<string, { word_mastered: boolean; sentence_mastered: boolean }> = {};

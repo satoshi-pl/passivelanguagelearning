@@ -27,9 +27,19 @@ type SupabaseLike = {
   from: (table: string) => QueryBuilder;
 };
 
+function firstNonEmpty(...vals: Array<string | null | undefined>) {
+  for (const v of vals) {
+    if (typeof v !== "string") continue;
+    const t = v.trim();
+    if (t) return t;
+  }
+  return null;
+}
+
 export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
   supabase: unknown,
-  rows: T[]
+  rows: T[],
+  targetLang: string
 ): Promise<T[]> {
   if (!rows.length) return rows;
   const client = supabase as SupabaseLike;
@@ -103,10 +113,21 @@ export async function hydrateCanonicalFirstAudioForPairs<T extends PairLike>(
 
     const wordRaw = resolvePreferredAudioRaw({
       canonicalKey: templateAudio?.word_audio_key ?? null,
+      // Pair-row audio fallback is intentionally removed now that canonical
+      // coverage is complete. We still keep pair_template_id recovery so the
+      // retained pt-* fallback remains available as a temporary final safety net.
+      pairAudioRaw: null,
+      targetLang,
+      kind: "word",
+      pairTemplateId,
     });
 
     const sentenceRaw = resolvePreferredAudioRaw({
       canonicalKey: templateAudio?.sentence_audio_key ?? null,
+      pairAudioRaw: null,
+      targetLang,
+      kind: "sentence",
+      pairTemplateId,
     });
 
     return {
